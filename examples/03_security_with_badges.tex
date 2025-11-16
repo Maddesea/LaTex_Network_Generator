@@ -1,0 +1,69 @@
+% Example 3: Security Visualization with Icons and Badges
+% Demonstrates icon integration and badge system
+\documentclass[border=5mm]{standalone}
+\usepackage{tikz}
+\usepackage{xcolor}
+\usepackage{ifthen}
+
+\usetikzlibrary{shapes, arrows, shadows, decorations.markings, patterns}
+
+\input{../styles_config.tex}
+
+\begin{document}
+
+\begin{tikzpicture}[scale=1.2]
+
+    % Title
+    \node[font=\Large\bfseries] at (3,6.5) {Network Security Status};
+    \node[font=\small, text=gray] at (3,6) {With OS Badges and Status Indicators};
+
+    % Attacker
+    \node[attacker] (attacker) at (0,4.5) {Attacker\\203.0.113.50};
+
+    % Firewall
+    \node[gradient firewall,
+          pin={[badge online]90:●}
+         ] (fw) at (3,4.5) {Firewall\\10.0.0.1};
+
+    % Internal Network
+    \node[gradient server,
+          pin={[badge windows]45:Win},
+          pin={[badge online]135:●}
+         ] (web) at (1.5,2.5) {\serverIcon\\Web Server\\10.0.1.10};
+
+    \node[gradient server,
+          pin={[badge linux]45:Linux},
+          pin={[badge online]135:●}
+         ] (db) at (4.5,2.5) {\databaseIcon\\Database\\10.0.1.20};
+
+    \node[gradient client,
+          pin={[badge windows]315:Win},
+          pin={[badge warning]225:⚠}
+         ] (admin) at (1.5,0.5) {\laptopIcon\\Admin PC\\10.0.2.50};
+
+    \node[gradient client,
+          pin={[badge macos]315:Mac},
+          pin={[badge critical]225:!}
+         ] (compromised) at (4.5,0.5) {\laptopIcon\\User PC\\10.0.2.51\\[2pt]{\color{red}\tiny COMPROMISED}};
+
+    % Connections
+    \draw[attack conn] (attacker) -- (fw) node[midway, above, font=\tiny] {Blocked};
+    \draw[encrypted conn] (fw) -- (web);
+    \draw[encrypted conn] (fw) -- (db);
+    \draw[encrypted conn] (web) -- (admin);
+    \draw[attack conn, bend left=20] (compromised) -- (db) node[midway, right, font=\tiny] {SQL Injection};
+    \draw[suspicious conn] (admin) -- (compromised);
+
+    % Status Box
+    \node[rectangle, draw=red, fill=red!10, thick, rounded corners, inner sep=5pt, anchor=north west] at (-0.5,0) {
+        \begin{tabular}{ll}
+            \multicolumn{2}{l}{\textbf{\color{red}Security Alerts}} \\[2pt]
+            \tikz\node[badge critical] {!}; & Critical: 1 \\
+            \tikz\node[badge warning] {⚠}; & Warning: 1 \\
+            \tikz\node[badge online] {●}; & Online: 4 \\
+        \end{tabular}
+    };
+
+\end{tikzpicture}
+
+\end{document}

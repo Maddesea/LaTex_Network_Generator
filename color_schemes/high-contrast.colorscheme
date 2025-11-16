@@ -1,0 +1,26 @@
+% High Contrast Color Scheme
+% Maximum contrast for accessibility and visibility
+% Network asset colors (bold, saturated)
+\definecolor{serverBlue}{RGB}{0,102,204}
+\definecolor{clientGreen}{RGB}{0,176,80}
+\definecolor{routerOrange}{RGB}{255,128,0}
+\definecolor{firewallRed}{RGB}{237,28,36}
+\definecolor{switchPurple}{RGB}{146,39,143}
+\definecolor{cloudGray}{RGB}{89,89,89}
+
+% Threat indicator colors (maximum contrast)
+\definecolor{threatCritical}{RGB}{204,0,0}
+\definecolor{threatHigh}{RGB}{255,102,0}
+\definecolor{threatMedium}{RGB}{255,192,0}
+\definecolor{threatLow}{RGB}{255,242,0}
+\definecolor{threatInfo}{RGB}{0,112,192}
+
+% Connection colors
+\definecolor{connNormal}{RGB}{96,96,96}
+\definecolor{connEncrypted}{RGB}{0,176,80}
+\definecolor{connSuspicious}{RGB}{255,128,0}
+\definecolor{connMalicious}{RGB}{204,0,0}
+
+% Background colors
+\definecolor{bgLight}{RGB}{255,255,255}
+\definecolor{bgDark}{RGB}{0,0,0}

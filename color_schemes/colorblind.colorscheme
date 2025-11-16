@@ -1,0 +1,27 @@
+% Colorblind-Friendly Color Scheme
+% Optimized for deuteranopia, protanopia, and tritanopia
+% Uses high contrast and distinct hues safe for all types of color vision deficiency
+% Network asset colors (blue-orange palette)
+\definecolor{serverBlue}{RGB}{0,114,178}
+\definecolor{clientGreen}{RGB}{0,158,115}
+\definecolor{routerOrange}{RGB}{230,159,0}
+\definecolor{firewallRed}{RGB}{213,94,0}
+\definecolor{switchPurple}{RGB}{204,121,167}
+\definecolor{cloudGray}{RGB}{128,128,128}
+
+% Threat indicator colors (sequential from safe to critical)
+\definecolor{threatCritical}{RGB}{213,94,0}
+\definecolor{threatHigh}{RGB}{230,159,0}
+\definecolor{threatMedium}{RGB}{240,228,66}
+\definecolor{threatLow}{RGB}{204,204,204}
+\definecolor{threatInfo}{RGB}{86,180,233}
+
+% Connection colors
+\definecolor{connNormal}{RGB}{128,128,128}
+\definecolor{connEncrypted}{RGB}{0,158,115}
+\definecolor{connSuspicious}{RGB}{230,159,0}
+\definecolor{connMalicious}{RGB}{213,94,0}
+
+% Background colors
+\definecolor{bgLight}{RGB}{245,245,245}
+\definecolor{bgDark}{RGB}{50,50,50}

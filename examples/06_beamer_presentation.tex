@@ -1,0 +1,138 @@
+% Example 6: Beamer Presentation with Animations
+% Demonstrates progressive reveal and animation styles
+\documentclass{beamer}
+\usepackage{tikz}
+\usepackage{xcolor}
+\usepackage{ifthen}
+
+\usetikzlibrary{shapes, arrows, shadows, decorations.markings, patterns}
+
+\input{../styles_config.tex}
+
+\usetheme{Madrid}
+\usecolortheme{default}
+
+\title{Network Security Incident}
+\subtitle{Attack Progression Analysis}
+\author{Security Team}
+\date{\today}
+
+\begin{document}
+
+\frame{\titlepage}
+
+\begin{frame}{Initial Network State}
+\begin{center}
+\begin{tikzpicture}[scale=0.8]
+
+    % All nodes visible on first slide
+    \node<1->[gradient firewall] (fw) at (4,4) {Firewall\\10.0.0.1};
+    \node<1->[gradient server] (web) at (2,2) {Web Server\\10.0.1.10};
+    \node<1->[gradient server] (db) at (6,2) {Database\\10.0.1.20};
+    \node<1->[gradient client] (user) at (4,0) {User PC\\10.0.2.50};
+
+    % Normal connections
+    \draw<1->[encrypted conn] (fw) -- (web);
+    \draw<1->[encrypted conn] (fw) -- (db);
+    \draw<1->[normal conn] (web) -- (user);
+
+    % Status - all online initially
+    \node<1> at (4,5) {\textbf{\color{green}All Systems Operational}};
+
+\end{tikzpicture}
+\end{center}
+\end{frame}
+
+\begin{frame}{Step 1: External Attack Detected}
+\begin{center}
+\begin{tikzpicture}[scale=0.8]
+
+    % Attacker appears on slide 2
+    \node<2->[attacker] (attacker) at (0,4) {Attacker\\203.0.113.50};
+
+    \node<1->[gradient firewall, pin={<2->[badge online]90:●}] (fw) at (4,4) {Firewall\\10.0.0.1};
+    \node<1->[gradient server] (web) at (2,2) {Web Server\\10.0.1.10};
+    \node<1->[gradient server] (db) at (6,2) {Database\\10.0.1.20};
+    \node<1->[gradient client] (user) at (4,0) {User PC\\10.0.2.50};
+
+    % Attack connection appears
+    \draw<2->[attack conn] (attacker) -- (fw) node[midway, above, font=\tiny] {BLOCKED};
+    \draw<1->[encrypted conn] (fw) -- (web);
+    \draw<1->[encrypted conn] (fw) -- (db);
+    \draw<1->[normal conn] (web) -- (user);
+
+    \node<2> at (4,5) {\textbf{\color{orange}Attack Blocked by Firewall}};
+
+\end{tikzpicture}
+\end{center}
+\end{frame}
+
+\begin{frame}{Step 2: Phishing Email Received}
+\begin{center}
+\begin{tikzpicture}[scale=0.8]
+
+    \node<1->[attacker] (attacker) at (0,4) {Attacker\\203.0.113.50};
+    \node<1->[gradient firewall] (fw) at (4,4) {Firewall\\10.0.0.1};
+    \node<1->[gradient server] (web) at (2,2) {Web Server\\10.0.1.10};
+    \node<1->[gradient server] (db) at (6,2) {Database\\10.0.1.20};
+
+    % User PC now shows warning
+    \node<1->[gradient client,
+              pin={<3->[badge warning]225:⚠}] (user) at (4,0) {User PC\\10.0.2.50};
+
+    \draw<1->[attack conn] (attacker) -- (fw);
+
+    % Suspicious email connection
+    \draw<3->[suspicious conn, bend right=30] (attacker) to node[midway, below, font=\tiny] {Phishing} (user);
+
+    \draw<1->[encrypted conn] (fw) -- (web);
+    \draw<1->[encrypted conn] (fw) -- (db);
+    \draw<1->[normal conn] (web) -- (user);
+
+    \node<3> at (4,5) {\textbf{\color{orange}Suspicious Email Detected}};
+
+\end{tikzpicture}
+\end{center}
+\end{frame}
+
+\begin{frame}{Step 3: User PC Compromised}
+\begin{center}
+\begin{tikzpicture}[scale=0.8]
+
+    \node<1->[attacker] (attacker) at (0,4) {Attacker\\203.0.113.50};
+    \node<1->[gradient firewall] (fw) at (4,4) {Firewall\\10.0.0.1};
+    \node<1->[gradient server] (web) at (2,2) {Web Server\\10.0.1.10};
+    \node<1->[gradient server] (db) at (6,2) {Database\\10.0.1.20};
+
+    % User PC now critical
+    \node<1->[radial critical,
+              pin={<4->[badge critical]225:!}] (user) at (4,0) {User PC\\10.0.2.50\\[2pt]{\color{red}\tiny COMPROMISED}};
+
+    \draw<1->[attack conn] (attacker) -- (fw);
+    \draw<4->[attack conn, bend right=30] (attacker) to (user);
+
+    % Attack from compromised PC to database
+    \draw<4->[attack conn] (user) -- (db) node[midway, right, font=\tiny] {Data Exfil};
+
+    \draw<1->[encrypted conn] (fw) -- (web);
+    \draw<1->[encrypted conn] (fw) -- (db);
+    \draw<1->[normal conn] (web) -- (user);
+
+    \node<4> at (4,5) {\textbf{\color{red}CRITICAL: System Compromised!}};
+
+\end{tikzpicture}
+\end{center}
+\end{frame}
+
+\begin{frame}{Response Actions}
+\begin{itemize}
+    \item<1-> Isolate compromised user PC
+    \item<2-> Block attacker IP at firewall
+    \item<3-> Scan database for unauthorized access
+    \item<4-> Reset user credentials
+    \item<5-> Conduct security awareness training
+    \item<6-> Update intrusion detection rules
+\end{itemize}
+\end{frame}
+
+\end{document}
