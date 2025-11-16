@@ -30,10 +30,186 @@
 \definecolor{bgLight}{RGB}{236, 240, 241}
 \definecolor{bgDark}{RGB}{44, 62, 80}
 
-% TODO: Add custom color scheme support
-% - Allow users to define custom palettes via config file
-% - Implement colorblind-friendly alternative palettes
-% - Add dark mode theme support
+% ============================================================================
+% COLOR SCHEME VARIANTS AND THEMES
+% ============================================================================
+%
+% Usage: Uncomment ONE theme at a time by removing the '%' before \loadColorScheme
+% Default: Light mode (already loaded above)
+%
+% Available themes:
+%   - light (default - no need to call)
+%   - dark
+%   - colorblind
+%   - highcontrast
+%   - grayscale
+%   - cyberpunk
+%
+% Example: \loadColorScheme{dark}
+
+% Dark Mode Theme
+\newcommand{\loadDarkMode}{
+    \definecolor{serverBlue}{RGB}{100, 181, 246}
+    \definecolor{clientGreen}{RGB}{129, 199, 132}
+    \definecolor{routerOrange}{RGB}{255, 183, 77}
+    \definecolor{firewallRed}{RGB}{239, 83, 80}
+    \definecolor{switchPurple}{RGB}{186, 104, 200}
+    \definecolor{cloudGray}{RGB}{189, 189, 189}
+
+    \definecolor{threatCritical}{RGB}{244, 67, 54}
+    \definecolor{threatHigh}{RGB}{255, 112, 67}
+    \definecolor{threatMedium}{RGB}{255, 193, 7}
+    \definecolor{threatLow}{RGB}{255, 235, 59}
+    \definecolor{threatInfo}{RGB}{66, 165, 245}
+
+    \definecolor{connNormal}{RGB}{176, 190, 197}
+    \definecolor{connEncrypted}{RGB}{102, 187, 106}
+    \definecolor{connSuspicious}{RGB}{255, 167, 38}
+    \definecolor{connMalicious}{RGB}{239, 83, 80}
+}
+
+% Colorblind-Friendly Theme (Deuteranopia/Protanopia safe)
+\newcommand{\loadColorblindMode}{
+    % Using colors distinguishable by red-green colorblind individuals
+    \definecolor{serverBlue}{RGB}{0, 114, 178}      % Blue
+    \definecolor{clientGreen}{RGB}{0, 158, 115}     % Bluish green
+    \definecolor{routerOrange}{RGB}{230, 159, 0}    % Orange
+    \definecolor{firewallRed}{RGB}{204, 121, 167}   % Reddish purple
+    \definecolor{switchPurple}{RGB}{86, 180, 233}   % Sky blue
+    \definecolor{cloudGray}{RGB}{128, 128, 128}     % Gray
+
+    \definecolor{threatCritical}{RGB}{213, 94, 0}   % Vermillion
+    \definecolor{threatHigh}{RGB}{204, 121, 167}    % Reddish purple
+    \definecolor{threatMedium}{RGB}{230, 159, 0}    % Orange
+    \definecolor{threatLow}{RGB}{240, 228, 66}      % Yellow
+    \definecolor{threatInfo}{RGB}{0, 114, 178}      % Blue
+
+    \definecolor{connNormal}{RGB}{128, 128, 128}
+    \definecolor{connEncrypted}{RGB}{0, 158, 115}
+    \definecolor{connSuspicious}{RGB}{230, 159, 0}
+    \definecolor{connMalicious}{RGB}{213, 94, 0}
+}
+
+% High Contrast Theme (WCAG AAA compliant)
+\newcommand{\loadHighContrastMode}{
+    \definecolor{serverBlue}{RGB}{0, 0, 255}
+    \definecolor{clientGreen}{RGB}{0, 200, 0}
+    \definecolor{routerOrange}{RGB}{255, 140, 0}
+    \definecolor{firewallRed}{RGB}{255, 0, 0}
+    \definecolor{switchPurple}{RGB}{148, 0, 211}
+    \definecolor{cloudGray}{RGB}{105, 105, 105}
+
+    \definecolor{threatCritical}{RGB}{139, 0, 0}
+    \definecolor{threatHigh}{RGB}{255, 69, 0}
+    \definecolor{threatMedium}{RGB}{255, 165, 0}
+    \definecolor{threatLow}{RGB}{255, 215, 0}
+    \definecolor{threatInfo}{RGB}{0, 0, 139}
+
+    \definecolor{connNormal}{RGB}{0, 0, 0}
+    \definecolor{connEncrypted}{RGB}{0, 128, 0}
+    \definecolor{connSuspicious}{RGB}{255, 140, 0}
+    \definecolor{connMalicious}{RGB}{200, 0, 0}
+}
+
+% Grayscale Theme (Print-friendly, black & white)
+\newcommand{\loadGrayscaleMode}{
+    \definecolor{serverBlue}{RGB}{80, 80, 80}
+    \definecolor{clientGreen}{RGB}{120, 120, 120}
+    \definecolor{routerOrange}{RGB}{160, 160, 160}
+    \definecolor{firewallRed}{RGB}{40, 40, 40}
+    \definecolor{switchPurple}{RGB}{100, 100, 100}
+    \definecolor{cloudGray}{RGB}{180, 180, 180}
+
+    \definecolor{threatCritical}{RGB}{0, 0, 0}
+    \definecolor{threatHigh}{RGB}{60, 60, 60}
+    \definecolor{threatMedium}{RGB}{120, 120, 120}
+    \definecolor{threatLow}{RGB}{180, 180, 180}
+    \definecolor{threatInfo}{RGB}{140, 140, 140}
+
+    \definecolor{connNormal}{RGB}{128, 128, 128}
+    \definecolor{connEncrypted}{RGB}{80, 80, 80}
+    \definecolor{connSuspicious}{RGB}{100, 100, 100}
+    \definecolor{connMalicious}{RGB}{40, 40, 40}
+}
+
+% Cyberpunk Theme (Neon/futuristic aesthetic)
+\newcommand{\loadCyberpunkMode}{
+    \definecolor{serverBlue}{RGB}{0, 255, 255}      % Cyan
+    \definecolor{clientGreen}{RGB}{57, 255, 20}     % Neon green
+    \definecolor{routerOrange}{RGB}{255, 128, 0}    % Orange
+    \definecolor{firewallRed}{RGB}{255, 16, 240}    % Neon pink
+    \definecolor{switchPurple}{RGB}{191, 0, 255}    % Purple
+    \definecolor{cloudGray}{RGB}{128, 128, 255}     % Light blue
+
+    \definecolor{threatCritical}{RGB}{255, 0, 110}  % Hot pink
+    \definecolor{threatHigh}{RGB}{255, 71, 26}      % Red-orange
+    \definecolor{threatMedium}{RGB}{255, 209, 0}    % Yellow
+    \definecolor{threatLow}{RGB}{173, 255, 47}      % Yellow-green
+    \definecolor{threatInfo}{RGB}{0, 247, 255}      % Cyan
+
+    \definecolor{connNormal}{RGB}{128, 128, 200}
+    \definecolor{connEncrypted}{RGB}{57, 255, 20}
+    \definecolor{connSuspicious}{RGB}{255, 209, 0}
+    \definecolor{connMalicious}{RGB}{255, 0, 110}
+}
+
+% Solarized Theme (Popular developer color scheme)
+\newcommand{\loadSolarizedMode}{
+    % Solarized Accent Colors
+    \definecolor{serverBlue}{RGB}{38, 139, 210}     % Blue
+    \definecolor{clientGreen}{RGB}{133, 153, 0}     % Green
+    \definecolor{routerOrange}{RGB}{203, 75, 22}    % Orange
+    \definecolor{firewallRed}{RGB}{220, 50, 47}     % Red
+    \definecolor{switchPurple}{RGB}{108, 113, 196}  % Violet
+    \definecolor{cloudGray}{RGB}{147, 161, 161}     % Base1
+
+    \definecolor{threatCritical}{RGB}{220, 50, 47}  % Red
+    \definecolor{threatHigh}{RGB}{203, 75, 22}      % Orange
+    \definecolor{threatMedium}{RGB}{181, 137, 0}    % Yellow
+    \definecolor{threatLow}{RGB}{133, 153, 0}       % Green
+    \definecolor{threatInfo}{RGB}{38, 139, 210}     % Blue
+
+    \definecolor{connNormal}{RGB}{147, 161, 161}
+    \definecolor{connEncrypted}{RGB}{133, 153, 0}
+    \definecolor{connSuspicious}{RGB}{203, 75, 22}
+    \definecolor{connMalicious}{RGB}{220, 50, 47}
+}
+
+% Theme Loader Command
+% Usage: \loadColorScheme{themename}
+\newcommand{\loadColorScheme}[1]{
+    \ifthenelse{\equal{#1}{dark}}{\loadDarkMode}{
+    \ifthenelse{\equal{#1}{colorblind}}{\loadColorblindMode}{
+    \ifthenelse{\equal{#1}{highcontrast}}{\loadHighContrastMode}{
+    \ifthenelse{\equal{#1}{grayscale}}{\loadGrayscaleMode}{
+    \ifthenelse{\equal{#1}{cyberpunk}}{\loadCyberpunkMode}{
+    \ifthenelse{\equal{#1}{solarized}}{\loadSolarizedMode}{
+        % Default: light mode (do nothing)
+    }}}}}}
+}
+
+% ============================================================================
+% THEME ACTIVATION INSTRUCTIONS
+% ============================================================================
+%
+% To use a different theme, add ONE of these lines to your main .tex file
+% AFTER \input{styles_config} but BEFORE \begin{document}:
+%
+% \loadColorScheme{dark}          % Dark mode
+% \loadColorScheme{colorblind}    % Colorblind-friendly
+% \loadColorScheme{highcontrast}  % High contrast (WCAG AAA)
+% \loadColorScheme{grayscale}     % Grayscale/print-friendly
+% \loadColorScheme{cyberpunk}     % Neon/futuristic theme
+% \loadColorScheme{solarized}     % Solarized developer theme
+%
+% Example:
+%   \documentclass[tikz,border=10pt]{standalone}
+%   \usepackage{tikz}
+%   ...
+%   \input{styles_config}
+%   \loadColorScheme{dark}        ← Add this line
+%   \input{node_definitions}
+%   ...
 
 % ============================================================================
 % NODE STYLES

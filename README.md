@@ -36,6 +36,69 @@ pdflatex network_diagram_generator.tex
 
 This generates `network_diagram_generator.pdf` with the example network.
 
+## Example Diagrams
+
+The project includes comprehensive example diagrams demonstrating different use cases:
+
+### 🎯 Enterprise APT Attack (`example_enterprise_attack.tex`)
+Complete APT29 (Cozy Bear) intrusion scenario showing:
+- Full enterprise topology (Internet, DMZ, internal network, backups)
+- CVSS vulnerabilities and MITRE ATT&CK techniques
+- IOCs (malicious IPs, C2 servers, file hashes)
+- Threat actor attribution and profiling
+- Defensive controls (Firewall, IDS, WAF, EDR, honeypots)
+- Security dashboards (Kill Chain, NIST Compliance, Risk Matrix)
+- Network segmentation boundaries
+- Incident tracking and response
+
+**Compile:** `pdflatex example_enterprise_attack.tex`
+
+### 🦠 Ransomware Incident (`example_ransomware_incident.tex`)
+WannaCry-style outbreak demonstration featuring:
+- Patient zero infection and lateral movement
+- SMB EternalBlue vulnerability (CVE-2017-0144)
+- Infection spread visualization across network
+- Kill chain progression (stage 6: C2)
+- EDR protection comparison (protected vs vulnerable)
+- Patch status analysis (current vs outdated)
+- Ransomware scenario helper functions
+- Recovery options and RTO estimation
+- Lessons learned and remediation steps
+
+**Compile:** `pdflatex example_ransomware_incident.tex`
+
+### 📋 Compliance Audit Dashboard (`example_compliance_audit.tex`)
+Multi-framework security compliance visualization:
+- PCI-DSS v4.0 full compliance (12/12 requirements)
+- NIST Cybersecurity Framework (5 functions)
+- CIS Controls v8 (IG1/IG2/IG3 implementation)
+- ISO 27001 and SOC 2 Type II scorecards
+- Cardholder Data Environment (CDE) segmentation
+- Control effectiveness metrics
+- Security coverage heatmap
+- Audit findings summary with recommendations
+- Multi-framework comparison analysis
+
+**Compile:** `pdflatex example_compliance_audit.tex`
+
+### 🔍 SOC Monitoring Dashboard (`example_soc_dashboard.tex`)
+Real-time Security Operations Center view:
+- SIEM integration (45K+ events/hour)
+- IDS/IPS alert monitoring (23 alerts/hour)
+- EDR deployment status across endpoints
+- Active threat detection (2 live threats)
+- IOC dashboard with threat intelligence feeds
+- Incident tracking (3 active incidents)
+- Attack timeline and progression
+- Risk prioritization matrix
+- Detection coverage metrics (92%)
+- Analyst notes and action items
+- MTTD: 22 min, MTTR: 1.5 hrs
+
+**Compile:** `pdflatex example_soc_dashboard.tex`
+
+**Tip:** These examples are fully documented and can be used as templates for your own diagrams. Each demonstrates different feature subsets optimized for specific use cases.
+
 ## File Structure
 
 ```
@@ -343,6 +406,63 @@ In `network_diagram_generator.tex`:
 % Parameters: threat_level, vuln_score, asset_value, control_effectiveness
 Risk: \calculateRiskScore{80}{90}{95}{75}
 ```
+
+## Color Schemes and Themes
+
+The system includes 6 professionally designed color schemes optimized for different use cases:
+
+### Available Themes
+
+| Theme | Use Case | Description |
+|-------|----------|-------------|
+| **Light** | Default | Standard bright colors, good for all purposes |
+| **Dark** | Night viewing | Easier on eyes for extended viewing sessions |
+| **Colorblind** | Accessibility | Deuteranopia/Protanopia safe (red-green colorblind) |
+| **High Contrast** | Accessibility | WCAG AAA compliant for visual impairment |
+| **Grayscale** | Printing | Optimized for black & white printing |
+| **Cyberpunk** | Presentations | Eye-catching neon aesthetic |
+| **Solarized** | Developer preference | Popular balanced color scheme |
+
+### How to Use Themes
+
+Add **ONE** `\loadColorScheme{...}` command to your main .tex file **AFTER** `\input{styles_config}`:
+
+```latex
+\documentclass[tikz,border=10pt]{standalone}
+\usepackage{tikz}
+\usepackage{xcolor}
+\usepackage{ifthen}
+\usetikzlibrary{positioning,shapes.geometric,arrows.meta,shadows.blur}
+
+\input{styles_config}
+
+% Choose ONE theme:
+\loadColorScheme{dark}          % Dark mode
+% \loadColorScheme{colorblind}    % Colorblind-friendly
+% \loadColorScheme{highcontrast}  % High contrast (WCAG AAA)
+% \loadColorScheme{grayscale}     % Grayscale/print-friendly
+% \loadColorScheme{cyberpunk}     % Neon/futuristic
+% \loadColorScheme{solarized}     % Solarized
+
+\input{node_definitions}
+\input{network_layout}
+\input{connection_renderer}
+\input{threat_indicators}
+
+\begin{document}
+% Your diagram here
+\end{document}
+```
+
+### Theme Showcase Example
+
+See `example_theme_showcase.tex` for a side-by-side comparison of all themes:
+
+```bash
+pdflatex example_theme_showcase.tex
+```
+
+Edit the file and uncomment different `\loadColorScheme{...}` lines to see how each theme affects your diagram.
 
 ## Security Zones
 

@@ -1,0 +1,150 @@
+% Theme Showcase - Demonstrating Color Scheme Variants
+% This example shows the same network in different color themes
+%
+% To switch themes, uncomment ONE of the \loadColorScheme lines below
+
+\documentclass[tikz,border=10pt]{standalone}
+\usepackage{tikz}
+\usepackage{xcolor}
+\usepackage{ifthen}
+\usetikzlibrary{positioning,shapes.geometric,arrows.meta,shadows.blur,decorations.markings}
+
+\input{styles_config}
+
+% ============================================================================
+% THEME SELECTION - Uncomment ONE line to activate a theme
+% ============================================================================
+
+% Default: Light mode (no command needed)
+
+% Uncomment ONE of these to try different themes:
+% \loadColorScheme{dark}          % Dark mode theme
+% \loadColorScheme{colorblind}    % Colorblind-friendly (deuteranopia/protanopia safe)
+% \loadColorScheme{highcontrast}  % High contrast (WCAG AAA compliant)
+% \loadColorScheme{grayscale}     % Grayscale/print-friendly
+% \loadColorScheme{cyberpunk}     % Neon/futuristic aesthetic
+% \loadColorScheme{solarized}     % Solarized developer theme
+
+\input{node_definitions}
+\input{network_layout}
+\input{connection_renderer}
+\input{threat_indicators}
+
+\begin{document}
+\begin{tikzpicture}[scale=0.9, transform shape, font=\sffamily]
+
+% ===== SIMPLE NETWORK TOPOLOGY =====
+
+% Internet
+\createCloud{internet}{0}{8}{Internet}
+
+% Attacker
+\createAttacker{hacker}{-6}{8}{Threat Actor}
+
+% Perimeter
+\createFirewall{fw1}{0}{5}{Firewall}
+
+% DMZ
+\createServer{web1}{-3}{2}{Web Server}
+\createServer{dns1}{3}{2}{DNS Server}
+
+% Internal
+\createRouter{router1}{0}{-1}{Core Router}
+\createServer{app1}{-4}{-4}{App Server}
+\createServer{db1}{4}{-4}{Database}
+
+% Endpoints
+\createClient{admin1}{-2}{-7}{Admin PC}
+\createClient{user1}{2}{-7}{User PC}
+
+% ===== CONNECTIONS =====
+
+% Normal traffic
+\drawConnection{internet}{fw1}{HTTPS}
+\drawConnection{fw1}{web1}{Filtered}
+\drawConnection{fw1}{dns1}{DNS}
+\drawEncryptedConnection{web1}{router1}{TLS 1.3}
+\drawConnection{router1}{app1}{Internal}
+\drawConnection{router1}{db1}{Database}
+\drawConnection{admin1}{router1}{Management}
+\drawConnection{user1}{router1}{User Traffic}
+
+% Attack traffic
+\drawAttackConnection{hacker}{fw1}{Port Scan}
+\drawSuspiciousConnection{hacker}{dns1}{DNS Tunneling}
+\drawAttackConnection{web1}{app1}{Exploit}
+
+% ===== THREAT INDICATORS =====
+
+% Vulnerabilities
+\markVulnerabilityCVSS{web1}{CVE-2024-0001}{9.8}{9.5}{9.2}
+\cvssBadge{app1}{7.5}
+
+% MITRE ATT&CK
+\attackTechnique{web1}{initial-access}{T1190}{Exploit Public-Facing}
+\attackTechnique{app1}{privilege-escalation}{T1068}{Privilege Escalation}
+
+% IOC
+\markMaliciousIP{hacker}{192.0.2.123}{Russia}{92}
+
+% Security Controls
+\markSecurityControl{fw1}{Firewall}{active}
+\markEDR{admin1}{CrowdStrike}{protected}
+\markIDS{router1}{Snort}{5}
+
+% ===== ANNOTATIONS =====
+
+\node[font=\Large\bfseries] at (0,11) {Theme Showcase - Network Security Diagram};
+\node[font=\small] at (0,10.3) {Edit this file to try different color schemes};
+
+% Theme indicator box
+\node[draw=black, fill=white, rounded corners=3pt, inner sep=5pt,
+      text width=6cm, font=\small, anchor=north west] at (-7,-10) {
+    \textbf{Current Theme:} Light Mode (default) \\
+    \\
+    \textbf{Available Themes:} \\
+    • Light (default) \\
+    • Dark \\
+    • Colorblind-friendly \\
+    • High Contrast (WCAG AAA) \\
+    • Grayscale (print-friendly) \\
+    • Cyberpunk (neon) \\
+    • Solarized \\
+    \\
+    \textbf{To change theme:} \\
+    Edit this .tex file and uncomment \\
+    one \texttt{\\loadColorScheme\{...\}} line \\
+    at the top of the document.
+};
+
+% Legend
+\node[legend box, anchor=north east] at (7,-10) {
+    \begin{tabular}{ll}
+        \multicolumn{2}{c}{\textbf{Legend}} \\
+        \hline
+        \textcolor{red}{Red Lines} & Attack Traffic \\
+        \textcolor{orange}{Orange Lines} & Suspicious \\
+        \textcolor{green!70!black}{Green Lines} & Encrypted \\
+        Gray Lines & Normal Traffic \\
+    \end{tabular}
+};
+
+% Instructions box
+\node[draw=blue, fill=blue!10, rounded corners=3pt, inner sep=5pt,
+      text width=12cm, font=\tiny, anchor=south] at (0,-12) {
+    \textbf{How to Use Themes:} \\
+    1. Open this file in a text editor \\
+    2. Find the "THEME SELECTION" section (around line 15) \\
+    3. Uncomment ONE {\tt \\loadColorScheme\{...\}} line by removing the \% \\
+    4. Recompile: {\tt pdflatex example\_theme\_showcase.tex} \\
+    5. Compare the output! Each theme is optimized for different use cases: \\
+    \quad • Dark mode: Easier on the eyes for long viewing sessions \\
+    \quad • Colorblind: Safe for deuteranopia/protanopia (red-green colorblindness) \\
+    \quad • High Contrast: WCAG AAA accessibility compliant for visual impairment \\
+    \quad • Grayscale: Optimized for black \& white printing \\
+    \quad • Cyberpunk: Eye-catching neon aesthetic for presentations \\
+    \quad • Solarized: Popular developer color scheme with balanced contrast
+};
+
+\end{tikzpicture}
+\end{document}
