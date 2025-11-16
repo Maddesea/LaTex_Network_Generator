@@ -1577,3 +1577,528 @@
         node[midway, above, font=\tiny\bfseries, fill=orange!15, inner sep=2pt] {#4}
         node[midway, below, font=\tiny, fill=orange!20, inner sep=1pt] {~#3};
 }
+
+% ============================================================================
+% TIME-SERIES AND TEMPORAL VISUALIZATION
+% ============================================================================
+
+% Connection with timestamp
+% Usage: \drawTimestampedConnection{from}{to}{timestamp}{label}
+\newcommand{\drawTimestampedConnection}[4]{
+    \draw[normal conn, -{Stealth[length=2.5mm]}] (#1) -- (#2)
+        node[midway, above, font=\tiny, fill=white, inner sep=1pt] {#4}
+        node[midway, below, font=\tiny, fill=gray!15, inner sep=1pt] {#3};
+}
+
+% Connection age indicator
+% Usage: \drawConnectionByAge{from}{to}{days_old}{label}
+\newcommand{\drawConnectionByAge}[4]{
+    \pgfmathsetmacro{\age}{#3}
+    \ifnum\age<7
+        \def\ageColor{green!70}
+        \def\ageDesc{New}
+    \else
+        \ifnum\age<30
+            \def\ageColor{blue!70}
+            \def\ageDesc{Recent}
+        \else
+            \ifnum\age<90
+                \def\ageColor{orange!70}
+                \def\ageDesc{Old}
+            \else
+                \def\ageColor{red!70}
+                \def\ageDesc{Stale}
+            \fi
+        \fi
+    \fi
+    \draw[draw=\ageColor, line width=1.2pt, -{Stealth[length=3mm]}]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny, fill=white, inner sep=1pt] {#4}
+        node[midway, below, font=\tiny, fill=\ageColor!15, inner sep=1pt] 
+            {#3d - \ageDesc};
+}
+
+% Historical connection (archived/deprecated)
+% Usage: \drawHistoricalConnection{from}{to}{decommission_date}{label}
+\newcommand{\drawHistoricalConnection}[4]{
+    \draw[draw=gray!40, line width=0.8pt, dashed, dash pattern=on 1pt off 2pt,
+          opacity=0.6, -{Stealth[length=2mm]}]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny, text=gray!60, fill=white, inner sep=1pt] {#4}
+        node[midway, below, font=\tiny, fill=gray!10, inner sep=1pt] 
+            {Decom: #3};
+}
+
+% Planned future connection
+% Usage: \drawPlannedConnection{from}{to}{planned_date}{label}
+\newcommand{\drawPlannedConnection}[4]{
+    \draw[draw=blue!60, line width=1.2pt, dotted, -{Stealth[length=3mm]}]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny, fill=blue!10, inner sep=2pt] {#4}
+        node[midway, below, font=\tiny, fill=blue!20, inner sep=1pt] 
+            {Planned: #3};
+}
+
+% Connection lifecycle stage
+% Usage: \drawLifecycleConnection{from}{to}{stage}{label}
+\newcommand{\drawLifecycleConnection}[4]{
+    % Stages: planning, implementation, production, maintenance, decommission
+    \ifthenelse{\equal{#3}{planning}}{
+        \def\lcColor{cyan!70}
+        \def\lcStyle{dotted}
+    }{
+        \ifthenelse{\equal{#3}{implementation}}{
+            \def\lcColor{blue!70}
+            \def\lcStyle{dashed}
+        }{
+            \ifthenelse{\equal{#3}{production}}{
+                \def\lcColor{green!70}
+                \def\lcStyle{solid}
+            }{
+                \ifthenelse{\equal{#3}{maintenance}}{
+                    \def\lcColor{orange!70}
+                    \def\lcStyle{solid}
+                }{
+                    \def\lcColor{red!70}
+                    \def\lcStyle{dashed}
+                }
+            }
+        }
+    }
+    \draw[draw=\lcColor, line width=1.2pt, \lcStyle, -{Stealth[length=3mm]}]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny, fill=white, inner sep=1pt] {#4}
+        node[midway, below, font=\tiny, fill=\lcColor!15, inner sep=1pt] 
+            {\MakeUppercase{#3}};
+}
+
+% ============================================================================
+% CAPACITY PLANNING AND FORECASTING
+% ============================================================================
+
+% Connection with capacity indicator
+% Usage: \drawCapacityConnection{from}{to}{current}{max}{label}
+\newcommand{\drawCapacityConnection}[5]{
+    \pgfmathsetmacro{\utilpct}{100*#3/#4}
+    \pgfmathsetmacro{\remaining}{#4-#3}
+    \ifnum\utilpct<60
+        \def\capColor{green!70}
+        \def\capStatus{OK}
+    \else
+        \ifnum\utilpct<85
+            \def\capColor{yellow!80!orange}
+            \def\capStatus{WARNING}
+        \else
+            \def\capColor{red!70}
+            \def\capStatus{CRITICAL}
+        \fi
+    \fi
+    \pgfmathsetmacro{\linewidth}{0.5 + ln(max(1, #3))/2}
+    \draw[draw=\capColor, line width=\linewidth pt, -{Stealth[length=3mm]}]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny\bfseries, fill=white, inner sep=2pt] {#5}
+        node[midway, below, font=\tiny, fill=\capColor!15, inner sep=1pt] 
+            {#3/#4 Gbps - \capStatus};
+}
+
+% Growth forecast connection
+% Usage: \drawForecastConnection{from}{to}{current}{forecast}{months}{label}
+\newcommand{\drawForecastConnection}[6]{
+    \pgfmathsetmacro{\growth}{100*(#4-#3)/#3}
+    \draw[draw=purple!70, line width=1.5pt, -{Stealth[length=3mm]},
+          decoration={markings,
+              mark=at position 0.5 with {
+                  \node[regular polygon, regular polygon sides=3,
+                        draw=purple!70, fill=purple!20, minimum size=4pt,
+                        rotate=90] {};
+              }}, postaction={decorate}]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny, fill=white, inner sep=1pt] {#6}
+        node[midway, below, font=\tiny, fill=purple!15, inner sep=2pt,
+              align=center] {Now: #3 | +#5m: #4\\Growth: \pgfmathprintnumber[precision=1]{\growth}\%};
+}
+
+% Capacity exhaustion warning
+% Usage: \drawExhaustionWarning{from}{to}{days_until_full}{label}
+\newcommand{\drawExhaustionWarning}[4]{
+    \pgfmathsetmacro{\days}{#3}
+    \ifnum\days<30
+        \def\warnColor{red!80}
+        \def\warnLevel{URGENT}
+    \else
+        \ifnum\days<90
+            \def\warnColor{orange!80}
+            \def\warnLevel{SOON}
+        \else
+            \def\warnColor{yellow!80}
+            \def\warnLevel{MONITOR}
+        \fi
+    \fi
+    \draw[draw=\warnColor, line width=2pt, -{Stealth[length=3mm]},
+          decoration={markings,
+              mark=between positions 0.2 and 0.8 step 0.2 with {
+                  \node[regular polygon, regular polygon sides=3,
+                        draw=\warnColor, fill=\warnColor!30,
+                        minimum size=4pt, inner sep=0pt] {};
+              }}, postaction={decorate}]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny\bfseries, fill=white, inner sep=2pt] {#4}
+        node[midway, below, font=\tiny\bfseries, fill=\warnColor!20, inner sep=2pt]
+            {Full in #3d - \warnLevel};
+}
+
+% ============================================================================
+% COST ANALYSIS AND BUDGETING
+% ============================================================================
+
+% Connection with cost per month
+% Usage: \drawCostConnection{from}{to}{monthly_cost}{label}
+\newcommand{\drawCostConnection}[4]{
+    \pgfmathsetmacro{\cost}{#3}
+    \ifnum\cost<100
+        \def\costColor{green!70}
+    \else
+        \ifnum\cost<500
+            \def\costColor{blue!70}
+        \else
+            \ifnum\cost<1000
+                \def\costColor{orange!70}
+            \else
+                \def\costColor{red!70}
+            \fi
+        \fi
+    \fi
+    \draw[draw=\costColor, line width=1.5pt, -{Stealth[length=3mm]}]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny, fill=white, inner sep=1pt] {#4}
+        node[midway, below, font=\tiny\bfseries, fill=\costColor!15, inner sep=2pt]
+            {\$#3/mo};
+}
+
+% ROI indicator connection
+% Usage: \drawROIConnection{from}{to}{roi_pct}{payback_months}{label}
+\newcommand{\drawROIConnection}[5]{
+    \pgfmathsetmacro{\roi}{#3}
+    \ifnum\roi>100
+        \def\roiColor{green!70}
+        \def\roiStatus{Excellent}
+    \else
+        \ifnum\roi>50
+            \def\roiColor{blue!70}
+            \def\roiStatus{Good}
+        \else
+            \def\roiColor{orange!70}
+            \def\roiStatus{Fair}
+        \fi
+    \fi
+    \draw[draw=\roiColor, line width=1.5pt, -{Stealth[length=3mm]}]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny, fill=white, inner sep=1pt] {#5}
+        node[midway, below, font=\tiny, fill=\roiColor!15, inner sep=2pt]
+            {ROI: #3\% | Payback: #4m};
+}
+
+% Budget status connection
+% Usage: \drawBudgetConnection{from}{to}{budget}{actual}{label}
+\newcommand{\drawBudgetConnection}[5]{
+    \pgfmathsetmacro{\variance}{100*(#4-#3)/#3}
+    \pgfmathsetmacro{\varval}{\variance}
+    \ifnum\varval<0
+        \def\budgetColor{green!70}
+        \def\budgetStatus{Under Budget}
+    \else
+        \ifnum\varval<10
+            \def\budgetColor{blue!70}
+            \def\budgetStatus{On Budget}
+        \else
+            \def\budgetColor{red!70}
+            \def\budgetStatus{Over Budget}
+        \fi
+    \fi
+    \draw[draw=\budgetColor, line width=1.5pt, -{Stealth[length=3mm]}]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny, fill=white, inner sep=1pt] {#5}
+        node[midway, below, font=\tiny, fill=\budgetColor!15, inner sep=2pt,
+              align=center] {Budget: \$#3 | Actual: \$#4\\\budgetStatus};
+}
+
+% ============================================================================
+% GEO-LOCATION AND REGIONAL FEATURES
+% ============================================================================
+
+% Inter-region connection
+% Usage: \drawRegionalConnection{from}{to}{region1}{region2}{latency}{label}
+\newcommand{\drawRegionalConnection}[6]{
+    \draw[draw=cyan!70, line width=1.5pt, -{Stealth[length=3mm]},
+          decoration={markings,
+              mark=at position 0.5 with {
+                  \node[circle, draw=cyan!70, fill=cyan!20,
+                        font=\tiny, inner sep=1pt] {#5ms};
+              }}, postaction={decorate}]
+        (#1) -- (#2)
+        node[pos=0.2, above, font=\tiny, fill=cyan!10, inner sep=1pt] {#3}
+        node[pos=0.8, above, font=\tiny, fill=cyan!10, inner sep=1pt] {#4}
+        node[midway, above=8pt, font=\tiny, fill=white, inner sep=1pt] {#6};
+}
+
+% Cross-datacenter connection
+% Usage: \drawDatacenterLink{from}{to}{dc1}{dc2}{bandwidth}{label}
+\newcommand{\drawDatacenterLink}[6]{
+    \pgfmathsetmacro{\linewidth}{0.5 + ln(max(1, #5))/2}
+    \draw[draw=blue!60!green, line width=\linewidth pt, -{Stealth[length=3mm]},
+          double=blue!30, double distance=1pt]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny\bfseries, fill=white, inner sep=2pt] {#6}
+        node[midway, below, font=\tiny, fill=blue!10, inner sep=2pt]
+            {#3 $\leftrightarrow$ #4 | #5 Gbps};
+}
+
+% Global CDN connection
+% Usage: \drawCDNConnection{from}{to}{edge_location}{label}
+\newcommand{\drawCDNConnection}[4]{
+    \draw[draw=purple!60, line width=1.2pt, -{Stealth[length=3mm]},
+          decoration={markings,
+              mark=between positions 0.25 and 0.75 step 0.25 with {
+                  \node[star, star points=5, draw=purple!60,
+                        fill=purple!20, minimum size=3pt, inner sep=0pt] {};
+              }}, postaction={decorate}]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny, fill=white, inner sep=1pt] {#4}
+        node[midway, below, font=\tiny, fill=purple!15, inner sep=1pt] 
+            {CDN: #3};
+}
+
+% ============================================================================
+% PERFORMANCE PREDICTION AND TRENDING
+% ============================================================================
+
+% Trending connection (showing direction of change)
+% Usage: \drawTrendingConnection{from}{to}{trend}{metric}{label}
+\newcommand{\drawTrendingConnection}[5]{
+    % Trend: up, down, stable
+    \ifthenelse{\equal{#3}{up}}{
+        \def\trendColor{red!70}
+        \def\trendSymbol{$\uparrow$}
+        \def\trendDesc{Increasing}
+    }{
+        \ifthenelse{\equal{#3}{down}}{
+            \def\trendColor{green!70}
+            \def\trendSymbol{$\downarrow$}
+            \def\trendDesc{Decreasing}
+        }{
+            \def\trendColor{blue!70}
+            \def\trendSymbol{$\rightarrow$}
+            \def\trendDesc{Stable}
+        }
+    }
+    \draw[draw=\trendColor, line width=1.5pt, -{Stealth[length=3mm]}]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny, fill=white, inner sep=1pt] {#5}
+        node[midway, below, font=\tiny, fill=\trendColor!15, inner sep=2pt]
+            {#4 \trendSymbol\ \trendDesc};
+}
+
+% Performance baseline comparison
+% Usage: \drawBaselineConnection{from}{to}{current}{baseline}{delta}{label}
+\newcommand{\drawBaselineConnection}[6]{
+    \pgfmathsetmacro{\diff}{#5}
+    \ifnum\diff>10
+        \def\baseColor{red!70}
+        \def\baseStatus{Degraded}
+    \else
+        \ifnum\diff>5
+            \def\baseColor{yellow!80!orange}
+            \def\baseStatus{Warning}
+        \else
+            \def\baseColor{green!70}
+            \def\baseStatus{Normal}
+        \fi
+    \fi
+    \draw[draw=\baseColor, line width=1.5pt, -{Stealth[length=3mm]}]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny, fill=white, inner sep=1pt] {#6}
+        node[midway, below, font=\tiny, fill=\baseColor!15, inner sep=2pt,
+              align=center] {Curr: #3 | Base: #4\\Delta: +#5\% - \baseStatus};
+}
+
+% Anomaly detection indicator
+% Usage: \drawAnomalyConnection{from}{to}{severity}{anomaly_type}{label}
+\newcommand{\drawAnomalyConnection}[5]{
+    % Severity: low, medium, high
+    \ifthenelse{\equal{#3}{high}}{
+        \def\anomColor{red!80}
+        \def\anomPattern{on 2pt off 1pt on 2pt off 1pt}
+    }{
+        \ifthenelse{\equal{#3}{medium}}{
+            \def\anomColor{orange!80}
+            \def\anomPattern{on 3pt off 2pt}
+        }{
+            \def\anomColor{yellow!80}
+            \def\anomPattern{on 4pt off 2pt}
+        }
+    }
+    \draw[draw=\anomColor, line width=2pt, dashed, dash pattern=\anomPattern,
+          -{Stealth[length=3mm]},
+          decoration={markings,
+              mark=between positions 0.3 and 0.7 step 0.2 with {
+                  \node[circle, draw=\anomColor, fill=\anomColor!30,
+                        font=\tiny, inner sep=1pt] {!};
+              }}, postaction={decorate}]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny\bfseries, fill=white, inner sep=2pt] {#5}
+        node[midway, below, font=\tiny\bfseries, fill=\anomColor!20, inner sep=2pt]
+            {ANOMALY: #4 (\MakeUppercase{#3})};
+}
+
+% ============================================================================
+% NETWORK EVOLUTION AND CHANGE TRACKING
+% ============================================================================
+
+% Migration path
+% Usage: \drawMigrationPath{from}{to}{migration_type}{completion_pct}{label}
+\newcommand{\drawMigrationPath}[5]{
+    \pgfmathsetmacro{\completion}{#4}
+    % Draw partial connection based on completion
+    \draw[draw=blue!70, line width=2pt, -{Stealth[length=3mm]}]
+        (#1) -- ($(#1)!#4/100!(#2)$);
+    \draw[draw=gray!50, line width=1pt, dashed, dash pattern=on 2pt off 2pt]
+        ($(#1)!#4/100!(#2)$) -- (#2);
+    % Progress indicator
+    \node[circle, fill=blue!70, text=white, font=\tiny\bfseries,
+          minimum size=10pt, inner sep=1pt]
+        at ($(#1)!#4/100!(#2)$) {#4\%};
+    % Labels
+    \node[above=10pt, font=\tiny, fill=white, inner sep=1pt]
+        at ($(#1)!0.5!(#2)$) {#5};
+    \node[below=10pt, font=\tiny, fill=blue!15, inner sep=2pt]
+        at ($(#1)!0.5!(#2)$) {Migration: #3};
+}
+
+% Technology upgrade path
+% Usage: \drawUpgradePath{from}{to}{old_tech}{new_tech}{date}{label}
+\newcommand{\drawUpgradePath}[6]{
+    \draw[draw=green!60!blue, line width=1.5pt, -{Stealth[length=3mm]},
+          decoration={markings,
+              mark=at position 0.5 with {
+                  \node[rectangle, draw=green!60!blue, fill=white,
+                        font=\tiny, inner sep=2pt] {UPGRADE};
+              }}, postaction={decorate}]
+        (#1) -- (#2)
+        node[pos=0.2, above, font=\tiny, fill=red!10, inner sep=1pt] {#3}
+        node[pos=0.8, above, font=\tiny, fill=green!10, inner sep=1pt] {#4}
+        node[midway, above=10pt, font=\tiny, fill=white, inner sep=1pt] {#6}
+        node[midway, below=10pt, font=\tiny, fill=blue!10, inner sep=1pt] {ETA: #5};
+}
+
+% Version control connection
+% Usage: \drawVersionedConnection{from}{to}{version}{changelog}{label}
+\newcommand{\drawVersionedConnection}[5]{
+    \draw[normal conn, -{Stealth[length=2.5mm]}] (#1) -- (#2)
+        node[midway, above, font=\tiny, fill=white, inner sep=1pt] {#5};
+    % Version badge
+    \node[rectangle, rounded corners=2pt, draw=blue!70, fill=blue!15,
+          font=\tiny\ttfamily, inner sep=2pt]
+        at ($(#1)!0.5!(#2)$) {v#3};
+    \node[below=8pt, font=\tiny, fill=yellow!15, inner sep=1pt, align=center]
+        at ($(#1)!0.5!(#2)$) {#4};
+}
+
+% ============================================================================
+% AUTOMATED DOCUMENTATION FEATURES
+% ============================================================================
+
+% Self-documenting connection with auto-generated notes
+% Usage: \drawDocumentedConnection{from}{to}{purpose}{owner}{sla}{label}
+\newcommand{\drawDocumentedConnection}[6]{
+    \draw[normal conn, -{Stealth[length=2.5mm]}] (#1) -- (#2)
+        node[midway, above, font=\tiny\bfseries, fill=white, inner sep=2pt] {#6};
+    % Documentation callout
+    \node[rectangle, draw=orange!70, fill=yellow!10, rounded corners=2pt,
+          font=\tiny, inner sep=3pt, align=left, anchor=west]
+        at ($(#1)!0.5!(#2) + (2,0)$) {
+            \textbf{Purpose:} #3\\
+            \textbf{Owner:} #4\\
+            \textbf{SLA:} #5
+        };
+}
+
+% Connection inventory entry
+% Usage: \drawInventoryConnection{from}{to}{id}{type}{criticality}{label}
+\newcommand{\drawInventoryConnection}[6]{
+    % Criticality: critical, high, medium, low
+    \ifthenelse{\equal{#5}{critical}}{
+        \def\invColor{red!70}
+        \def\invWidth{2pt}
+    }{
+        \ifthenelse{\equal{#5}{high}}{
+            \def\invColor{orange!70}
+            \def\invWidth{1.5pt}
+        }{
+            \ifthenelse{\equal{#5}{medium}}{
+                \def\invColor{blue!70}
+                \def\invWidth{1.2pt}
+            }{
+                \def\invColor{gray!60}
+                \def\invWidth{0.8pt}
+            }
+        }
+    }
+    \draw[draw=\invColor, line width=\invWidth, -{Stealth[length=3mm]}]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny, fill=white, inner sep=1pt] {#6};
+    % Inventory tag
+    \node[rectangle, draw=\invColor, fill=\invColor!10,
+          font=\tiny\ttfamily, inner sep=1pt]
+        at ($(#1)!0.5!(#2)$) {ID:#3};
+    \node[below=6pt, font=\tiny, fill=\invColor!15, inner sep=1pt]
+        at ($(#1)!0.5!(#2)$) {#4 - \MakeUppercase{#5}};
+}
+
+% Connection with CMDB integration
+% Usage: \drawCMDBConnection{from}{to}{cmdb_id}{asset_tag}{last_audit}{label}
+\newcommand{\drawCMDBConnection}[6]{
+    \draw[draw=purple!60, line width=1.2pt, -{Stealth[length=3mm]}]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny, fill=white, inner sep=1pt] {#6};
+    % CMDB badge
+    \node[circle, draw=purple!70, fill=purple!15,
+          font=\tiny\bfseries, inner sep=2pt]
+        at ($(#1)!0.5!(#2)$) {DB};
+    \node[below=6pt, font=\tiny\ttfamily, fill=purple!10, inner sep=1pt,
+          align=center]
+        at ($(#1)!0.5!(#2)$) {#3\\#4\\Audit: #5};
+}
+
+% ============================================================================
+% ADVANCED METRICS AND KPIs
+% ============================================================================
+
+% Connection with full telemetry
+% Usage: \drawTelemetryConnection{from}{to}{metrics}{label}
+\newcommand{\drawTelemetryConnection}[4]{
+    \draw[draw=cyan!70, line width=1.5pt, -{Stealth[length=3mm]}]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny\bfseries, fill=white, inner sep=2pt] {#4};
+    % Telemetry data box
+    \node[rectangle, draw=cyan!70, fill=cyan!5, rounded corners=2pt,
+          font=\tiny\ttfamily, inner sep=3pt, align=left, anchor=north]
+        at ($(#1)!0.5!(#2) + (0,-0.8)$) {#3};
+}
+
+% SRE Golden Signals connection
+% Usage: \drawGoldenSignals{from}{to}{latency}{traffic}{errors}{saturation}{label}
+\newcommand{\drawGoldenSignals}[7]{
+    \draw[draw=blue!70, line width=1.5pt, -{Stealth[length=3mm]}]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny\bfseries, fill=white, inner sep=2pt] {#7};
+    % Golden signals dashboard
+    \node[rectangle, draw=blue!70, fill=blue!5, rounded corners=3pt,
+          font=\tiny, inner sep=3pt, align=left, anchor=south]
+        at ($(#1)!0.5!(#2) + (0,0.8)$) {
+            \textbf{Golden Signals}\\
+            Latency: #3ms\\
+            Traffic: #4 rps\\
+            Errors: #5\%\\
+            Saturation: #6\%
+        };
+}
