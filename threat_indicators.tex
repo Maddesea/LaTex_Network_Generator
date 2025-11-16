@@ -1830,6 +1830,1431 @@
 }
 
 % ============================================================================
+% STIX/TAXII THREAT INTELLIGENCE SHARING
+% ============================================================================
+
+% STIX (Structured Threat Information Expression) indicator visualization
+% Usage: \drawSTIXIndicator{x}{y}{indicator_type}{value}{confidence}{tlp_level}
+% TLP levels: white, green, amber, red
+\newcommand{\drawSTIXIndicator}[6]{
+    \ifthenelse{\equal{#6}{red}}{
+        \def\tlpcolor{red!80!black}
+        \def\tlplabel{TLP:RED}
+    }{
+    \ifthenelse{\equal{#6}{amber}}{
+        \def\tlpcolor{orange!90!black}
+        \def\tlplabel{TLP:AMBER}
+    }{
+    \ifthenelse{\equal{#6}{green}}{
+        \def\tlpcolor{green!60!black}
+        \def\tlplabel{TLP:GREEN}
+    }{
+        \def\tlpcolor{gray!50}
+        \def\tlplabel{TLP:WHITE}
+    }}}
+
+    \pgfmathsetmacro{\conf}{#5}
+    \ifthenelse{\lengthtest{\conf pt > 75 pt}}{
+        \def\confcolor{green!60!black}
+    }{
+    \ifthenelse{\lengthtest{\conf pt > 50 pt}}{
+        \def\confcolor{orange}
+    }{
+        \def\confcolor{threatMedium}
+    }}
+
+    \node[legend box, anchor=north west, minimum width=6cm,
+          draw=\tlpcolor, line width=2pt, fill=\tlpcolor!5] at (#1,#2) {
+        \begin{tabular}{ll}
+            \multicolumn{2}{c}{\textbf{\textcolor{\tlpcolor}{STIX Indicator}}} \\
+            \hline
+            \textbf{Type:} & #3 \\
+            \textbf{Value:} & \texttt{\tiny #4} \\
+            \textbf{Confidence:} & \textcolor{\confcolor}{#5\%} \\
+            \hline
+            \textbf{Sharing:} & \colorbox{\tlpcolor}{\textcolor{white}{\tiny\bfseries #6}} \\
+        \end{tabular}
+    };
+}
+
+% STIX object type visualizations
+% Usage: \drawSTIXObject{x}{y}{object_type}{name}{description}
+\newcommand{\drawSTIXObject}[5]{
+    \ifthenelse{\equal{#3}{campaign}}{
+        \def\stixcolor{purple!70}
+    }{
+    \ifthenelse{\equal{#3}{threat-actor}}{
+        \def\stixcolor{red!70}
+    }{
+    \ifthenelse{\equal{#3}{malware}}{
+        \def\stixcolor{threatCritical}
+    }{
+    \ifthenelse{\equal{#3}{attack-pattern}}{
+        \def\stixcolor{orange!80}
+    }{
+        \def\stixcolor{blue!70}
+    }}}}
+
+    \node[legend box, anchor=north west, minimum width=5.5cm,
+          draw=\stixcolor, line width=2pt] at (#1,#2) {
+        \begin{tabular}{p{5cm}}
+            \multicolumn{1}{c}{\textbf{\textcolor{\stixcolor}{STIX: \uppercase{#3}}}} \\
+            \hline
+            \textbf{Name:} #4 \\
+            \hline
+            #5 \\
+        \end{tabular}
+    };
+}
+
+% TAXII (Trusted Automated Exchange of Intelligence Information) feed status
+% Usage: \drawTAXIIFeed{x}{y}{feed_name}{collection}{last_update}{object_count}{status}
+\newcommand{\drawTAXIIFeed}[7]{
+    \ifthenelse{\equal{#7}{active}}{
+        \def\taxiicolor{green!60!black}
+    }{
+    \ifthenelse{\equal{#7}{stale}}{
+        \def\taxiicolor{orange}
+    }{
+        \def\taxiicolor{red!70}
+    }}
+
+    \node[legend box, anchor=north west, minimum width=6cm,
+          draw=\taxiicolor, line width=2pt] at (#1,#2) {
+        \begin{tabular}{ll}
+            \multicolumn{2}{c}{\textbf{TAXII Feed: #3}} \\
+            \hline
+            \textbf{Collection:} & #4 \\
+            \textbf{Last Update:} & #5 \\
+            \textbf{Objects:} & #6 \\
+            \textbf{Status:} & \textcolor{\taxiicolor}{\uppercase{#7}} \\
+        \end{tabular}
+    };
+}
+
+% Multi-source threat intelligence aggregation
+% Usage: \drawThreatIntelSharing{x}{y}{sources_count}{total_indicators}{high_confidence}{shared_iocs}
+\newcommand{\drawThreatIntelSharing}[6]{
+    \node[legend box, anchor=north west, minimum width=6.5cm,
+          draw=purple!70, line width=2.5pt] at (#1,#2) {
+        \begin{tabular}{lc}
+            \multicolumn{2}{c}{\textbf{Threat Intelligence Sharing}} \\
+            \hline
+            Active Sources & #3 \\
+            Total Indicators & #4 \\
+            High Confidence & \textcolor{green!60!black}{#5} \\
+            Shared IOCs & #6 \\
+        \end{tabular}
+    };
+}
+
+% STIX Bundle visualization (contains multiple objects)
+% Usage: \drawSTIXBundle{x}{y}{bundle_name}{indicators}{campaigns}{actors}{patterns}
+\newcommand{\drawSTIXBundle}[7]{
+    \node[legend box, anchor=north west, minimum width=6cm,
+          draw=blue!70, line width=2pt, fill=blue!3] at (#1,#2) {
+        \begin{tabular}{lc}
+            \multicolumn{2}{c}{\textbf{STIX Bundle: #3}} \\
+            \hline
+            Indicators & #4 \\
+            Campaigns & #5 \\
+            Threat Actors & #6 \\
+            Attack Patterns & #7 \\
+        \end{tabular}
+    };
+}
+
+% Threat intelligence platform integration status
+% Usage: \drawTIPIntegration{x}{y}{platform}{api_status}{last_sync}{iocs_imported}{errors}
+\newcommand{\drawTIPIntegration}[7]{
+    \ifthenelse{\equal{#4}{connected}}{
+        \def\tipcolor{green!60!black}
+    }{
+        \def\tipcolor{red!70}
+    }
+
+    \node[legend box, anchor=north west, minimum width=6cm,
+          draw=\tipcolor, line width=2pt] at (#1,#2) {
+        \begin{tabular}{ll}
+            \multicolumn{2}{c}{\textbf{TIP: #3}} \\
+            \hline
+            \textbf{API Status:} & \textcolor{\tipcolor}{\uppercase{#4}} \\
+            \textbf{Last Sync:} & #5 \\
+            \textbf{IOCs Imported:} & #6 \\
+            \textbf{Errors:} & \textcolor{red!70}{#7} \\
+        \end{tabular}
+    };
+}
+
+% MISP (Malware Information Sharing Platform) integration
+% Usage: \drawMISPIntegration{x}{y}{server}{events}{attributes}{tags}{last_pull}
+\newcommand{\drawMISPIntegration}[7]{
+    \node[legend box, anchor=north west, minimum width=6cm,
+          draw=orange!80, line width=2pt] at (#1,#2) {
+        \begin{tabular}{ll}
+            \multicolumn{2}{c}{\textbf{MISP Integration}} \\
+            \hline
+            \textbf{Server:} & #3 \\
+            \textbf{Events:} & #4 \\
+            \textbf{Attributes:} & #5 \\
+            \textbf{Tags:} & #6 \\
+            \textbf{Last Pull:} & #7 \\
+        \end{tabular}
+    };
+}
+
+% OpenCTI (Open Cyber Threat Intelligence) platform
+% Usage: \drawOpenCTI{x}{y}{observables}{indicators}{reports}{connectors_active}
+\newcommand{\drawOpenCTI}[6]{
+    \node[legend box, anchor=north west, minimum width=5.5cm,
+          draw=purple!60, line width=2pt] at (#1,#2) {
+        \begin{tabular}{lc}
+            \multicolumn{2}{c}{\textbf{OpenCTI Platform}} \\
+            \hline
+            Observables & #3 \\
+            Indicators & #4 \\
+            Reports & #5 \\
+            Connectors & \textcolor{green!60!black}{#6} \\
+        \end{tabular}
+    };
+}
+
+% Threat intelligence quality metrics
+% Usage: \drawTIQualityMetrics{x}{y}{freshness_score}{accuracy}{coverage}{actionability}
+\newcommand{\drawTIQualityMetrics}[6]{
+    \node[legend box, anchor=north west, minimum width=6cm,
+          draw=blue!60, line width=2pt] at (#1,#2) {
+        \begin{tabular}{lc}
+            \multicolumn{2}{c}{\textbf{TI Quality Metrics}} \\
+            \hline
+            Freshness & \drawQualityBar{#3} \\
+            Accuracy & \drawQualityBar{#4} \\
+            Coverage & \drawQualityBar{#5} \\
+            Actionability & \drawQualityBar{#6} \\
+        \end{tabular}
+    };
+}
+
+% Helper for quality metric bars
+\newcommand{\drawQualityBar}[1]{
+    \pgfmathsetmacro{\quality}{#1}
+    \ifthenelse{\lengthtest{\quality pt > 85 pt}}{
+        \textcolor{green!60!black}{#1\% ●●●●●}
+    }{
+    \ifthenelse{\lengthtest{\quality pt > 70 pt}}{
+        \textcolor{green!60!black}{#1\% ●●●●}\textcolor{gray!40}{●}
+    }{
+    \ifthenelse{\lengthtest{\quality pt > 50 pt}}{
+        \textcolor{orange}{#1\% ●●●}\textcolor{gray!40}{●●}
+    }{
+        \textcolor{red!70}{#1\% ●●}\textcolor{gray!40}{●●●}
+    }}}
+}
+
+% ============================================================================
+% ADVANCED FORENSICS AND MEMORY ANALYSIS
+% ============================================================================
+
+% Memory dump analysis results
+% Usage: \drawMemoryAnalysis{x}{y}{process_name}{pid}{malicious_indicators}{volatility_plugins}
+\newcommand{\drawMemoryAnalysis}[6]{
+    \pgfmathsetmacro{\indicators}{#5}
+    \ifthenelse{\lengthtest{\indicators pt > 5 pt}}{
+        \def\memcolor{threatCritical}
+    }{
+    \ifthenelse{\lengthtest{\indicators pt > 2 pt}}{
+        \def\memcolor{threatHigh}
+    }{
+        \def\memcolor{orange}
+    }}
+
+    \node[legend box, anchor=north west, minimum width=6cm,
+          draw=\memcolor, line width=2pt] at (#1,#2) {
+        \begin{tabular}{ll}
+            \multicolumn{2}{c}{\textbf{\textcolor{\memcolor}{Memory Analysis}}} \\
+            \hline
+            \textbf{Process:} & #3 \\
+            \textbf{PID:} & #4 \\
+            \textbf{Malicious Indicators:} & \textcolor{\memcolor}{#5} \\
+            \hline
+            \multicolumn{2}{l}{\textbf{Plugins Run:}} \\
+            \multicolumn{2}{p{5.5cm}}{\tiny #6} \\
+        \end{tabular}
+    };
+}
+
+% Code injection detection
+% Usage: \markCodeInjection{node}{technique}{target_process}{injected_code_hash}
+\newcommand{\markCodeInjection}[4]{
+    \node[draw=threatCritical, fill=red!30, text=black,
+          font=\tiny\bfseries, rounded corners=2pt, inner sep=3pt,
+          anchor=north] at (#1.north) [yshift=0.6cm] {
+        CODE INJECTION DETECTED
+    };
+    \node[legend box, anchor=north, minimum width=4.5cm,
+          draw=threatCritical, line width=2pt] at (#1.north) [yshift=0.1cm] {
+        \begin{tabular}{ll}
+            \textbf{Technique:} & #2 \\
+            \textbf{Target:} & #3 \\
+            \textbf{Hash:} & \texttt{\tiny #4} \\
+        \end{tabular}
+    };
+}
+
+% Process hollowing detection
+% Usage: \markProcessHollowing{node}{process}{legitimate_path}{actual_code}
+\newcommand{\markProcessHollowing}[4]{
+    \node[draw=red!80!black, fill=yellow!40, text=black,
+          font=\tiny\bfseries, rounded corners=2pt, inner sep=2pt,
+          anchor=west] at (#1.west) [xshift=0.2cm] {
+        PROCESS HOLLOWING
+    };
+    \node[below, font=\tiny, fill=white, draw=red!80!black,
+          inner sep=2pt] at (#1.west) [xshift=0.8cm, yshift=-0.4cm] {
+        Process: #2 | Path: #3
+    };
+}
+
+% DLL hijacking detection
+% Usage: \markDLLHijacking{node}{dll_name}{legitimate_path}{malicious_path}
+\newcommand{\markDLLHijacking}[4]{
+    \node[legend box, anchor=south west, minimum width=5cm,
+          draw=threatHigh, line width=2pt] at (#1.south west) [yshift=-1cm] {
+        \begin{tabular}{ll}
+            \multicolumn{2}{c}{\textbf{\textcolor{threatHigh}{DLL Hijacking}}} \\
+            \hline
+            \textbf{DLL:} & #2 \\
+            \textbf{Expected:} & \texttt{\tiny #3} \\
+            \textbf{Actual:} & \textcolor{red!70}{\texttt{\tiny #4}} \\
+        \end{tabular}
+    };
+}
+
+% Registry persistence mechanism
+% Usage: \markRegistryPersistence{node}{key_path}{value_name}{persistence_type}
+\newcommand{\markRegistryPersistence}[4]{
+    \node[legend box, anchor=east, minimum width=5.5cm,
+          draw=threatHigh, line width=2pt] at (#1.east) [xshift=1cm] {
+        \begin{tabular}{p{5cm}}
+            \multicolumn{1}{c}{\textbf{\textcolor{threatHigh}{Registry Persistence}}} \\
+            \hline
+            \textbf{Type:} #4 \\
+            \textbf{Key:} \texttt{\tiny #2} \\
+            \textbf{Value:} \texttt{\tiny #3} \\
+        \end{tabular}
+    };
+}
+
+% Rootkit detection indicator
+% Usage: \markRootkit{node}{rootkit_name}{type}{hidden_objects}
+\newcommand{\markRootkit}[4]{
+    \node[draw=black, fill=red!80!black, text=white,
+          font=\small\bfseries, rounded corners=3pt, inner sep=4pt,
+          anchor=north] at (#1.north) [yshift=0.9cm] {
+        ⚠ ROOTKIT DETECTED ⚠
+    };
+    \node[legend box, anchor=north, minimum width=4.5cm,
+          draw=black, line width=3pt, fill=red!10] at (#1.north) [yshift=0.4cm] {
+        \begin{tabular}{ll}
+            \textbf{Name:} & #2 \\
+            \textbf{Type:} & #3 \\
+            \textbf{Hidden Objects:} & #4 \\
+        \end{tabular}
+    };
+}
+
+% Timeline analysis results
+% Usage: \drawForensicTimeline{x}{y}{start_time}{end_time}{key_events}
+\newcommand{\drawForensicTimeline}[5]{
+    \node[legend box, anchor=north west, minimum width=7cm,
+          draw=blue!70, line width=2pt] at (#1,#2) {
+        \begin{tabular}{p{6.5cm}}
+            \multicolumn{1}{c}{\textbf{Forensic Timeline}} \\
+            \hline
+            \textbf{Period:} #3 to #4 \\
+            \hline
+            \textbf{Key Events:} \\
+            #5 \\
+        \end{tabular}
+    };
+}
+
+% Disk forensics findings
+% Usage: \drawDiskForensics{x}{y}{artifacts_found}{deleted_files}{encrypted_volumes}{suspicious_files}
+\newcommand{\drawDiskForensics}[6]{
+    \node[legend box, anchor=north west, minimum width=6cm,
+          draw=purple!70, line width=2pt] at (#1,#2) {
+        \begin{tabular}{lc}
+            \multicolumn{2}{c}{\textbf{Disk Forensics}} \\
+            \hline
+            Artifacts Found & #3 \\
+            Deleted Files Recovered & #4 \\
+            Encrypted Volumes & #5 \\
+            Suspicious Files & \textcolor{threatHigh}{#6} \\
+        \end{tabular}
+    };
+}
+
+% Network forensics capture analysis
+% Usage: \drawNetworkForensics{x}{y}{packets}{malicious_traffic}{c2_beacons}{exfil_attempts}
+\newcommand{\drawNetworkForensics}[6]{
+    \node[legend box, anchor=north west, minimum width=6cm,
+          draw=orange!80, line width=2pt] at (#1,#2) {
+        \begin{tabular}{lc}
+            \multicolumn{2}{c}{\textbf{Network Forensics}} \\
+            \hline
+            Packets Analyzed & #3 \\
+            Malicious Traffic & \textcolor{threatHigh}{#4} \\
+            C2 Beacons & \textcolor{threatCritical}{#5} \\
+            Exfil Attempts & \textcolor{red!80}{#6} \\
+        \end{tabular}
+    };
+}
+
+% ============================================================================
+% MACHINE LEARNING / AI DETECTION AND CONFIDENCE SCORING
+% ============================================================================
+
+% ML-based anomaly detection score
+% Usage: \drawMLAnomalyScore{x}{y}{target}{anomaly_score}{confidence}{model_name}
+\newcommand{\drawMLAnomalyScore}[6]{
+    \pgfmathsetmacro{\anomalyscore}{#4}
+    \ifthenelse{\lengthtest{\anomalyscore pt > 85 pt}}{
+        \def\mlcolor{threatCritical}
+        \def\mllabel{CRITICAL ANOMALY}
+    }{
+    \ifthenelse{\lengthtest{\anomalyscore pt > 70 pt}}{
+        \def\mlcolor{threatHigh}
+        \def\mllabel{HIGH ANOMALY}
+    }{
+    \ifthenelse{\lengthtest{\anomalyscore pt > 50 pt}}{
+        \def\mlcolor{orange}
+        \def\mllabel{MODERATE ANOMALY}
+    }{
+        \def\mlcolor{green!60!black}
+        \def\mllabel{NORMAL}
+    }}}
+
+    \node[legend box, anchor=north west, minimum width=6cm,
+          draw=\mlcolor, line width=2pt] at (#1,#2) {
+        \begin{tabular}{ll}
+            \multicolumn{2}{c}{\textbf{\textcolor{\mlcolor}{ML Anomaly Detection}}} \\
+            \hline
+            \textbf{Target:} & #3 \\
+            \textbf{Anomaly Score:} & \textcolor{\mlcolor}{#4/100} \\
+            \textbf{Confidence:} & #5\% \\
+            \textbf{Model:} & #6 \\
+            \hline
+            \textbf{Classification:} & \textcolor{\mlcolor}{\mllabel} \\
+        \end{tabular}
+    };
+}
+
+% AI threat classification with confidence levels
+% Usage: \drawAIThreatClassification{x}{y}{sample}{predicted_class}{confidence}{alternatives}
+\newcommand{\drawAIThreatClassification}[6]{
+    \pgfmathsetmacro{\conf}{#5}
+    \ifthenelse{\lengthtest{\conf pt > 90 pt}}{
+        \def\aicolor{green!60!black}
+        \def\aiconfidlabel{VERY HIGH}
+    }{
+    \ifthenelse{\lengthtest{\conf pt > 75 pt}}{
+        \def\aicolor{blue!70}
+        \def\aiconfidlabel{HIGH}
+    }{
+    \ifthenelse{\lengthtest{\conf pt > 60 pt}}{
+        \def\aicolor{orange}
+        \def\aiconfidlabel{MODERATE}
+    }{
+        \def\aicolor{red!70}
+        \def\aiconfidlabel{LOW}
+    }}}
+
+    \node[legend box, anchor=north west, minimum width=6.5cm,
+          draw=\aicolor, line width=2pt] at (#1,#2) {
+        \begin{tabular}{p{6cm}}
+            \multicolumn{1}{c}{\textbf{AI Threat Classification}} \\
+            \hline
+            \textbf{Sample:} #3 \\
+            \textbf{Predicted Class:} \textcolor{threatHigh}{#4} \\
+            \textbf{Confidence:} \textcolor{\aicolor}{#5\% (\aiconfidlabel)} \\
+            \hline
+            \textbf{Alternative Classifications:} \\
+            \tiny #6 \\
+        \end{tabular}
+    };
+}
+
+% Model performance metrics dashboard
+% Usage: \drawMLModelMetrics{x}{y}{model_name}{accuracy}{precision}{recall}{f1_score}
+\newcommand{\drawMLModelMetrics}[7]{
+    \node[legend box, anchor=north west, minimum width=6cm,
+          draw=blue!70, line width=2pt] at (#1,#2) {
+        \begin{tabular}{lc}
+            \multicolumn{2}{c}{\textbf{ML Model: #3}} \\
+            \hline
+            Accuracy & #4\% \\
+            Precision & #5\% \\
+            Recall & #6\% \\
+            F1 Score & #7\% \\
+        \end{tabular}
+    };
+}
+
+% False positive/negative rate indicator
+% Usage: \drawFPRates{x}{y}{model}{false_positives}{false_negatives}{total_predictions}
+\newcommand{\drawFPRates}[6]{
+    \pgfmathsetmacro{\fpr}{(#4 / #6) * 100}
+    \pgfmathsetmacro{\fnr}{(#5 / #6) * 100}
+
+    \node[legend box, anchor=north west, minimum width=5.5cm,
+          draw=orange!70, line width=2pt] at (#1,#2) {
+        \begin{tabular}{lc}
+            \multicolumn{2}{c}{\textbf{Error Rates: #3}} \\
+            \hline
+            False Positives & #4 (\pgfmathprintnumber[precision=1]{\fpr}\%) \\
+            False Negatives & #5 (\pgfmathprintnumber[precision=1]{\fnr}\%) \\
+            Total Predictions & #6 \\
+        \end{tabular}
+    };
+}
+
+% Ensemble model prediction
+% Usage: \drawEnsemblePrediction{x}{y}{target}{models_count}{consensus}{final_prediction}
+\newcommand{\drawEnsemblePrediction}[6]{
+    \pgfmathsetmacro{\consensus}{#5}
+    \ifthenelse{\lengthtest{\consensus pt > 80 pt}}{
+        \def\ensemblecolor{green!60!black}
+    }{
+    \ifthenelse{\lengthtest{\consensus pt > 60 pt}}{
+        \def\ensemblecolor{blue!70}
+    }{
+        \def\ensemblecolor{orange}
+    }}
+
+    \node[legend box, anchor=north west, minimum width=6cm,
+          draw=\ensemblecolor, line width=2pt] at (#1,#2) {
+        \begin{tabular}{ll}
+            \multicolumn{2}{c}{\textbf{Ensemble Prediction: #3}} \\
+            \hline
+            \textbf{Models Voting:} & #4 \\
+            \textbf{Consensus:} & \textcolor{\ensemblecolor}{#5\%} \\
+            \textbf{Final Prediction:} & #6 \\
+        \end{tabular}
+    };
+}
+
+% Feature importance visualization
+% Usage: \drawFeatureImportance{x}{y}{model}{top_feature}{importance}{second_feature}{importance2}
+\newcommand{\drawFeatureImportance}[7]{
+    \node[legend box, anchor=north west, minimum width=6cm,
+          draw=purple!60, line width=2pt] at (#1,#2) {
+        \begin{tabular}{lc}
+            \multicolumn{2}{c}{\textbf{Feature Importance: #3}} \\
+            \hline
+            #4 & \drawImportanceBar{#5} \\
+            #6 & \drawImportanceBar{#7} \\
+        \end{tabular}
+    };
+}
+
+% Helper for importance bars
+\newcommand{\drawImportanceBar}[1]{
+    \pgfmathsetmacro{\importance}{#1}
+    \ifthenelse{\lengthtest{\importance pt > 80 pt}}{
+        \textcolor{blue!70}{#1\% ████████}
+    }{
+    \ifthenelse{\lengthtest{\importance pt > 60 pt}}{
+        \textcolor{blue!60}{#1\% ██████}\textcolor{gray!30}{██}
+    }{
+    \ifthenelse{\lengthtest{\importance pt > 40 pt}}{
+        \textcolor{blue!50}{#1\% ████}\textcolor{gray!30}{████}
+    }{
+        \textcolor{blue!40}{#1\% ██}\textcolor{gray!30}{██████}
+    }}}
+}
+
+% Model drift detection
+% Usage: \drawModelDrift{x}{y}{model}{baseline_accuracy}{current_accuracy}{drift_detected}
+\newcommand{\drawModelDrift}[6]{
+    \ifthenelse{\equal{#6}{yes}}{
+        \def\driftcolor{red!70}
+        \def\driftstatus{DRIFT DETECTED}
+    }{
+        \def\driftcolor{green!60!black}
+        \def\driftstatus{STABLE}
+    }
+
+    \node[legend box, anchor=north west, minimum width=5.5cm,
+          draw=\driftcolor, line width=2pt] at (#1,#2) {
+        \begin{tabular}{ll}
+            \multicolumn{2}{c}{\textbf{Model Drift: #3}} \\
+            \hline
+            Baseline Accuracy & #4\% \\
+            Current Accuracy & #5\% \\
+            \hline
+            \textbf{Status} & \textcolor{\driftcolor}{\driftstatus} \\
+        \end{tabular}
+    };
+}
+
+% Automated retraining indicator
+% Usage: \markAutoRetraining{node}{model}{trigger}{scheduled_time}
+\newcommand{\markAutoRetraining}[4]{
+    \node[draw=blue!70, fill=blue!20, text=black,
+          font=\tiny\bfseries, rounded corners=2pt, inner sep=2pt,
+          anchor=south] at (#1.south) [yshift=-0.5cm] {
+        AUTO-RETRAINING SCHEDULED
+    };
+    \node[below, font=\tiny, fill=white, draw=blue!70,
+          inner sep=2pt] at (#1.south) [yshift=-0.8cm] {
+        Model: #2 | Trigger: #3 | ETA: #4
+    };
+}
+
+% Deep learning threat detection
+% Usage: \drawDeepLearningDetection{x}{y}{architecture}{layers}{parameters}{accuracy}
+\newcommand{\drawDeepLearningDetection}[6]{
+    \node[legend box, anchor=north west, minimum width=6cm,
+          draw=purple!70, line width=2pt, fill=purple!5] at (#1,#2) {
+        \begin{tabular}{ll}
+            \multicolumn{2}{c}{\textbf{Deep Learning Model}} \\
+            \hline
+            \textbf{Architecture:} & #3 \\
+            \textbf{Layers:} & #4 \\
+            \textbf{Parameters:} & #5 \\
+            \textbf{Accuracy:} & \textcolor{green!60!black}{#6\%} \\
+        \end{tabular}
+    };
+}
+
+% Neural network confidence heatmap
+% Usage: \drawNNConfidence{node}{prediction}{confidence}{uncertainty}
+\newcommand{\drawNNConfidence}[4]{
+    \pgfmathsetmacro{\conf}{#3}
+    \pgfmathsetmacro{\uncert}{#4}
+
+    \ifthenelse{\lengthtest{\conf pt > 90 pt}}{
+        \def\nncolor{green!60!black}
+    }{
+    \ifthenelse{\lengthtest{\conf pt > 75 pt}}{
+        \def\nncolor{blue!70}
+    }{
+        \def\nncolor{orange}
+    }}
+
+    \node[draw=\nncolor, fill=\nncolor!20, font=\tiny\bfseries,
+          rounded corners=2pt, inner sep=2pt, anchor=north]
+        at (#1.north) [yshift=0.4cm] {
+        NN: #2 (Conf: #3\%, Uncert: #4\%)
+    };
+}
+
+% Explainable AI (XAI) insights
+% Usage: \drawXAIExplanation{x}{y}{prediction}{key_factors}{shap_values}
+\newcommand{\drawXAIExplanation}[5]{
+    \node[legend box, anchor=north west, minimum width=6.5cm,
+          draw=teal!70, line width=2pt] at (#1,#2) {
+        \begin{tabular}{p{6cm}}
+            \multicolumn{1}{c}{\textbf{XAI Explanation}} \\
+            \hline
+            \textbf{Prediction:} #3 \\
+            \hline
+            \textbf{Key Contributing Factors:} \\
+            #4 \\
+            \hline
+            \textbf{SHAP Values:} \\
+            \tiny #5 \\
+        \end{tabular}
+    };
+}
+
+% ============================================================================
+% THREAT LANDSCAPE AND INDUSTRY TRACKING
+% ============================================================================
+
+% Global threat landscape overview
+% Usage: \drawThreatLandscape{x}{y}{total_threats}{trending_up}{geographic_hotspots}{top_threat_type}
+\newcommand{\drawThreatLandscape}[6]{
+    \node[legend box, anchor=north west, minimum width=7cm,
+          draw=red!70, line width=2.5pt] at (#1,#2) {
+        \begin{tabular}{lc}
+            \multicolumn{2}{c}{\textbf{Global Threat Landscape}} \\
+            \hline
+            Total Active Threats & \textcolor{threatHigh}{#3} \\
+            Trending Upward & \textcolor{orange}{#4} \\
+            Geographic Hotspots & #5 \\
+            \hline
+            \textbf{Top Threat Type} & \textcolor{threatCritical}{#6} \\
+        \end{tabular}
+    };
+}
+
+% Industry-specific threat tracking
+% Usage: \drawIndustryThreats{x}{y}{industry}{specific_threats}{attack_frequency}{primary_targets}
+\newcommand{\drawIndustryThreats}[6]{
+    \node[legend box, anchor=north west, minimum width=6.5cm,
+          draw=orange!80, line width=2pt] at (#1,#2) {
+        \begin{tabular}{ll}
+            \multicolumn{2}{c}{\textbf{Industry: #3}} \\
+            \hline
+            \textbf{Specific Threats:} & #4 \\
+            \textbf{Attack Frequency:} & \textcolor{threatHigh}{#5/month} \\
+            \textbf{Primary Targets:} & #6 \\
+        \end{tabular}
+    };
+}
+
+% Threat trend analysis
+% Usage: \drawThreatTrends{x}{y}{threat_type}{last_month}{this_month}{trend}{prediction}
+\newcommand{\drawThreatTrends}[7]{
+    \ifthenelse{\equal{#6}{increasing}}{
+        \def\trendcolor{red!70}
+        \def\trendsymbol{↑}
+    }{
+    \ifthenelse{\equal{#6}{decreasing}}{
+        \def\trendcolor{green!60!black}
+        \def\trendsymbol{↓}
+    }{
+        \def\trendcolor{orange}
+        \def\trendsymbol{→}
+    }}
+
+    \node[legend box, anchor=north west, minimum width=6cm,
+          draw=\trendcolor, line width=2pt] at (#1,#2) {
+        \begin{tabular}{ll}
+            \multicolumn{2}{c}{\textbf{Trend: #3}} \\
+            \hline
+            Last Month & #4 incidents \\
+            This Month & #5 incidents \\
+            \textbf{Trend} & \textcolor{\trendcolor}{\trendsymbol\ \uppercase{#6}} \\
+            \textbf{Prediction} & #7 \\
+        \end{tabular}
+    };
+}
+
+% Emerging threat radar
+% Usage: \drawEmergingThreats{x}{y}{new_threats_count}{zero_days}{novel_ttps}
+\newcommand{\drawEmergingThreats}[5]{
+    \node[legend box, anchor=north west, minimum width=5.5cm,
+          draw=purple!70, line width=2.5pt, fill=purple!5] at (#1,#2) {
+        \begin{tabular}{lc}
+            \multicolumn{2}{c}{\textbf{Emerging Threats Radar}} \\
+            \hline
+            New Threats (7d) & \textcolor{red!70}{#3} \\
+            Zero-Days & \textcolor{threatCritical}{#4} \\
+            Novel TTPs & \textcolor{orange}{#5} \\
+        \end{tabular}
+    };
+}
+
+% Threat actor activity heatmap
+% Usage: \drawActorActivityMap{x}{y}{active_groups}{campaigns}{targets}{peak_activity}
+\newcommand{\drawActorActivityMap}[6]{
+    \node[legend box, anchor=north west, minimum width=6cm,
+          draw=red!80, line width=2pt] at (#1,#2) {
+        \begin{tabular}{lc}
+            \multicolumn{2}{c}{\textbf{Threat Actor Activity}} \\
+            \hline
+            Active Groups & #3 \\
+            Active Campaigns & #4 \\
+            Targeted Sectors & #5 \\
+            Peak Activity Time & #6 \\
+        \end{tabular}
+    };
+}
+
+% Seasonal threat patterns
+% Usage: \drawSeasonalPatterns{x}{y}{season}{typical_threats}{expected_increase}{mitigation}
+\newcommand{\drawSeasonalPatterns}[6]{
+    \node[legend box, anchor=north west, minimum width=6.5cm,
+          draw=blue!60, line width=2pt] at (#1,#2) {
+        \begin{tabular}{p{6cm}}
+            \multicolumn{1}{c}{\textbf{Seasonal Pattern: #3}} \\
+            \hline
+            \textbf{Typical Threats:} #4 \\
+            \textbf{Expected Increase:} \textcolor{orange}{#5\%} \\
+            \hline
+            \textbf{Recommended Mitigation:} \\
+            \tiny #6 \\
+        \end{tabular}
+    };
+}
+
+% ============================================================================
+% RISK MATRICES AND THREAT HEAT MAPS
+% ============================================================================
+
+% Risk assessment matrix (Likelihood vs Impact)
+% Usage: \drawRiskMatrix{x}{y}{likelihood}{impact}{risk_level}
+\newcommand{\drawRiskMatrix}[5]{
+    % Calculate risk score
+    \pgfmathsetmacro{\riskscore}{(#3 * #4) / 100}
+
+    \ifthenelse{\lengthtest{\riskscore pt > 7 pt}}{
+        \def\riskcolor{threatCritical}
+        \def\risklabel{CRITICAL}
+    }{
+    \ifthenelse{\lengthtest{\riskscore pt > 5 pt}}{
+        \def\riskcolor{threatHigh}
+        \def\risklabel{HIGH}
+    }{
+    \ifthenelse{\lengthtest{\riskscore pt > 3 pt}}{
+        \def\riskcolor{orange}
+        \def\risklabel{MEDIUM}
+    }{
+        \def\riskcolor{green!60!black}
+        \def\risklabel{LOW}
+    }}}
+
+    \node[legend box, anchor=north west, minimum width=5.5cm,
+          draw=\riskcolor, line width=2.5pt] at (#1,#2) {
+        \begin{tabular}{lc}
+            \multicolumn{2}{c}{\textbf{Risk Assessment Matrix}} \\
+            \hline
+            Likelihood & #3/10 \\
+            Impact & #4/10 \\
+            \hline
+            \textbf{Risk Score} & \textcolor{\riskcolor}{\pgfmathprintnumber[precision=1]{\riskscore}/10} \\
+            \textbf{Level} & \textcolor{\riskcolor}{\risklabel\ RISK} \\
+        \end{tabular}
+    };
+}
+
+% Comprehensive 5x5 risk matrix visualization
+% Usage: \drawFullRiskMatrix{x}{y}{position_likelihood}{position_impact}
+\newcommand{\drawFullRiskMatrix}[4]{
+    \pgfmathsetmacro{\cellsize}{0.8}
+    \pgfmathsetmacro{\matrixwidth}{5 * \cellsize}
+
+    % Draw matrix grid
+    \node[anchor=north west] at (#1,#2) {
+        \begin{tabular}{|c|c|c|c|c|c|}
+            \hline
+            \diagbox{Impact}{Likelihood} & Rare & Unlikely & Possible & Likely & Certain \\
+            \hline
+            Severe & \cellcolor{orange} & \cellcolor{orange!80} & \cellcolor{red!60} & \cellcolor{red!80} & \cellcolor{red!90!black} \\
+            \hline
+            Major & \cellcolor{yellow!60} & \cellcolor{orange!60} & \cellcolor{orange!80} & \cellcolor{red!60} & \cellcolor{red!80} \\
+            \hline
+            Moderate & \cellcolor{green!60} & \cellcolor{yellow!60} & \cellcolor{orange!60} & \cellcolor{orange!80} & \cellcolor{red!60} \\
+            \hline
+            Minor & \cellcolor{green!70} & \cellcolor{green!60} & \cellcolor{yellow!60} & \cellcolor{orange!60} & \cellcolor{orange!80} \\
+            \hline
+            Insignificant & \cellcolor{green!80} & \cellcolor{green!70} & \cellcolor{green!60} & \cellcolor{yellow!60} & \cellcolor{orange!60} \\
+            \hline
+        \end{tabular}
+    };
+}
+
+% Threat heat map with color gradient
+% Usage: \drawThreatHeatMap{x}{y}{critical_zones}{high_zones}{medium_zones}{low_zones}
+\newcommand{\drawThreatHeatMap}[6]{
+    \node[legend box, anchor=north west, minimum width=6.5cm,
+          draw=black, line width=2pt] at (#1,#2) {
+        \begin{tabular}{lcc}
+            \multicolumn{3}{c}{\textbf{Threat Heat Map}} \\
+            \hline
+            \textbf{Zone} & \textbf{Count} & \textbf{Intensity} \\
+            \hline
+            Critical & #3 & \cellcolor{red!90!black}\textcolor{white}{█████} \\
+            High & #4 & \cellcolor{orange!80}████ \\
+            Medium & #5 & \cellcolor{yellow!70}███ \\
+            Low & #6 & \cellcolor{green!60}██ \\
+        \end{tabular}
+    };
+}
+
+% Asset criticality matrix
+% Usage: \drawAssetCriticality{x}{y}{asset_name}{business_impact}{recovery_time}{criticality_score}
+\newcommand{\drawAssetCriticality}[6]{
+    \pgfmathsetmacro{\criticality}{#6}
+    \ifthenelse{\lengthtest{\criticality pt > 85 pt}}{
+        \def\critcolor{threatCritical}
+        \def\critlabel{MISSION CRITICAL}
+    }{
+    \ifthenelse{\lengthtest{\criticality pt > 70 pt}}{
+        \def\critcolor{orange}
+        \def\critlabel{BUSINESS CRITICAL}
+    }{
+    \ifthenelse{\lengthtest{\criticality pt > 50 pt}}{
+        \def\critcolor{yellow!80!black}
+        \def\critlabel{IMPORTANT}
+    }{
+        \def\critcolor{green!60!black}
+        \def\critlabel{NON-CRITICAL}
+    }}}
+
+    \node[legend box, anchor=north west, minimum width=6cm,
+          draw=\critcolor, line width=2pt] at (#1,#2) {
+        \begin{tabular}{ll}
+            \multicolumn{2}{c}{\textbf{Asset: #3}} \\
+            \hline
+            Business Impact & #4/10 \\
+            Recovery Time (RTO) & #5h \\
+            \hline
+            \textbf{Criticality} & \textcolor{\critcolor}{#6/100} \\
+            \textbf{Classification} & \textcolor{\critcolor}{\critlabel} \\
+        \end{tabular}
+    };
+}
+
+% Vulnerability heat map for network zones
+% Usage: \drawVulnerabilityHeatMap{x}{y}{dmz_score}{internal_score}{critical_score}{external_score}
+\newcommand{\drawVulnerabilityHeatMap}[6]{
+    \node[legend box, anchor=north west, minimum width=6.5cm,
+          draw=black, line width=2pt] at (#1,#2) {
+        \begin{tabular}{lc}
+            \multicolumn{2}{c}{\textbf{Vulnerability Heat Map}} \\
+            \hline
+            \textbf{Zone} & \textbf{Vulnerability Score} \\
+            \hline
+            DMZ & \drawHeatBar{#3} \\
+            Internal Network & \drawHeatBar{#4} \\
+            Critical Assets & \drawHeatBar{#5} \\
+            External Facing & \drawHeatBar{#6} \\
+        \end{tabular}
+    };
+}
+
+% Helper for heat map color bars
+\newcommand{\drawHeatBar}[1]{
+    \pgfmathsetmacro{\heatscore}{#1}
+    \ifthenelse{\lengthtest{\heatscore pt > 80 pt}}{
+        \cellcolor{red!90!black}\textcolor{white}{#1}
+    }{
+    \ifthenelse{\lengthtest{\heatscore pt > 60 pt}}{
+        \cellcolor{orange!80}{#1}
+    }{
+    \ifthenelse{\lengthtest{\heatscore pt > 40 pt}}{
+        \cellcolor{yellow!70}{#1}
+    }{
+        \cellcolor{green!60}{#1}
+    }}}
+}
+
+% Geographic threat heat map
+% Usage: \drawGeographicThreatMap{x}{y}{region}{threat_count}{severity}{trend}
+\newcommand{\drawGeographicThreatMap}[6]{
+    \pgfmathsetmacro{\severity}{#5}
+    \ifthenelse{\lengthtest{\severity pt > 75 pt}}{
+        \def\geocolor{red!80!black}
+    }{
+    \ifthenelse{\lengthtest{\severity pt > 50 pt}}{
+        \def\geocolor{orange!80}
+    }{
+        \def\geocolor{yellow!70}
+    }}
+
+    \node[legend box, anchor=north west, minimum width=5.5cm,
+          draw=\geocolor, line width=2pt, fill=\geocolor!10] at (#1,#2) {
+        \begin{tabular}{ll}
+            \multicolumn{2}{c}{\textbf{Region: #3}} \\
+            \hline
+            Threat Count & #4 \\
+            Severity & \textcolor{\geocolor}{#5/100} \\
+            Trend & #6 \\
+        \end{tabular}
+    };
+}
+
+% Time-based threat heat map
+% Usage: \drawTemporalHeatMap{x}{y}{hour}{day}{week}{month}
+\newcommand{\drawTemporalHeatMap}[6]{
+    \node[legend box, anchor=north west, minimum width=6cm,
+          draw=blue!70, line width=2pt] at (#1,#2) {
+        \begin{tabular}{lc}
+            \multicolumn{2}{c}{\textbf{Temporal Threat Pattern}} \\
+            \hline
+            \textbf{Time Period} & \textbf{Activity} \\
+            \hline
+            Past Hour & \drawThreatIntensity{#3} \\
+            Past 24 Hours & \drawThreatIntensity{#4} \\
+            Past Week & \drawThreatIntensity{#5} \\
+            Past Month & \drawThreatIntensity{#6} \\
+        \end{tabular}
+    };
+}
+
+% Helper for threat intensity visualization
+\newcommand{\drawThreatIntensity}[1]{
+    \pgfmathsetmacro{\intensity}{#1}
+    \ifthenelse{\lengthtest{\intensity pt > 80 pt}}{
+        \textcolor{red!80!black}{#1 ████████}
+    }{
+    \ifthenelse{\lengthtest{\intensity pt > 60 pt}}{
+        \textcolor{orange}{#1 ██████}\textcolor{gray!30}{██}
+    }{
+    \ifthenelse{\lengthtest{\intensity pt > 40 pt}}{
+        \textcolor{yellow!80!black}{#1 ████}\textcolor{gray!30}{████}
+    }{
+        \textcolor{green!60!black}{#1 ██}\textcolor{gray!30}{██████}
+    }}}
+}
+
+% Risk scoring grid for multiple assets
+% Usage: \drawRiskScoringGrid{x}{y}{asset1}{score1}{asset2}{score2}{asset3}{score3}
+\newcommand{\drawRiskScoringGrid}[8]{
+    \node[legend box, anchor=north west, minimum width=6.5cm,
+          draw=black, line width=2pt] at (#1,#2) {
+        \begin{tabular}{lc}
+            \multicolumn{2}{c}{\textbf{Risk Scoring Grid}} \\
+            \hline
+            \textbf{Asset} & \textbf{Risk Score} \\
+            \hline
+            #3 & \drawRiskScore{#4} \\
+            #5 & \drawRiskScore{#6} \\
+            #7 & \drawRiskScore{#8} \\
+        \end{tabular}
+    };
+}
+
+% Helper for risk score visualization
+\newcommand{\drawRiskScore}[1]{
+    \pgfmathsetmacro{\risk}{#1}
+    \ifthenelse{\lengthtest{\risk pt > 80 pt}}{
+        \cellcolor{red!90!black}\textcolor{white}{\textbf{#1}}
+    }{
+    \ifthenelse{\lengthtest{\risk pt > 60 pt}}{
+        \cellcolor{orange!80}{#1}
+    }{
+    \ifthenelse{\lengthtest{\risk pt > 40 pt}}{
+        \cellcolor{yellow!70}{#1}
+    }{
+        \cellcolor{green!60}{#1}
+    }}}
+}
+
+% ============================================================================
+% BREACH PROBABILITY AND IMPACT MODELING
+% ============================================================================
+
+% Breach probability calculator
+% Usage: \drawBreachProbability{x}{y}{target}{vulnerabilities}{exposure}{controls}{probability}
+\newcommand{\drawBreachProbability}[7]{
+    \pgfmathsetmacro{\prob}{#7}
+    \ifthenelse{\lengthtest{\prob pt > 75 pt}}{
+        \def\probcolor{threatCritical}
+        \def\problabel{VERY HIGH}
+    }{
+    \ifthenelse{\lengthtest{\prob pt > 50 pt}}{
+        \def\probcolor{orange}
+        \def\problabel{HIGH}
+    }{
+    \ifthenelse{\lengthtest{\prob pt > 25 pt}}{
+        \def\probcolor{yellow!80!black}
+        \def\problabel{MODERATE}
+    }{
+        \def\probcolor{green!60!black}
+        \def\problabel{LOW}
+    }}}
+
+    \node[legend box, anchor=north west, minimum width=6.5cm,
+          draw=\probcolor, line width=2.5pt] at (#1,#2) {
+        \begin{tabular}{ll}
+            \multicolumn{2}{c}{\textbf{Breach Probability: #3}} \\
+            \hline
+            Known Vulnerabilities & #4 \\
+            Attack Surface Exposure & #5\% \\
+            Security Controls & #6/10 \\
+            \hline
+            \textbf{Breach Probability} & \textcolor{\probcolor}{\textbf{#7\%}} \\
+            \textbf{Risk Level} & \textcolor{\probcolor}{\problabel} \\
+        \end{tabular}
+    };
+}
+
+% Impact modeling dashboard
+% Usage: \drawImpactModeling{x}{y}{target}{financial_impact}{operational_impact}{reputational_impact}{total_impact}
+\newcommand{\drawImpactModeling}[7]{
+    \node[legend box, anchor=north west, minimum width=7cm,
+          draw=red!70, line width=2pt] at (#1,#2) {
+        \begin{tabular}{lc}
+            \multicolumn{2}{c}{\textbf{Impact Assessment: #3}} \\
+            \hline
+            \textbf{Impact Category} & \textbf{Score} \\
+            \hline
+            Financial Impact & \drawImpactBar{#4} \\
+            Operational Impact & \drawImpactBar{#5} \\
+            Reputational Impact & \drawImpactBar{#6} \\
+            \hline
+            \textbf{Total Impact Score} & \drawImpactBar{#7} \\
+        \end{tabular}
+    };
+}
+
+% Helper for impact visualization
+\newcommand{\drawImpactBar}[1]{
+    \pgfmathsetmacro{\impact}{#1}
+    \ifthenelse{\lengthtest{\impact pt > 80 pt}}{
+        \textcolor{red!80!black}{#1/100 ●●●●●}
+    }{
+    \ifthenelse{\lengthtest{\impact pt > 60 pt}}{
+        \textcolor{orange}{#1/100 ●●●●}\textcolor{gray!40}{●}
+    }{
+    \ifthenelse{\lengthtest{\impact pt > 40 pt}}{
+        \textcolor{yellow!80!black}{#1/100 ●●●}\textcolor{gray!40}{●●}
+    }{
+        \textcolor{green!60!black}{#1/100 ●●}\textcolor{gray!40}{●●●}
+    }}}
+}
+
+% Mean Time to Breach (MTTB) prediction
+% Usage: \drawMTTBPrediction{x}{y}{target}{current_controls}{predicted_mttb}{confidence}
+\newcommand{\drawMTTBPrediction}[6]{
+    \pgfmathsetmacro{\mttb}{#5}
+    \ifthenelse{\lengthtest{\mttb pt < 30 pt}}{
+        \def\mttbcolor{threatCritical}
+        \def\mttblabel{CRITICAL}
+    }{
+    \ifthenelse{\lengthtest{\mttb pt < 90 pt}}{
+        \def\mttbcolor{orange}
+        \def\mttblabel{WARNING}
+    }{
+        \def\mttbcolor{green!60!black}
+        \def\mttblabel{ACCEPTABLE}
+    }}
+
+    \node[legend box, anchor=north west, minimum width=6cm,
+          draw=\mttbcolor, line width=2pt] at (#1,#2) {
+        \begin{tabular}{ll}
+            \multicolumn{2}{c}{\textbf{MTTB Prediction: #3}} \\
+            \hline
+            Current Controls & #4/10 \\
+            Predicted MTTB & \textcolor{\mttbcolor}{#5 days} \\
+            Confidence & #6\% \\
+            \hline
+            \textbf{Status} & \textcolor{\mttbcolor}{\mttblabel} \\
+        \end{tabular}
+    };
+}
+
+% Cost-benefit analysis for security investment
+% Usage: \drawSecurityROI{x}{y}{investment}{risk_reduction}{annual_loss_expectancy}{roi}
+\newcommand{\drawSecurityROI}[6]{
+    \pgfmathsetmacro{\roi}{#6}
+    \ifthenelse{\lengthtest{\roi pt > 100 pt}}{
+        \def\roicolor{green!60!black}
+        \def\roilabel{POSITIVE ROI}
+    }{
+        \def\roicolor{red!70}
+        \def\roilabel{NEGATIVE ROI}
+    }
+
+    \node[legend box, anchor=north west, minimum width=6.5cm,
+          draw=\roicolor, line width=2pt] at (#1,#2) {
+        \begin{tabular}{ll}
+            \multicolumn{2}{c}{\textbf{Security Investment ROI}} \\
+            \hline
+            Investment Cost & \$#3 \\
+            Risk Reduction & #4\% \\
+            Annual Loss Expectancy & \$#5 \\
+            \hline
+            \textbf{ROI} & \textcolor{\roicolor}{#6\%} \\
+            \textbf{Assessment} & \textcolor{\roicolor}{\roilabel} \\
+        \end{tabular}
+    };
+}
+
+% Cyber insurance coverage analysis
+% Usage: \drawCyberInsurance{x}{y}{coverage_limit}{deductible}{premium}{gap_analysis}
+\newcommand{\drawCyberInsurance}[6]{
+    \node[legend box, anchor=north west, minimum width=6cm,
+          draw=blue!70, line width=2pt] at (#1,#2) {
+        \begin{tabular}{ll}
+            \multicolumn{2}{c}{\textbf{Cyber Insurance Coverage}} \\
+            \hline
+            Coverage Limit & \$#3 \\
+            Deductible & \$#4 \\
+            Annual Premium & \$#5 \\
+            \hline
+            \textbf{Coverage Gap} & \textcolor{orange}{#6\%} \\
+        \end{tabular}
+    };
+}
+
+% ============================================================================
+% EXECUTIVE SUMMARY AND REPORTING TOOLS
+% ============================================================================
+
+% Executive security dashboard (C-level summary)
+% Usage: \drawExecutiveDashboard{x}{y}{risk_score}{incidents}{compliance}{investment}
+\newcommand{\drawExecutiveDashboard}[6]{
+    \pgfmathsetmacro{\risk}{#3}
+    \ifthenelse{\lengthtest{\risk pt > 70 pt}}{
+        \def\execcolor{red!70}
+    }{
+    \ifthenelse{\lengthtest{\risk pt > 50 pt}}{
+        \def\execcolor{orange}
+    }{
+        \def\execcolor{green!60!black}
+    }}
+
+    \node[legend box, anchor=north west, minimum width=8cm,
+          draw=\execcolor, line width=3pt, fill=\execcolor!5] at (#1,#2) {
+        \begin{tabular}{lc}
+            \multicolumn{2}{c}{\Large\textbf{EXECUTIVE SECURITY DASHBOARD}} \\
+            \hline
+            \textbf{Overall Risk Score} & \textcolor{\execcolor}{\Large\textbf{#3/100}} \\
+            \hline
+            Active Incidents & \textcolor{red!70}{#4} \\
+            Compliance Status & #5\% \\
+            Security Investment & \$#6 \\
+        \end{tabular}
+    };
+}
+
+% Security posture briefing for board
+% Usage: \drawBoardBriefing{x}{y}{quarter}{maturity_level}{major_incidents}{budget_utilization}
+\newcommand{\drawBoardBriefing}[6]{
+    \node[legend box, anchor=north west, minimum width=8.5cm,
+          draw=blue!70, line width=2.5pt] at (#1,#2) {
+        \begin{tabular}{p{8cm}}
+            \multicolumn{1}{c}{\Large\textbf{BOARD SECURITY BRIEFING}} \\
+            \multicolumn{1}{c}{\textit{#3}} \\
+            \hline
+            \\
+            \textbf{Security Maturity Level:} #4/5 \\[0.2cm]
+            \textbf{Major Incidents This Quarter:} \textcolor{orange}{#5} \\[0.2cm]
+            \textbf{Security Budget Utilization:} #6\% \\[0.2cm]
+        \end{tabular}
+    };
+}
+
+% Incident response summary
+% Usage: \drawIncidentSummary{x}{y}{incident_id}{severity}{status}{actions_taken}{next_steps}
+\newcommand{\drawIncidentSummary}[7]{
+    \ifthenelse{\equal{#4}{critical}}{
+        \def\sumcolor{threatCritical}
+    }{
+    \ifthenelse{\equal{#4}{high}}{
+        \def\sumcolor{orange}
+    }{
+        \def\sumcolor{yellow!80!black}
+    }}
+
+    \node[legend box, anchor=north west, minimum width=7.5cm,
+          draw=\sumcolor, line width=2pt] at (#1,#2) {
+        \begin{tabular}{p{7cm}}
+            \multicolumn{1}{c}{\textbf{\textcolor{\sumcolor}{Incident Summary: #3}}} \\
+            \hline
+            \textbf{Severity:} \textcolor{\sumcolor}{\uppercase{#4}} \\
+            \textbf{Status:} #5 \\
+            \hline
+            \textbf{Actions Taken:} \\
+            \small #6 \\
+            \hline
+            \textbf{Next Steps:} \\
+            \small #7 \\
+        \end{tabular}
+    };
+}
+
+% Compliance status report
+% Usage: \drawComplianceReport{x}{y}{frameworks}{compliant}{gaps}{remediation_timeline}
+\newcommand{\drawComplianceReport}[6]{
+    \node[legend box, anchor=north west, minimum width=7cm,
+          draw=blue!60, line width=2pt] at (#1,#2) {
+        \begin{tabular}{lc}
+            \multicolumn{2}{c}{\textbf{Compliance Status Report}} \\
+            \hline
+            Frameworks Assessed & #3 \\
+            Compliant Controls & \textcolor{green!60!black}{#4} \\
+            Identified Gaps & \textcolor{orange}{#5} \\
+            \hline
+            \textbf{Remediation Timeline} & \textbf{#6} \\
+        \end{tabular}
+    };
+}
+
+% Quarterly security metrics
+% Usage: \drawQuarterlyMetrics{x}{y}{quarter}{threats_blocked}{incidents}{vulnerabilities_patched}{new_controls}
+\newcommand{\drawQuarterlyMetrics}[7]{
+    \node[legend box, anchor=north west, minimum width=7.5cm,
+          draw=purple!60, line width=2pt] at (#1,#2) {
+        \begin{tabular}{lc}
+            \multicolumn{2}{c}{\textbf{Quarterly Security Metrics - #3}} \\
+            \hline
+            Threats Blocked & \textcolor{green!60!black}{#4} \\
+            Security Incidents & \textcolor{orange}{#5} \\
+            Vulnerabilities Patched & #6 \\
+            New Controls Implemented & #7 \\
+        \end{tabular}
+    };
+}
+
+% Annual security report summary
+% Usage: \drawAnnualReport{x}{y}{year}{total_incidents}{successful_defenses}{major_investments}{roi}
+\newcommand{\drawAnnualReport}[7]{
+    \node[legend box, anchor=north west, minimum width=8cm,
+          draw=teal!70, line width=2.5pt, fill=teal!5] at (#1,#2) {
+        \begin{tabular}{ll}
+            \multicolumn{2}{c}{\Large\textbf{Annual Security Report #3}} \\
+            \hline
+            \textbf{Total Incidents:} & #4 \\
+            \textbf{Successful Defenses:} & \textcolor{green!60!black}{#5} \\
+            \textbf{Major Investments:} & \$#6 \\
+            \textbf{Security ROI:} & \textcolor{green!60!black}{#7\%} \\
+        \end{tabular}
+    };
+}
+
+% Key Performance Indicators (KPI) dashboard
+% Usage: \drawKPIDashboard{x}{y}{mttd}{mttr}{patch_rate}{uptime}
+\newcommand{\drawKPIDashboard}[6]{
+    \node[legend box, anchor=north west, minimum width=7cm,
+          draw=blue!70, line width=2pt] at (#1,#2) {
+        \begin{tabular}{lcc}
+            \multicolumn{3}{c}{\textbf{Security KPI Dashboard}} \\
+            \hline
+            \textbf{Metric} & \textbf{Value} & \textbf{Target} \\
+            \hline
+            MTTD (Mean Time to Detect) & #3h & <4h \\
+            MTTR (Mean Time to Respond) & #4h & <8h \\
+            Patch Compliance Rate & #5\% & >95\% \\
+            Security Uptime & #6\% & >99.9\% \\
+        \end{tabular}
+    };
+}
+
+% Security trend report
+% Usage: \drawTrendReport{x}{y}{period}{trend_direction}{key_findings}
+\newcommand{\drawTrendReport}[5]{
+    \ifthenelse{\equal{#4}{improving}}{
+        \def\trendcolor{green!60!black}
+        \def\trendsymbol{↗}
+    }{
+    \ifthenelse{\equal{#4}{declining}}{
+        \def\trendcolor{red!70}
+        \def\trendsymbol{↘}
+    }{
+        \def\trendcolor{orange}
+        \def\trendsymbol{→}
+    }}
+
+    \node[legend box, anchor=north west, minimum width=7.5cm,
+          draw=\trendcolor, line width=2pt] at (#1,#2) {
+        \begin{tabular}{p{7cm}}
+            \multicolumn{1}{c}{\textbf{Security Trend Report}} \\
+            \multicolumn{1}{c}{\textit{Period: #3}} \\
+            \hline
+            \textbf{Trend:} \textcolor{\trendcolor}{\Large\trendsymbol\ \uppercase{#4}} \\
+            \hline
+            \textbf{Key Findings:} \\
+            \small #5 \\
+        \end{tabular}
+    };
+}
+
+% Recommendations and action items
+% Usage: \drawRecommendations{x}{y}{priority}{recommendations}{owner}{deadline}
+\newcommand{\drawRecommendations}[6]{
+    \ifthenelse{\equal{#3}{critical}}{
+        \def\reccolor{threatCritical}
+    }{
+    \ifthenelse{\equal{#3}{high}}{
+        \def\reccolor{orange}
+    }{
+        \def\reccolor{blue!70}
+    }}
+
+    \node[legend box, anchor=north west, minimum width=7.5cm,
+          draw=\reccolor, line width=2pt] at (#1,#2) {
+        \begin{tabular}{p{7cm}}
+            \multicolumn{1}{c}{\textbf{\textcolor{\reccolor}{Action Items}}} \\
+            \multicolumn{1}{c}{\textit{Priority: \uppercase{#3}}} \\
+            \hline
+            \textbf{Recommendations:} \\
+            \small #4 \\
+            \hline
+            \textbf{Owner:} #5 \\
+            \textbf{Deadline:} #6 \\
+        \end{tabular}
+    };
+}
+
+% Risk register summary
+% Usage: \drawRiskRegister{x}{y}{total_risks}{critical}{high}{medium}{low}
+\newcommand{\drawRiskRegister}[7]{
+    \node[legend box, anchor=north west, minimum width=7cm,
+          draw=black, line width=2pt] at (#1,#2) {
+        \begin{tabular}{lcc}
+            \multicolumn{3}{c}{\textbf{Risk Register Summary}} \\
+            \hline
+            \textbf{Risk Level} & \textbf{Count} & \textbf{\%} \\
+            \hline
+            Critical & \textcolor{threatCritical}{#4} & \pgfmathparse{int((#4/#3)*100)}\pgfmathresult\% \\
+            High & \textcolor{orange}{#5} & \pgfmathparse{int((#5/#3)*100)}\pgfmathresult\% \\
+            Medium & \textcolor{yellow!80!black}{#6} & \pgfmathparse{int((#6/#3)*100)}\pgfmathresult\% \\
+            Low & \textcolor{green!60!black}{#7} & \pgfmathparse{int((#7/#3)*100)}\pgfmathresult\% \\
+            \hline
+            \textbf{Total} & \textbf{#3} & \textbf{100\%} \\
+        \end{tabular}
+    };
+}
+
+% Security maturity assessment
+% Usage: \drawMaturityAssessment{x}{y}{current_level}{target_level}{gap_analysis}
+\newcommand{\drawMaturityAssessment}[5]{
+    \node[legend box, anchor=north west, minimum width=7cm,
+          draw=purple!70, line width=2pt] at (#1,#2) {
+        \begin{tabular}{lc}
+            \multicolumn{2}{c}{\textbf{Security Maturity Assessment}} \\
+            \hline
+            Current Maturity Level & #3/5 \\
+            Target Maturity Level & #4/5 \\
+            \hline
+            \textbf{Gap} & \textcolor{orange}{#5} \\
+        \end{tabular}
+    };
+}
+
+% Budget allocation visualization
+% Usage: \drawBudgetAllocation{x}{y}{total}{people}{process}{technology}{other}
+\newcommand{\drawBudgetAllocation}[7]{
+    \pgfmathsetmacro{\peoplepct}{(#4/#3)*100}
+    \pgfmathsetmacro{\processpct}{(#5/#3)*100}
+    \pgfmathsetmacro{\techpct}{(#6/#3)*100}
+    \pgfmathsetmacro{\otherpct}{(#7/#3)*100}
+
+    \node[legend box, anchor=north west, minimum width=7.5cm,
+          draw=green!60!black, line width=2pt] at (#1,#2) {
+        \begin{tabular}{lcc}
+            \multicolumn{3}{c}{\textbf{Security Budget Allocation}} \\
+            \hline
+            \textbf{Category} & \textbf{Amount} & \textbf{\%} \\
+            \hline
+            People & \$#4 & \pgfmathprintnumber[precision=0]{\peoplepct}\% \\
+            Process & \$#5 & \pgfmathprintnumber[precision=0]{\processpct}\% \\
+            Technology & \$#6 & \pgfmathprintnumber[precision=0]{\techpct}\% \\
+            Other & \$#7 & \pgfmathprintnumber[precision=0]{\otherpct}\% \\
+            \hline
+            \textbf{Total} & \textbf{\$#3} & \textbf{100\%} \\
+        \end{tabular}
+    };
+}
+
+% Executive action tracker
+% Usage: \drawActionTracker{x}{y}{total_actions}{completed}{in_progress}{blocked}
+\newcommand{\drawActionTracker}[6]{
+    \pgfmathsetmacro{\completionrate}{(#4/#3)*100}
+
+    \node[legend box, anchor=north west, minimum width=6.5cm,
+          draw=blue!70, line width=2pt] at (#1,#2) {
+        \begin{tabular}{lc}
+            \multicolumn{2}{c}{\textbf{Executive Action Tracker}} \\
+            \hline
+            Total Actions & #3 \\
+            Completed & \textcolor{green!60!black}{#4} \\
+            In Progress & \textcolor{orange}{#5} \\
+            Blocked & \textcolor{red!70}{#6} \\
+            \hline
+            \textbf{Completion Rate} & \textbf{\pgfmathprintnumber[precision=0]{\completionrate}\%} \\
+        \end{tabular}
+    };
+}
+
+% ============================================================================
 % MAIN THREAT RENDERING ENGINE
 % ============================================================================
 
