@@ -1516,9 +1516,358 @@
         };
 }
 
-% TODO: Statistics enhancements
-% - Real-time connection counts
-% - Bandwidth utilization graphs
-% - Protocol distribution pie chart
-% - Top talkers list
-% - Connection timeline visualization
+% ============================================================================
+% TIME-SERIES CONNECTION METRICS
+% ============================================================================
+
+% Connection with historical trend indicator
+% Usage: \drawTrendConnection{from}{to}{current_value}{trend}{label}
+% trend: up, down, stable
+\newcommand{\drawTrendConnection}[5]{
+    \ifthenelse{\equal{#4}{up}}{
+        \def\trendColor{green}
+        \def\trendSymbol{$\uparrow$}
+    }{}
+    \ifthenelse{\equal{#4}{down}}{
+        \def\trendColor{red}
+        \def\trendSymbol{$\downarrow$}
+    }{}
+    \ifthenelse{\equal{#4}{stable}}{
+        \def\trendColor{blue}
+        \def\trendSymbol{$\rightarrow$}
+    }{}
+    \draw[draw=\trendColor!70!black, line width=1.2pt, -{Stealth[length=3mm]}]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny, fill=\trendColor!15, rounded corners=2pt, inner sep=2pt] {
+            #5: #3 \trendSymbol
+        };
+}
+
+% Connection with time-based metric history
+% Usage: \drawMetricHistoryConnection{from}{to}{metric_values}{label}
+% metric_values: comma-separated list like "10,15,20,25,30"
+\newcommand{\drawMetricHistoryConnection}[4]{
+    \draw[normal conn, line width=1pt, -{Stealth[length=3mm]}]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny, fill=blue!10, rounded corners=2pt, inner sep=2pt] {
+            #4: #3
+        };
+}
+
+% Connection with peak/average/current metrics
+% Usage: \drawPeakAverageConnection{from}{to}{peak}{avg}{current}{label}
+\newcommand{\drawPeakAverageConnection}[6]{
+    \draw[normal conn, line width=1.2pt, -{Stealth[length=3mm]}]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny, fill=cyan!10, rounded corners=2pt, inner sep=2pt, align=center] {
+            \textbf{#6} \\
+            \texttt{Peak:#3 | Avg:#4 | Now:#5}
+        };
+}
+
+% Connection with SLA compliance indicator
+% Usage: \drawSLAConnection{from}{to}{sla_percent}{threshold}{label}
+\newcommand{\drawSLAConnection}[5]{
+    \pgfmathsetmacro{\sla}{#3}
+    \pgfmathsetmacro{\thresh}{#4}
+    \ifdim\sla pt<\thresh pt
+        \def\slaColor{red}
+        \def\slaStatus{VIOLATION}
+    \else
+        \def\slaColor{green}
+        \def\slaStatus{OK}
+    \fi
+    \draw[draw=\slaColor!70!black, line width=1.5pt, -{Stealth[length=3mm]}]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny\bfseries, fill=\slaColor!20, rounded corners=2pt, inner sep=2pt] {
+            #5: SLA #3\% [\slaStatus]
+        };
+}
+
+% ============================================================================
+% SECURITY FRAMEWORK CONNECTIONS
+% ============================================================================
+
+% Zero Trust Architecture connection
+% Usage: \drawZeroTrustConnection{from}{to}{trust_score}{label}
+% trust_score: 0-100
+\newcommand{\drawZeroTrustConnection}[4]{
+    \pgfmathsetmacro{\trust}{#3}
+    \ifnum\trust<50
+        \def\ztColor{red}
+        \def\ztLabel{Low Trust}
+    \else\ifnum\trust<80
+        \def\ztColor{yellow}
+        \def\ztLabel{Medium Trust}
+    \else
+        \def\ztColor{green}
+        \def\ztLabel{High Trust}
+    \fi\fi
+    \draw[draw=\ztColor!70!black, line width=1.5pt, -{Stealth[length=3mm]}, densely dashed]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny, fill=\ztColor!15, rounded corners=2pt, inner sep=2pt] {
+            #4: Trust=#3 (\ztLabel)
+        };
+}
+
+% SASE (Secure Access Service Edge) connection
+% Usage: \drawSASEConnection{from}{to}{security_score}{label}
+\newcommand{\drawSASEConnection}[4]{
+    \draw[draw=purple!70!black, line width=1.8pt, -{Stealth[length=4mm]}, double distance=1.5pt]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny\bfseries, fill=purple!15, rounded corners=3pt, inner sep=3pt] {
+            \textcolor{purple!80!black}{$\blacksquare$} SASE: #4 (Sec:#3)
+        };
+}
+
+% Microsegmentation boundary
+% Usage: \drawMicrosegmentConnection{from}{to}{segment_id}{policy}{label}
+\newcommand{\drawMicrosegmentConnection}[5]{
+    \draw[draw=teal!70!black, line width=1pt, densely dotted, -{Stealth[length=3mm]}]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny, fill=teal!15, rounded corners=2pt, inner sep=2pt] {
+            Seg#3: #4 | #5
+        };
+}
+
+% Identity-based connection (IAM/SSO)
+% Usage: \drawIdentityConnection{from}{to}{identity}{role}{label}
+\newcommand{\drawIdentityConnection}[5]{
+    \draw[draw=blue!70!cyan, line width=1.2pt, -{Stealth[length=3mm]}]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny, fill=cyan!15, rounded corners=2pt, inner sep=2pt, align=center] {
+            #5 \\
+            \texttt{ID:#3 | Role:#4}
+        };
+}
+
+% ============================================================================
+% SD-WAN AND MPLS CONNECTIONS
+% ============================================================================
+
+% SD-WAN connection with path selection
+% Usage: \drawSDWANConnection{from}{to}{path_type}{quality}{label}
+% path_type: internet, mpls, lte, broadband
+\newcommand{\drawSDWANConnection}[5]{
+    \ifthenelse{\equal{#3}{internet}}{
+        \def\sdwanColor{blue}
+    }{}
+    \ifthenelse{\equal{#3}{mpls}}{
+        \def\sdwanColor{green}
+    }{}
+    \ifthenelse{\equal{#3}{lte}}{
+        \def\sdwanColor{orange}
+    }{}
+    \ifthenelse{\equal{#3}{broadband}}{
+        \def\sdwanColor{purple}
+    }{}
+    \draw[draw=\sdwanColor!70!black, line width=1.5pt, -{Stealth[length=4mm]}, double distance=1pt]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny\bfseries, fill=\sdwanColor!15, rounded corners=2pt, inner sep=2pt] {
+            SD-WAN (#3): #5 | Q:#4
+        };
+}
+
+% MPLS circuit with CoS marking
+% Usage: \drawMPLSConnection{from}{to}{cos}{circuit_id}{label}
+% cos: EF, AF, BE (Expedited Forwarding, Assured Forwarding, Best Effort)
+\newcommand{\drawMPLSConnection}[5]{
+    \ifthenelse{\equal{#3}{EF}}{
+        \def\mplsColor{red}
+        \def\mplsWidth{2pt}
+    }{}
+    \ifthenelse{\equal{#3}{AF}}{
+        \def\mplsColor{orange}
+        \def\mplsWidth{1.5pt}
+    }{}
+    \ifthenelse{\equal{#3}{BE}}{
+        \def\mplsColor{gray}
+        \def\mplsWidth{1pt}
+    }{}
+    \draw[draw=\mplsColor!70!black, line width=\mplsWidth, -{Stealth[length=3mm]}, double distance=1.5pt]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny, fill=\mplsColor!15, rounded corners=2pt, inner sep=2pt] {
+            MPLS-#4: #5 (CoS:#3)
+        };
+}
+
+% Multi-path SD-WAN with link aggregation
+% Usage: \drawMultiPathSDWAN{from}{to}{path_count}{active_paths}{label}
+\newcommand{\drawMultiPathSDWAN}[5]{
+    \foreach \i in {1,...,#4} {
+        \pgfmathsetmacro{\offset}{-1.5 + 3*(\i-1)/(#4-1)}
+        \draw[draw=blue!70!black, line width=1pt, -{Stealth[length=2mm]}]
+            ([yshift=\offset pt]#1) -- ([yshift=\offset pt]#2);
+    }
+    \node[above=5pt, font=\tiny\bfseries, fill=blue!20, rounded corners=2pt, inner sep=2pt]
+        at ($(#1)!0.5!(#2)$) {SD-WAN: #5 (#4/#3 active)};
+}
+
+% ============================================================================
+% MONITORING AND ALERTING VISUALIZATIONS
+% ============================================================================
+
+% Connection with alert indicator
+% Usage: \drawAlertConnection{from}{to}{alert_level}{message}{label}
+% alert_level: 0=info, 1=warning, 2=critical
+\newcommand{\drawAlertConnection}[5]{
+    \ifcase#3
+        \def\alertColor{blue}
+        \def\alertLabel{INFO}
+        \def\alertSymbol{ℹ}
+    \or
+        \def\alertColor{orange}
+        \def\alertLabel{WARNING}
+        \def\alertSymbol{⚠}
+    \or
+        \def\alertColor{red}
+        \def\alertLabel{CRITICAL}
+        \def\alertSymbol{✖}
+    \fi
+    \draw[draw=\alertColor!70!black, line width=1.5pt, -{Stealth[length=3mm]}]
+        (#1) -- (#2)
+        [postaction={
+            decorate,
+            decoration={
+                markings,
+                mark=at position 0.5 with {
+                    \node[fill=\alertColor!30, circle, inner sep=3pt] {\alertSymbol};
+                }
+            }
+        }]
+        node[pos=0.3, above, font=\tiny\bfseries, fill=\alertColor!20] {\alertLabel}
+        node[pos=0.7, below, font=\tiny] {#5: #4};
+}
+
+% SNMP trap visualization
+% Usage: \drawSNMPTrap{from}{to}{trap_type}{severity}{label}
+\newcommand{\drawSNMPTrap}[5]{
+    \draw[draw=yellow!70!orange, line width=1pt, -{Stealth[length=3mm]}, densely dashed]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny, fill=yellow!20, rounded corners=2pt, inner sep=2pt] {
+            SNMP Trap: #3 (Sev:#4) | #5
+        };
+}
+
+% NetFlow/sFlow collector connection
+% Usage: \drawNetFlowConnection{from}{to}{flow_rate}{label}
+\newcommand{\drawNetFlowConnection}[4]{
+    \draw[draw=cyan!70!black, line width=1pt, -{Stealth[length=3mm]}]
+        (#1) -- (#2)
+        [postaction={
+            decorate,
+            decoration={
+                markings,
+                mark=between positions 0.2 and 0.8 step 0.15 with {
+                    \node[circle, fill=cyan!60!black, inner sep=0.5pt] {};
+                }
+            }
+        }]
+        node[midway, above, font=\tiny, fill=cyan!15, rounded corners=2pt, inner sep=2pt] {
+            NetFlow: #4 (#3 fps)
+        };
+}
+
+% Syslog connection
+% Usage: \drawSyslogConnection{from}{to}{facility}{priority}{label}
+\newcommand{\drawSyslogConnection}[5]{
+    \draw[draw=purple!60!black, line width=0.8pt, -{Stealth[length=2mm]}, densely dotted]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny, fill=purple!15, rounded corners=2pt, inner sep=2pt] {
+            Syslog F#3.P#4: #5
+        };
+}
+
+% ============================================================================
+% NETWORK AUTOMATION AND ORCHESTRATION
+% ============================================================================
+
+% Ansible/Terraform provisioning connection
+% Usage: \drawProvisioningConnection{from}{to}{tool}{action}{label}
+\newcommand{\drawProvisioningConnection}[5]{
+    \ifthenelse{\equal{#3}{ansible}}{
+        \def\provColor{red}
+    }{}
+    \ifthenelse{\equal{#3}{terraform}}{
+        \def\provColor{purple}
+    }{}
+    \ifthenelse{\equal{#3}{puppet}}{
+        \def\provColor{orange}
+    }{}
+    \draw[draw=\provColor!70!black, line width=1.2pt, -{Stealth[length=3mm]}, densely dashed]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny, fill=\provColor!15, rounded corners=2pt, inner sep=2pt] {
+            \textbf{#3}: #4 | #5
+        };
+}
+
+% API management connection
+% Usage: \drawAPIConnection{from}{to}{api_version}{method}{label}
+\newcommand{\drawAPIConnection}[5]{
+    \draw[draw=green!70!black, line width=1pt, -{Stealth[length=3mm]}]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny\ttfamily, fill=green!15, rounded corners=2pt, inner sep=2pt] {
+            API #3: #4 | #5
+        };
+}
+
+% Webhook notification
+% Usage: \drawWebhookConnection{from}{to}{event}{label}
+\newcommand{\drawWebhookConnection}[4]{
+    \draw[draw=orange!70!black, line width=1pt, -{Stealth[length=3mm]}, decorate,
+          decoration={zigzag, amplitude=0.5mm, segment length=2mm}]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny, fill=orange!15, rounded corners=2pt, inner sep=2pt] {
+            Webhook: #3 | #4
+        };
+}
+
+% ============================================================================
+% COMPLIANCE AND AUDIT TRAIL
+% ============================================================================
+
+% Compliance-checked connection
+% Usage: \drawComplianceConnection{from}{to}{framework}{status}{label}
+% framework: PCI-DSS, HIPAA, SOC2, GDPR, etc.
+\newcommand{\drawComplianceConnection}[5]{
+    \ifthenelse{\equal{#4}{compliant}}{
+        \def\compColor{green}
+        \def\compSymbol{✓}
+    }{
+        \def\compColor{red}
+        \def\compSymbol{✗}
+    }
+    \draw[draw=\compColor!70!black, line width=1.2pt, -{Stealth[length=3mm]}]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny, fill=\compColor!15, rounded corners=2pt, inner sep=2pt] {
+            #3: #5 \compSymbol
+        };
+}
+
+% Audit trail connection
+% Usage: \drawAuditConnection{from}{to}{timestamp}{action}{user}{label}
+\newcommand{\drawAuditConnection}[6]{
+    \draw[draw=blue!60!black, line width=1pt, -{Stealth[length=3mm]}, densely dotted]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny, fill=blue!10, rounded corners=2pt, inner sep=2pt, align=center] {
+            #6 \\
+            \texttt{#3 | #4 | User:#5}
+        };
+}
+
+% Data sovereignty boundary
+% Usage: \drawDataSovereigntyConnection{from}{to}{region}{regulation}{label}
+\newcommand{\drawDataSovereigntyConnection}[5]{
+    \draw[draw=purple!70!black, line width=1.5pt, -{Stealth[length=3mm]}, densely dashed]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny\bfseries, fill=purple!15, rounded corners=2pt, inner sep=2pt] {
+            Data: #3 (#4) | #5
+        };
+}
+
+% TODO: Advanced statistics features
+% - Real-time connection counts with live updates
+% - Bandwidth utilization graphs embedded in diagram
+% - Protocol distribution pie charts
+% - Top talkers ranked list
+% - Connection timeline with historical playback
