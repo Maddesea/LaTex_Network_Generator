@@ -786,6 +786,57 @@ Free for personal and commercial use. Attribution appreciated.
   - 250+ documentation examples
   - Support for: Enterprise SOC operations, C-level briefings, board presentations, compliance audits, threat intelligence sharing, incident forensics, ML/AI security operations, risk quantification, executive reporting
 
+- **v1.3 (Current - Cloud-Native Security & DevSecOps Platform)** - Comprehensive cloud, container, and modern security with 160+ total commands:
+
+  **Cloud Security Posture Management (CSPM):**
+  - Multi-cloud security posture (AWS/Azure/GCP scoring)
+  - AWS misconfiguration detection with CIS benchmark mapping
+  - Azure Security Center finding visualization
+  - GCP Security Command Center integration
+  - S3 bucket misconfiguration detection (public access, encryption, versioning)
+  - IAM overprivileged role detection with risk scoring
+  - Cloud compliance framework (CIS Cloud Benchmarks)
+  - Cloud workload protection (EC2/VMs, Lambda/Functions, Containers)
+
+  **Container & Kubernetes Security:**
+  - Container vulnerability scan results (Trivy, Anchore, Snyk integration)
+  - Kubernetes pod security policy violation detection
+  - K8s RBAC misconfiguration identification
+  - Container runtime security (privileged containers, host network, dangerous capabilities)
+  - Container image supply chain visualization with SBOM
+  - Kubernetes cluster security score (API server, network policies, pod security)
+
+  **DevSecOps & CI/CD Pipeline Security:**
+  - CI/CD pipeline security scan dashboards (SAST/DAST/SCA/Secrets)
+  - SBOM (Software Bill of Materials) component visualization
+  - Supply chain risk assessment with license tracking
+
+  **IAM & Privilege Escalation:**
+  - Privilege escalation path visualization (user → intermediate → admin)
+  - IAM policy risk assessment (wildcard actions, resource exposure)
+  - MFA status visualization with privileged user highlighting
+
+  **Network Protocol Analysis:**
+  - DNS tunneling detection (query volume, entropy scoring)
+  - Encrypted traffic anomaly detection (TLS/SSL issues, cipher strength)
+
+  **Automated Remediation:**
+  - Remediation playbook steps with priority and ETA
+  - Step-by-step vulnerability fix workflows
+
+  **Security Control Testing:**
+  - Purple team assessment results (attack vs defense success rates)
+  - Control effectiveness measurement
+
+  **Advanced Threat Modeling:**
+  - STRIDE threat model visualization (Spoofing, Tampering, Repudiation, Information Disclosure, Denial of Service, Elevation of Privilege)
+
+  **Total v1.3 Implementation:**
+  - 160+ total LaTeX visualization commands (30+ new in v1.3)
+  - 3800+ total lines of production-ready code (600+ new in v1.3)
+  - 300+ documentation examples
+  - Support for: Cloud security operations, container security, DevSecOps, IAM governance, protocol analysis, purple teaming, threat modeling
+
 - **v2.0 (Planned)** - Auto-layout algorithms and data import/export
 - **v3.0 (Planned)** - Real-time SIEM integration and live threat feeds
 

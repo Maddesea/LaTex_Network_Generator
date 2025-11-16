@@ -3255,6 +3255,546 @@
 }
 
 % ============================================================================
+% CLOUD SECURITY POSTURE MANAGEMENT (CSPM)
+% ============================================================================
+
+% Multi-cloud security posture overview
+% Usage: \drawCloudSecurityPosture{x}{y}{aws_score}{azure_score}{gcp_score}{overall}
+\newcommand{\drawCloudSecurityPosture}[6]{
+    \pgfmathsetmacro{\overall}{#6}
+    \ifthenelse{\lengthtest{\overall pt > 80 pt}}{
+        \def\cspmcolor{green!60!black}
+    }{
+    \ifthenelse{\lengthtest{\overall pt > 60 pt}}{
+        \def\cspmcolor{orange}
+    }{
+        \def\cspmcolor{red!70}
+    }}
+
+    \node[legend box, anchor=north west, minimum width=7cm,
+          draw=\cspmcolor, line width=2.5pt] at (#1,#2) {
+        \begin{tabular}{lc}
+            \multicolumn{2}{c}{\textbf{Cloud Security Posture}} \\
+            \hline
+            AWS Security Score & \drawCloudScore{#3} \\
+            Azure Security Score & \drawCloudScore{#4} \\
+            GCP Security Score & \drawCloudScore{#5} \\
+            \hline
+            \textbf{Overall CSPM Score} & \textcolor{\cspmcolor}{\textbf{#6/100}} \\
+        \end{tabular}
+    };
+}
+
+% Helper for cloud score visualization
+\newcommand{\drawCloudScore}[1]{
+    \pgfmathsetmacro{\score}{#1}
+    \ifthenelse{\lengthtest{\score pt > 80 pt}}{
+        \textcolor{green!60!black}{#1}
+    }{
+    \ifthenelse{\lengthtest{\score pt > 60 pt}}{
+        \textcolor{orange}{#1}
+    }{
+        \textcolor{red!70}{#1}
+    }}
+}
+
+% AWS security misconfiguration
+% Usage: \markAWSMisconfig{x}{y}{service}{issue}{severity}{cis_benchmark}
+\newcommand{\markAWSMisconfig}[6]{
+    \ifthenelse{\equal{#5}{critical}}{
+        \def\awscolor{threatCritical}
+    }{
+    \ifthenelse{\equal{#5}{high}}{
+        \def\awscolor{orange}
+    }{
+        \def\awscolor{yellow!80!black}
+    }}
+
+    \node[legend box, anchor=north west, minimum width=6.5cm,
+          draw=\awscolor, line width=2pt, fill=orange!10] at (#1,#2) {
+        \begin{tabular}{ll}
+            \multicolumn{2}{c}{\textbf{\textcolor{\awscolor}{AWS Misconfiguration}}} \\
+            \hline
+            \textbf{Service:} & #3 \\
+            \textbf{Issue:} & #4 \\
+            \textbf{Severity:} & \textcolor{\awscolor}{\uppercase{#5}} \\
+            \textbf{CIS Benchmark:} & #6 \\
+        \end{tabular}
+    };
+}
+
+% Azure security findings
+% Usage: \markAzureSecurityFinding{x}{y}{resource}{finding}{recommendation}{priority}
+\newcommand{\markAzureSecurityFinding}[6]{
+    \node[legend box, anchor=north west, minimum width=6.5cm,
+          draw=blue!70, line width=2pt, fill=blue!5] at (#1,#2) {
+        \begin{tabular}{p{6cm}}
+            \multicolumn{1}{c}{\textbf{Azure Security Center Finding}} \\
+            \hline
+            \textbf{Resource:} #3 \\
+            \textbf{Finding:} #4 \\
+            \textbf{Recommendation:} #5 \\
+            \textbf{Priority:} \textcolor{orange}{#6} \\
+        \end{tabular}
+    };
+}
+
+% GCP Security Command Center
+% Usage: \drawGCPSecurityFinding{x}{y}{asset}{category}{severity}{scc_finding_class}
+\newcommand{\drawGCPSecurityFinding}[6]{
+    \node[legend box, anchor=north west, minimum width=6cm,
+          draw=red!70, line width=2pt, fill=red!5] at (#1,#2) {
+        \begin{tabular}{ll}
+            \multicolumn{2}{c}{\textbf{GCP SCC Finding}} \\
+            \hline
+            \textbf{Asset:} & #3 \\
+            \textbf{Category:} & #4 \\
+            \textbf{Severity:} & \textcolor{red!70}{#5} \\
+            \textbf{Finding Class:} & #6 \\
+        \end{tabular}
+    };
+}
+
+% S3 bucket misconfiguration
+% Usage: \markS3Misconfiguration{x}{y}{bucket_name}{public_access}{encryption}{versioning}
+\newcommand{\markS3Misconfiguration}[6]{
+    \ifthenelse{\equal{#4}{yes}}{
+        \def\s3color{threatCritical}
+        \def\s3status{PUBLIC - CRITICAL}
+    }{
+        \def\s3color{green!60!black}
+        \def\s3status{PRIVATE}
+    }
+
+    \node[legend box, anchor=north west, minimum width=6cm,
+          draw=\s3color, line width=2pt] at (#1,#2) {
+        \begin{tabular}{ll}
+            \multicolumn{2}{c}{\textbf{S3 Bucket: #3}} \\
+            \hline
+            \textbf{Public Access:} & \textcolor{\s3color}{\uppercase{#4}} \\
+            \textbf{Encryption:} & #5 \\
+            \textbf{Versioning:} & #6 \\
+            \hline
+            \textbf{Status:} & \textcolor{\s3color}{\s3status} \\
+        \end{tabular}
+    };
+}
+
+% IAM overprivileged role detection
+% Usage: \markOverprivilegedRole{x}{y}{role_name}{permissions_count}{unused_permissions}{risk_score}
+\newcommand{\markOverprivilegedRole}[6]{
+    \pgfmathsetmacro{\risk}{#6}
+    \ifthenelse{\lengthtest{\risk pt > 75 pt}}{
+        \def\iamcolor{red!70}
+    }{
+        \def\iamcolor{orange}
+    }
+
+    \node[legend box, anchor=north west, minimum width=6cm,
+          draw=\iamcolor, line width=2pt] at (#1,#2) {
+        \begin{tabular}{ll}
+            \multicolumn{2}{c}{\textbf{Overprivileged IAM Role}} \\
+            \hline
+            \textbf{Role:} & #3 \\
+            \textbf{Total Permissions:} & #4 \\
+            \textbf{Unused:} & \textcolor{orange}{#5} \\
+            \hline
+            \textbf{Risk Score:} & \textcolor{\iamcolor}{\textbf{#6/100}} \\
+        \end{tabular}
+    };
+}
+
+% Cloud compliance framework (CIS Cloud Benchmarks)
+% Usage: \drawCloudCompliance{x}{y}{provider}{cis_version}{compliant}{non_compliant}{score}
+\newcommand{\drawCloudCompliance}[7]{
+    \node[legend box, anchor=north west, minimum width=6.5cm,
+          draw=blue!70, line width=2pt] at (#1,#2) {
+        \begin{tabular}{lc}
+            \multicolumn{2}{c}{\textbf{CIS #3 Benchmark v#4}} \\
+            \hline
+            Compliant Controls & \textcolor{green!60!black}{#5} \\
+            Non-Compliant & \textcolor{red!70}{#6} \\
+            \hline
+            \textbf{Compliance Score} & \textbf{#7\%} \\
+        \end{tabular}
+    };
+}
+
+% Cloud workload protection
+% Usage: \drawCloudWorkloadProtection{x}{y}{ec2_protected}{lambda_protected}{containers_protected}{overall}
+\newcommand{\drawCloudWorkloadProtection}[6]{
+    \node[legend box, anchor=north west, minimum width=7cm,
+          draw=purple!70, line width=2pt] at (#1,#2) {
+        \begin{tabular}{lcc}
+            \multicolumn{3}{c}{\textbf{Cloud Workload Protection}} \\
+            \hline
+            \textbf{Workload Type} & \textbf{Protected} & \textbf{\%} \\
+            \hline
+            EC2/VMs & #3 & \pgfmathparse{int((#3/#6)*100)}\pgfmathresult \\
+            Lambda/Functions & #4 & \pgfmathparse{int((#4/#6)*100)}\pgfmathresult \\
+            Containers & #5 & \pgfmathparse{int((#5/#6)*100)}\pgfmathresult \\
+            \hline
+            \textbf{Overall Coverage} & \multicolumn{2}{c}{\textbf{#6\%}} \\
+        \end{tabular}
+    };
+}
+
+% ============================================================================
+% CONTAINER & KUBERNETES SECURITY
+% ============================================================================
+
+% Container vulnerability scan results
+% Usage: \drawContainerVulnScan{x}{y}{image_name}{critical}{high}{medium}{low}
+\newcommand{\drawContainerVulnScan}[7]{
+    \node[legend box, anchor=north west, minimum width=6.5cm,
+          draw=blue!70, line width=2pt, fill=blue!5] at (#1,#2) {
+        \begin{tabular}{lc}
+            \multicolumn{2}{c}{\textbf{Container Scan: #3}} \\
+            \hline
+            \textcolor{threatCritical}{Critical} & #4 \\
+            \textcolor{orange}{High} & #5 \\
+            \textcolor{yellow!80!black}{Medium} & #6 \\
+            \textcolor{green!60!black}{Low} & #7 \\
+        \end{tabular}
+    };
+}
+
+% Kubernetes pod security policy violation
+% Usage: \markK8sPolicyViolation{x}{y}{pod_name}{namespace}{violation}{severity}
+\newcommand{\markK8sPolicyViolation}[6]{
+    \ifthenelse{\equal{#6}{critical}}{
+        \def\k8scolor{threatCritical}
+    }{
+        \def\k8scolor{orange}
+    }
+
+    \node[legend box, anchor=north west, minimum width=6cm,
+          draw=\k8scolor, line width=2pt] at (#1,#2) {
+        \begin{tabular}{ll}
+            \multicolumn{2}{c}{\textbf{\textcolor{\k8scolor}{K8s Policy Violation}}} \\
+            \hline
+            \textbf{Pod:} & #3 \\
+            \textbf{Namespace:} & #4 \\
+            \textbf{Violation:} & #5 \\
+            \textbf{Severity:} & \textcolor{\k8scolor}{\uppercase{#6}} \\
+        \end{tabular}
+    };
+}
+
+% Kubernetes RBAC misconfiguration
+% Usage: \drawK8sRBACIssue{x}{y}{service_account}{overprivileged_verbs}{resources}{risk}
+\newcommand{\drawK8sRBACIssue}[6]{
+    \node[legend box, anchor=north west, minimum width=6.5cm,
+          draw=red!70, line width=2pt] at (#1,#2) {
+        \begin{tabular}{p{6cm}}
+            \multicolumn{1}{c}{\textbf{K8s RBAC Issue}} \\
+            \hline
+            \textbf{Service Account:} #3 \\
+            \textbf{Overprivileged Verbs:} #4 \\
+            \textbf{Affected Resources:} #5 \\
+            \hline
+            \textbf{Risk Level:} \textcolor{red!70}{#6} \\
+        \end{tabular}
+    };
+}
+
+% Container runtime security
+% Usage: \drawContainerRuntimeSecurity{x}{y}{privileged_containers}{host_network}{dangerous_caps}
+\newcommand{\drawContainerRuntimeSecurity}[5]{
+    \node[legend box, anchor=north west, minimum width=6cm,
+          draw=orange!80, line width=2pt] at (#1,#2) {
+        \begin{tabular}{lc}
+            \multicolumn{2}{c}{\textbf{Container Runtime Security}} \\
+            \hline
+            Privileged Containers & \textcolor{red!70}{#3} \\
+            Host Network Mode & \textcolor{orange}{#4} \\
+            Dangerous Capabilities & \textcolor{orange}{#5} \\
+        \end{tabular}
+    };
+}
+
+% Container image supply chain
+% Usage: \drawImageSupplyChain{x}{y}{image}{base_vulns}{layers_analyzed}{sbom_present}{signed}
+\newcommand{\drawImageSupplyChain}[7]{
+    \ifthenelse{\equal{#7}{yes}}{
+        \def\signcolor{green!60!black}
+    }{
+        \def\signcolor{red!70}
+    }
+
+    \node[legend box, anchor=north west, minimum width=6.5cm,
+          draw=purple!70, line width=2pt] at (#1,#2) {
+        \begin{tabular}{ll}
+            \multicolumn{2}{c}{\textbf{Image Supply Chain: #3}} \\
+            \hline
+            Base Image Vulns & \textcolor{orange}{#4} \\
+            Layers Analyzed & #5 \\
+            SBOM Present & #6 \\
+            \textbf{Image Signed} & \textcolor{\signcolor}{\uppercase{#7}} \\
+        \end{tabular}
+    };
+}
+
+% Kubernetes cluster security score
+% Usage: \drawK8sSecurityScore{x}{y}{cluster_name}{api_security}{network_policies}{pod_security}{overall}
+\newcommand{\drawK8sSecurityScore}[6]{
+    \node[legend box, anchor=north west, minimum width=7cm,
+          draw=blue!70, line width=2pt] at (#1,#2) {
+        \begin{tabular}{lc}
+            \multicolumn{2}{c}{\textbf{K8s Cluster: #3}} \\
+            \hline
+            API Server Security & #4/100 \\
+            Network Policies & #5/100 \\
+            Pod Security & #6/100 \\
+            \hline
+            \textbf{Overall Score} & \textbf{#6/100} \\
+        \end{tabular}
+    };
+}
+
+% ============================================================================
+% DEVSECOPS & CI/CD PIPELINE SECURITY
+% ============================================================================
+
+% CI/CD pipeline security scan
+% Usage: \drawPipelineSecurity{x}{y}{pipeline_name}{sast}{dast}{sca}{secrets_scan}
+\newcommand{\drawPipelineSecurity}[7]{
+    \node[legend box, anchor=north west, minimum width=7cm,
+          draw=purple!70, line width=2pt] at (#1,#2) {
+        \begin{tabular}{lcc}
+            \multicolumn{3}{c}{\textbf{Pipeline Security: #3}} \\
+            \hline
+            \textbf{Scan Type} & \textbf{Status} & \textbf{Issues} \\
+            \hline
+            SAST & #4 & \drawScanStatus{#4} \\
+            DAST & #5 & \drawScanStatus{#5} \\
+            SCA & #6 & \drawScanStatus{#6} \\
+            Secrets Scan & #7 & \drawScanStatus{#7} \\
+        \end{tabular}
+    };
+}
+
+% Helper for scan status
+\newcommand{\drawScanStatus}[1]{
+    \ifthenelse{\equal{#1}{pass}}{
+        \textcolor{green!60!black}{PASS}
+    }{
+    \ifthenelse{\equal{#1}{fail}}{
+        \textcolor{red!70}{FAIL}
+    }{
+        \textcolor{orange}{WARN}
+    }}
+}
+
+% SBOM (Software Bill of Materials) visualization
+% Usage: \drawSBOM{x}{y}{component}{version}{vulnerabilities}{license}{supply_chain_risk}
+\newcommand{\drawSBOM}[7]{
+    \pgfmathsetmacro{\risk}{#7}
+    \ifthenelse{\lengthtest{\risk pt > 70 pt}}{
+        \def\sbomcolor{red!70}
+    }{
+        \def\sbomcolor{green!60!black}
+    }
+
+    \node[legend box, anchor=north west, minimum width=6.5cm,
+          draw=\sbomcolor, line width=2pt] at (#1,#2) {
+        \begin{tabular}{ll}
+            \multicolumn{2}{c}{\textbf{SBOM Component}} \\
+            \hline
+            \textbf{Component:} & #3 \\
+            \textbf{Version:} & #4 \\
+            \textbf{Vulnerabilities:} & \textcolor{orange}{#5} \\
+            \textbf{License:} & #6 \\
+            \textbf{Supply Chain Risk:} & \textcolor{\sbomcolor}{#7\%} \\
+        \end{tabular}
+    };
+}
+
+% ============================================================================
+% IAM & PRIVILEGE ESCALATION MAPPING
+% ============================================================================
+
+% Privilege escalation path visualization
+% Usage: \drawPrivEscPath{user}{intermediate}{admin}{method}{severity}
+\newcommand{\drawPrivEscPath}[5]{
+    \draw[draw=red!70, line width=3pt, dashed, -{Stealth[length=5mm]}]
+        (#1) -- (#2) node[midway, above, font=\tiny, fill=yellow!30, inner sep=2pt] {
+            #4
+        };
+    \draw[draw=red!70, line width=3pt, dashed, -{Stealth[length=5mm]}]
+        (#2) -- (#3) node[midway, above, font=\tiny, fill=red!20, inner sep=2pt] {
+            ESCALATE TO ADMIN
+        };
+}
+
+% IAM policy risk assessment
+% Usage: \drawIAMPolicyRisk{x}{y}{policy_name}{wildcard_actions}{resource_exposure}{risk_score}
+\newcommand{\drawIAMPolicyRisk}[6]{
+    \pgfmathsetmacro{\risk}{#6}
+    \ifthenelse{\lengthtest{\risk pt > 80 pt}}{
+        \def\iampolicycolor{threatCritical}
+    }{
+        \def\iampolicycolor{orange}
+    }
+
+    \node[legend box, anchor=north west, minimum width=6cm,
+          draw=\iampolicycolor, line width=2pt] at (#1,#2) {
+        \begin{tabular}{ll}
+            \multicolumn{2}{c}{\textbf{IAM Policy: #3}} \\
+            \hline
+            Wildcard Actions (*) & \textcolor{red!70}{#4} \\
+            Resource Exposure & #5 \\
+            \hline
+            \textbf{Risk Score} & \textcolor{\iampolicycolor}{\textbf{#6/100}} \\
+        \end{tabular}
+    };
+}
+
+% MFA status visualization
+% Usage: \markMFAStatus{node}{user}{mfa_enabled}{privileged}
+\newcommand{\markMFAStatus}[4]{
+    \ifthenelse{\equal{#3}{no}}{
+        \def\mfacolor{red!70}
+        \def\mfalabel{NO MFA}
+    }{
+        \def\mfacolor{green!60!black}
+        \def\mfalabel{MFA ENABLED}
+    }
+
+    \node[draw=\mfacolor, fill=\mfacolor!20, font=\tiny\bfseries,
+          rounded corners=2pt, inner sep=2pt, anchor=south]
+        at (#1.south) [yshift=-0.4cm] {
+        #2: \mfalabel
+    };
+}
+
+% ============================================================================
+% NETWORK PROTOCOL ANALYSIS
+% ============================================================================
+
+% DNS tunneling detection
+% Usage: \markDNSTunneling{node}{domain}{query_volume}{entropy_score}
+\newcommand{\markDNSTunneling}[4]{
+    \node[draw=red!70, fill=yellow!30, font=\tiny\bfseries,
+          rounded corners=2pt, inner sep=3pt, anchor=north]
+        at (#1.north) [yshift=0.5cm] {
+        DNS TUNNELING DETECTED
+    };
+    \node[legend box, anchor=north, minimum width=5cm,
+          draw=red!70, line width=2pt] at (#1.north) {
+        \begin{tabular}{ll}
+            \textbf{Domain:} & #2 \\
+            \textbf{Query Volume:} & #3 \\
+            \textbf{Entropy:} & #4 \\
+        \end{tabular}
+    };
+}
+
+% Encrypted traffic anomaly
+% Usage: \drawEncryptedTrafficAnomaly{x}{y}{protocol}{cert_issues}{tls_version}{cipher_strength}
+\newcommand{\drawEncryptedTrafficAnomaly}[6]{
+    \node[legend box, anchor=north west, minimum width=6cm,
+          draw=orange!80, line width=2pt] at (#1,#2) {
+        \begin{tabular}{ll}
+            \multicolumn{2}{c}{\textbf{TLS/SSL Anomaly}} \\
+            \hline
+            \textbf{Protocol:} & #3 \\
+            \textbf{Cert Issues:} & \textcolor{red!70}{#4} \\
+            \textbf{TLS Version:} & #5 \\
+            \textbf{Cipher Strength:} & #6 \\
+        \end{tabular}
+    };
+}
+
+% ============================================================================
+% AUTOMATED REMEDIATION WORKFLOWS
+% ============================================================================
+
+% Remediation playbook steps
+% Usage: \drawRemediationPlaybook{x}{y}{vuln_id}{steps}{priority}{eta}
+\newcommand{\drawRemediationPlaybook}[6]{
+    \ifthenelse{\equal{#5}{critical}}{
+        \def\remcolor{threatCritical}
+    }{
+        \def\remcolor{orange}
+    }
+
+    \node[legend box, anchor=north west, minimum width=7cm,
+          draw=\remcolor, line width=2pt] at (#1,#2) {
+        \begin{tabular}{p{6.5cm}}
+            \multicolumn{1}{c}{\textbf{\textcolor{\remcolor}{Remediation: #3}}} \\
+            \hline
+            \textbf{Steps:} \\
+            #4 \\
+            \hline
+            \textbf{Priority:} \textcolor{\remcolor}{\uppercase{#5}} \\
+            \textbf{ETA:} #6 \\
+        \end{tabular}
+    };
+}
+
+% ============================================================================
+% SECURITY CONTROL EFFECTIVENESS TESTING
+% ============================================================================
+
+% Purple team assessment results
+% Usage: \drawPurpleTeamResults{x}{y}{control}{attack_success}{defense_success}{effectiveness}
+\newcommand{\drawPurpleTeamResults}[6]{
+    \pgfmathsetmacro{\effective}{#6}
+    \ifthenelse{\lengthtest{\effective pt > 80 pt}}{
+        \def\purplecolor{green!60!black}
+    }{
+        \def\purplecolor{orange}
+    }
+
+    \node[legend box, anchor=north west, minimum width=6.5cm,
+          draw=\purplecolor, line width=2pt] at (#1,#2) {
+        \begin{tabular}{ll}
+            \multicolumn{2}{c}{\textbf{Purple Team: #3}} \\
+            \hline
+            Attack Success Rate & #4\% \\
+            Defense Success Rate & #5\% \\
+            \hline
+            \textbf{Effectiveness} & \textcolor{\purplecolor}{\textbf{#6\%}} \\
+        \end{tabular}
+    };
+}
+
+% ============================================================================
+% ADVANCED THREAT MODELING FRAMEWORKS
+% ============================================================================
+
+% STRIDE threat model
+% Usage: \drawSTRIDE{x}{y}{component}{spoofing}{tampering}{repudiation}{info_disclosure}{dos}{elevation}
+\newcommand{\drawSTRIDE}[8]{
+    \node[legend box, anchor=north west, minimum width=7cm,
+          draw=purple!70, line width=2pt, fill=purple!5] at (#1,#2) {
+        \begin{tabular}{lc}
+            \multicolumn{2}{c}{\textbf{STRIDE Model: #3}} \\
+            \hline
+            Spoofing & \drawThreatLevel{#4} \\
+            Tampering & \drawThreatLevel{#5} \\
+            Repudiation & \drawThreatLevel{#6} \\
+            Information Disclosure & \drawThreatLevel{#7} \\
+            Denial of Service & \drawThreatLevel{#8} \\
+            Elevation of Privilege & \drawThreatLevel{#8} \\
+        \end{tabular}
+    };
+}
+
+% Helper for threat level visualization
+\newcommand{\drawThreatLevel}[1]{
+    \ifthenelse{\equal{#1}{high}}{
+        \textcolor{red!70}{HIGH}
+    }{
+    \ifthenelse{\equal{#1}{medium}}{
+        \textcolor{orange}{MEDIUM}
+    }{
+        \textcolor{green!60!black}{LOW}
+    }}
+}
+
+% ============================================================================
 % MAIN THREAT RENDERING ENGINE
 % ============================================================================
 
