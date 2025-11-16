@@ -701,7 +701,7 @@
         label={[inner sep=2pt, font=\small]center:\routerIcon}
     },
     icon database/.style={
-        server,
+        database,
         label={[inner sep=2pt, font=\small]center:\databaseIcon}
     }
 }
@@ -1243,7 +1243,7 @@
     % #1 = number of connections
     % #2 = from node
     % #3 = to node
-    \draw[draw=connNormal, line width=2pt, -{Stealth[length=4mm]}] (#2) -- (#3)
+    \draw[connNormal, line width=2pt, -{Stealth[length=4mm]}] (#2) -- (#3)
         node[midway, fill=white, inner sep=2pt, font=\tiny] {×#1};
 }
 
@@ -1257,7 +1257,7 @@
 
 % Connection with inline protocol label
 \tikzset{
-    labeled conn/.style 2 args={
+    labeled conn/.style n args={2}{
         draw=connNormal,
         line width=1pt,
         -{Stealth[length=3mm]},
@@ -1659,6 +1659,9 @@
 }
 
 % Timestamp annotation
+% Define current time command (simple version without external packages)
+\newcommand{\currenttime}{\number\hour:\ifnum\minute<10 0\fi\number\minute}
+
 \newcommand{\timestamp}{
     \node[font=\tiny, text=gray] at (current page.south east)
         [anchor=south east, xshift=-5mm, yshift=5mm]
