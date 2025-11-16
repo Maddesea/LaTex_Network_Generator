@@ -8,6 +8,10 @@
 % Node counter for auto-indexing
 \newcounter{nodecount}
 
+% Configurable parameters for node styling
+\newlength{\containerStackOffset}
+\setlength{\containerStackOffset}{2pt}  % Offset between stacked container layers
+
 % ============================================================================
 % HASH MAP IMPLEMENTATION FOR O(1) NODE LOOKUP
 % ============================================================================
@@ -40,27 +44,47 @@
 
 % Lookup node ID by IP address
 % Usage: \getNodeByIP{192.168.1.10}{\resultvar}
+% Returns: Node ID if found, empty string otherwise
 \newcommand{\getNodeByIP}[2]{
     \StrSubstitute{#1}{.}{_}[\safeip]
-    \pgfkeysgetvalue{/nodemap/byip/\safeip}{#2}
+    \pgfkeysifdefined{/nodemap/byip/\safeip}{
+        \pgfkeysgetvalue{/nodemap/byip/\safeip}{#2}
+    }{
+        \def#2{} % Return empty if not found
+    }
 }
 
 % Lookup node ID by hostname
 % Usage: \getNodeByHostname{webserver}{\resultvar}
+% Returns: Node ID if found, empty string otherwise
 \newcommand{\getNodeByHostname}[2]{
-    \pgfkeysgetvalue{/nodemap/byhost/#1}{#2}
+    \pgfkeysifdefined{/nodemap/byhost/#1}{
+        \pgfkeysgetvalue{/nodemap/byhost/#1}{#2}
+    }{
+        \def#2{} % Return empty if not found
+    }
 }
 
 % Get node IP by node ID
 % Usage: \getNodeIP{srv1}{\resultvar}
+% Returns: IP address if found, empty string otherwise
 \newcommand{\getNodeIP}[2]{
-    \pgfkeysgetvalue{/nodemap/byid/#1/ip}{#2}
+    \pgfkeysifdefined{/nodemap/byid/#1/ip}{
+        \pgfkeysgetvalue{/nodemap/byid/#1/ip}{#2}
+    }{
+        \def#2{} % Return empty if not found
+    }
 }
 
 % Get node hostname by node ID
 % Usage: \getNodeHostname{srv1}{\resultvar}
+% Returns: Hostname if found, empty string otherwise
 \newcommand{\getNodeHostname}[2]{
-    \pgfkeysgetvalue{/nodemap/byid/#1/hostname}{#2}
+    \pgfkeysifdefined{/nodemap/byid/#1/hostname}{
+        \pgfkeysgetvalue{/nodemap/byid/#1/hostname}{#2}
+    }{
+        \def#2{} % Return empty if not found
+    }
 }
 
 % ============================================================================
@@ -105,31 +129,52 @@
     \pgfkeys{/nodemap/byid/#1/compliance/.initial={#4}}
 }
 
-% Get node metadata
+% Get node metadata (with error handling)
 \newcommand{\getNodeType}[2]{
-    \pgfkeysgetvalue{/nodemap/byid/#1/type}{#2}
+    \pgfkeysifdefined{/nodemap/byid/#1/type}{
+        \pgfkeysgetvalue{/nodemap/byid/#1/type}{#2}
+    }{
+        \def#2{unknown}
+    }
 }
 
 \newcommand{\getNodeOS}[2]{
-    \pgfkeysgetvalue{/nodemap/byid/#1/os}{#2}
+    \pgfkeysifdefined{/nodemap/byid/#1/os}{
+        \pgfkeysgetvalue{/nodemap/byid/#1/os}{#2}
+    }{
+        \def#2{unknown}
+    }
 }
 
 \newcommand{\getNodeStatus}[2]{
-    \pgfkeysgetvalue{/nodemap/byid/#1/status}{#2}
+    \pgfkeysifdefined{/nodemap/byid/#1/status}{
+        \pgfkeysgetvalue{/nodemap/byid/#1/status}{#2}
+    }{
+        \def#2{unknown}
+    }
 }
 
 \newcommand{\getNodeCluster}[2]{
-    \pgfkeysgetvalue{/nodemap/byid/#1/cluster}{#2}
+    \pgfkeysifdefined{/nodemap/byid/#1/cluster}{
+        \pgfkeysgetvalue{/nodemap/byid/#1/cluster}{#2}
+    }{
+        \def#2{}
+    }
 }
 
 \newcommand{\getNodeParent}[2]{
-    \pgfkeysgetvalue{/nodemap/byid/#1/parent}{#2}
+    \pgfkeysifdefined{/nodemap/byid/#1/parent}{
+        \pgfkeysgetvalue{/nodemap/byid/#1/parent}{#2}
+    }{
+        \def#2{}
+    }
 }
 
-% TODO: Advanced hash map features
+% TODO: Advanced hash map features (future enhancements)
 % - Index nodes by multiple attributes simultaneously
 % - Support for node tagging and label querying
 % - Network topology graph representation
+% Note: Error handling for missing keys is now implemented
 
 % ============================================================================
 % IP ADDRESS VALIDATION AND FORMATTING
@@ -242,9 +287,20 @@
         \StrCut{\remaining}{.}{\octetB}{\remaining}
         \StrCut{\remaining}{.}{\octetC}{\octetD}
 
-        % Note: Full range validation would require more complex LaTeX programming
-        % This is a basic structure - full implementation would need numeric comparison
-        \def#2{1} % Mark as valid if format is correct
+        % Validate each octet is in range 0-255
+        \def\validoctets{1}
+        \ifnum\octetA<0\relax \def\validoctets{0}\fi
+        \ifnum\octetA>255\relax \def\validoctets{0}\fi
+        \ifnum\octetB<0\relax \def\validoctets{0}\fi
+        \ifnum\octetB>255\relax \def\validoctets{0}\fi
+        \ifnum\octetC<0\relax \def\validoctets{0}\fi
+        \ifnum\octetC>255\relax \def\validoctets{0}\fi
+        \ifnum\octetD<0\relax \def\validoctets{0}\fi
+        \ifnum\octetD>255\relax \def\validoctets{0}\fi
+
+        \ifnum\validoctets=1\relax
+            \def#2{1} % Mark as valid if format and range are correct
+        \fi
     \fi
 }
 
@@ -292,17 +348,41 @@
     }{
     % Check for 172.16.0.0/12 (172.16-172.31)
     \ifthenelse{\equal{\octetA}{172}}{
-        \def#2{1} % Simplified - should check 16-31 range
+        % Properly validate second octet is in range 16-31
+        \ifnum\octetB<16\relax
+            \def#2{0}
+        \else
+            \ifnum\octetB>31\relax
+                \def#2{0}
+            \else
+                \def#2{1}
+            \fi
+        \fi
     }{
         \def#2{0}
     }}}
 }
 
 % TODO: Advanced IP validation
-% - Full numeric range validation for octets (requires lua or complex TeX)
 % - Full IPv6 validation with compression
 % - CIDR validation and calculations
 % - IP range validation (start-end)
+
+% ============================================================================
+% TEXT FORMATTING HELPERS
+% ============================================================================
+
+% Format IP address text with consistent styling (avoids nested TikZ nodes)
+% Usage: \iptext{192.168.1.10}
+\newcommand{\iptext}[1]{%
+    {\scriptsize\ttfamily\textcolor{black!70}{#1}}%
+}
+
+% Format IP address with custom background color
+% Usage: \iptextcolored{192.168.1.10}{threatCritical!20}
+\newcommand{\iptextcolored}[2]{%
+    {\scriptsize\ttfamily\colorbox{#2}{\textcolor{black!70}{#1}}}%
+}
 
 % ============================================================================
 % BASIC NODE CREATION COMMANDS
@@ -313,7 +393,7 @@
 \newcommand{\createServer}[5]{
     \node[server] (#1) at (#3,#4) {
         \textbf{#5} \\[2pt]
-        \tikz\node[ip label]{#2};
+        \iptext{#2}
     };
 }
 
@@ -322,7 +402,7 @@
 \newcommand{\createClient}[5]{
     \node[client] (#1) at (#3,#4) {
         \textbf{#5} \\[2pt]
-        \tikz\node[ip label]{#2};
+        \iptext{#2}
     };
 }
 
@@ -331,7 +411,7 @@
 \newcommand{\createRouter}[5]{
     \node[router] (#1) at (#3,#4) {
         \textbf{#5} \\[2pt]
-        \tikz\node[ip label]{#2};
+        \iptext{#2}
     };
 }
 
@@ -340,7 +420,7 @@
 \newcommand{\createFirewall}[5]{
     \node[firewall] (#1) at (#3,#4) {
         \textbf{#5} \\[2pt]
-        \tikz\node[ip label]{#2};
+        \iptext{#2}
     };
 }
 
@@ -349,7 +429,7 @@
 \newcommand{\createSwitch}[5]{
     \node[switch] (#1) at (#3,#4) {
         \textbf{#5} \\[2pt]
-        \tikz\node[ip label]{#2};
+        \iptext{#2}
     };
 }
 
@@ -366,16 +446,14 @@
 \newcommand{\createAttacker}[5]{
     \node[attacker] (#1) at (#3,#4) {
         \textbf{#5} \\[2pt]
-        \tikz\node[ip label, fill=threatCritical!20]{#2};
+        \iptextcolored{#2}{threatCritical!20}
     };
 }
 
-% TODO: Advanced node creation
+% TODO: Advanced node creation (future enhancements)
 % - Add support for custom node shapes via parameters
-% - Implement node templates for common device types
-% - Add automatic IP validation and formatting
 % - Create composite nodes (e.g., server rack with multiple servers)
-% - Support for node status indicators (up/down/warning)
+% Note: Node templates, IP validation, and status indicators are implemented
 
 % ============================================================================
 % ENHANCED NODE VARIANTS
@@ -386,7 +464,7 @@
 \newcommand{\createServerWithPorts}[6]{
     \node[server, minimum height=2cm] (#1) at (#3,#4) {
         \textbf{#5} \\[2pt]
-        \tikz\node[ip label]{#2}; \\[3pt]
+        \iptext{#2} \\[3pt]
         \tikz\node[port label]{#6};
     };
 }
@@ -426,7 +504,7 @@
 \newcommand{\createDatabase}[5]{
     \node[database] (#1) at (#3,#4) {
         \textbf{#5} \\[2pt]
-        \tikz\node[ip label]{#2};
+        \iptext{#2}
     };
 }
 
@@ -435,7 +513,7 @@
 \newcommand{\createDatabasePrimary}[5]{
     \node[database primary] (#1) at (#3,#4) {
         \textbf{#5} \\[2pt]
-        \tikz\node[ip label]{#2}; \\[1pt]
+        \iptext{#2} \\[1pt]
         \tikz\node[font=\tiny\bfseries, text=databaseTeal!90]{PRIMARY};
     };
 }
@@ -445,7 +523,7 @@
 \newcommand{\createDatabaseReplica}[5]{
     \node[database replica] (#1) at (#3,#4) {
         \textbf{#5} \\[2pt]
-        \tikz\node[ip label]{#2}; \\[1pt]
+        \iptext{#2} \\[1pt]
         \tikz\node[font=\tiny\bfseries, text=databaseTeal!70]{REPLICA};
     };
 }
@@ -455,7 +533,7 @@
 \newcommand{\createDatabaseCluster}[5]{
     \node[database cluster] (#1) at (#3,#4) {
         \textbf{#5} \\[2pt]
-        \tikz\node[ip label]{#2}; \\[1pt]
+        \iptext{#2} \\[1pt]
         \tikz\node[font=\tiny\bfseries, text=databaseTeal!85]{CLUSTER};
     };
 }
@@ -469,7 +547,7 @@
 \newcommand{\createLoadBalancer}[5]{
     \node[loadbalancer] (#1) at (#3,#4) {
         \textbf{#5} \\[2pt]
-        \tikz\node[ip label]{#2};
+        \iptext{#2}
     };
 }
 
@@ -479,7 +557,7 @@
 \newcommand{\createLoadBalancerActive}[6]{
     \node[loadbalancer active] (#1) at (#3,#4) {
         \textbf{#5} \\[2pt]
-        \tikz\node[ip label]{#2}; \\[1pt]
+        \iptext{#2} \\[1pt]
         \tikz\node[font=\tiny\ttfamily, text=loadBalancerCyan!90]{#6}; \\[1pt]
         \tikz\node[font=\tiny\bfseries, text=clientGreen!80]{ACTIVE};
     };
@@ -490,7 +568,7 @@
 \newcommand{\createLoadBalancerPassive}[5]{
     \node[loadbalancer passive] (#1) at (#3,#4) {
         \textbf{#5} \\[2pt]
-        \tikz\node[ip label]{#2}; \\[1pt]
+        \iptext{#2} \\[1pt]
         \tikz\node[font=\tiny\bfseries, text=black!50]{STANDBY};
     };
 }
@@ -511,7 +589,7 @@
 \newcommand{\createVM}[6]{
     \node[vm] (#1) at (#3,#4) {
         \textbf{#5} \\[2pt]
-        \tikz\node[ip label]{#2}; \\[1pt]
+        \iptext{#2} \\[1pt]
         \tikz\node[font=\tiny\ttfamily, text=vmIndigo!70]{Host: #6};
     };
 }
@@ -521,7 +599,7 @@
 \newcommand{\createHypervisor}[6]{
     \node[vm hypervisor] (#1) at (#3,#4) {
         \textbf{#5} \\[2pt]
-        \tikz\node[ip label]{#2}; \\[3pt]
+        \iptext{#2} \\[3pt]
         \tikz\node[font=\tiny\bfseries, text=vmIndigo!90]{HYPERVISOR}; \\[1pt]
         \tikz\node[font=\tiny\ttfamily, text=vmIndigo!70]{VMs: #6};
     };
@@ -532,7 +610,7 @@
 \newcommand{\createVMWithResources}[8]{
     \node[vm] (#1) at (#3,#4) {
         \textbf{#5} \\[2pt]
-        \tikz\node[ip label]{#2}; \\[2pt]
+        \iptext{#2} \\[2pt]
         \tikz\node[font=\tiny\ttfamily, text=black!60]{CPU: #6 | RAM: #7 | Disk: #8};
     };
 }
@@ -546,18 +624,18 @@
 \newcommand{\createContainer}[6]{
     \node[container] (#1) at (#3,#4) {
         \textbf{#5} \\[1pt]
-        \tikz\node[ip label]{#2}; \\[1pt]
+        \iptext{#2} \\[1pt]
         \tikz\node[font=\tiny\ttfamily, text=containerBlue!70]{#6};
     };
-    % Add stacked effect
+    % Add stacked effect (configurable offset)
     \draw[containerBlue!60, line width=0.8pt]
-        ([xshift=-2pt, yshift=2pt]#1.north west) --
-        ([xshift=-2pt, yshift=2pt]#1.north east) --
-        ([xshift=-2pt]#1.south east);
+        ([xshift=-\containerStackOffset, yshift=\containerStackOffset]#1.north west) --
+        ([xshift=-\containerStackOffset, yshift=\containerStackOffset]#1.north east) --
+        ([xshift=-\containerStackOffset]#1.south east);
     \draw[containerBlue!40, line width=0.6pt]
-        ([xshift=-4pt, yshift=4pt]#1.north west) --
-        ([xshift=-4pt, yshift=4pt]#1.north east) --
-        ([xshift=-4pt]#1.south east);
+        ([xshift=-2\containerStackOffset, yshift=2\containerStackOffset]#1.north west) --
+        ([xshift=-2\containerStackOffset, yshift=2\containerStackOffset]#1.north east) --
+        ([xshift=-2\containerStackOffset]#1.south east);
 }
 
 % Create a Kubernetes pod node
@@ -565,7 +643,7 @@
 \newcommand{\createPod}[6]{
     \node[container pod] (#1) at (#3,#4) {
         \textbf{#5} \\[1pt]
-        \tikz\node[ip label]{#2}; \\[1pt]
+        \iptext{#2} \\[1pt]
         \tikz\node[font=\tiny\ttfamily, text=containerBlue!70]{NS: #6};
     };
 }
@@ -575,14 +653,14 @@
 \newcommand{\createContainerWithPorts}[6]{
     \node[container] (#1) at (#3,#4) {
         \textbf{#5} \\[1pt]
-        \tikz\node[ip label]{#2}; \\[1pt]
+        \iptext{#2} \\[1pt]
         \tikz\node[font=\tiny\ttfamily, text=containerBlue!70]{Ports: #6};
     };
-    % Add stacked effect
+    % Add stacked effect (configurable offset)
     \draw[containerBlue!60, line width=0.8pt]
-        ([xshift=-2pt, yshift=2pt]#1.north west) --
-        ([xshift=-2pt, yshift=2pt]#1.north east) --
-        ([xshift=-2pt]#1.south east);
+        ([xshift=-\containerStackOffset, yshift=\containerStackOffset]#1.north west) --
+        ([xshift=-\containerStackOffset, yshift=\containerStackOffset]#1.north east) --
+        ([xshift=-\containerStackOffset]#1.south east);
 }
 
 % ============================================================================
@@ -622,11 +700,9 @@
     }
 }
 
-% TODO: Enhanced clustering features
-% - Mobile device nodes with phone/tablet shapes
-% - IoT device nodes with specialized icons
+% TODO: Enhanced clustering features (future enhancements)
 % - Auto-arrange nodes within clusters
-% - Subnet boundary visualization
+% Note: Mobile devices, IoT devices, and subnet boundaries are implemented
 
 % ============================================================================
 % MULTI-PART NODES FOR DETAILED INFORMATION
@@ -638,7 +714,7 @@
     \node[multipart node] (#1) at (#3,#4) {
         \textbf{#5}
         \nodepart{two}
-        \tikz\node[ip label]{#2}; \\
+        \iptext{#2} \\
         \tikz\node[font=\tiny\ttfamily, text=black!70]{#6};
         \nodepart{three}
         \tikz\node[font=\tiny\bfseries, text=clientGreen!80]{#7};
@@ -683,7 +759,7 @@
     ] (#1) at (#3,#4) {
         \textbf{#5}
         \nodepart{two}
-        \tikz\node[ip label]{#2};
+        \iptext{#2}
         \nodepart{three}
         % CPU bar
         \tikz{
@@ -734,7 +810,7 @@
     ] (#1) at (#3,#4) {
         \textbf{#5}
         \nodepart{two}
-        \tikz\node[ip label]{#2}; \\
+        \iptext{#2} \\
         \tikz\node[font=\tiny\ttfamily, text=black!70]{Vulnerabilities: #6}; \\
         \tikz\node[font=\tiny\ttfamily, text=black!70]{Max CVSS: #7};
         \nodepart{three}
@@ -751,7 +827,7 @@
 \newcommand{\createMobilePhone}[6]{
     \node[mobile phone] (#1) at (#3,#4) {
         \tikz\node[font=\tiny\bfseries]{#5}; \\[1pt]
-        \tikz\node[ip label, font=\tiny]{#2}; \\[1pt]
+        {\tiny\ttfamily\textcolor{black!70}{#2}} \\[1pt]
         \tikz\node[font=\tiny\ttfamily, text=mobileOrange!80]{#6};
     };
     % Add screen indicator
@@ -765,7 +841,7 @@
 \newcommand{\createTablet}[6]{
     \node[tablet] (#1) at (#3,#4) {
         \textbf{#5} \\[1pt]
-        \tikz\node[ip label]{#2}; \\[1pt]
+        \iptext{#2} \\[1pt]
         \tikz\node[font=\tiny\ttfamily, text=mobileOrange!80]{#6};
     };
 }
@@ -775,7 +851,7 @@
 \newcommand{\createLaptop}[6]{
     \node[client, minimum width=2.2cm] (#1) at (#3,#4) {
         \textbf{#5} \\[2pt]
-        \tikz\node[ip label]{#2}; \\[1pt]
+        \iptext{#2} \\[1pt]
         \tikz\node[font=\tiny\ttfamily, text=clientGreen!70]{User: #6};
     };
     % Add laptop hinge indicator
@@ -792,7 +868,7 @@
 \newcommand{\createIoTDevice}[6]{
     \node[iot device] (#1) at (#3,#4) {
         \tikz\node[font=\small\bfseries]{#5}; \\[1pt]
-        \tikz\node[ip label, font=\tiny]{#2}; \\[1pt]
+        {\tiny\ttfamily\textcolor{black!70}{#2}} \\[1pt]
         \tikz\node[font=\tiny\ttfamily, text=iotGreen!80]{#6};
     };
 }
@@ -812,7 +888,7 @@
 \newcommand{\createSmartDevice}[7]{
     \node[iot device, minimum width=2.5cm] (#1) at (#3,#4) {
         \tikz\node[font=\small\bfseries]{#5}; \\[1pt]
-        \tikz\node[ip label, font=\tiny]{#2}; \\[1pt]
+        {\tiny\ttfamily\textcolor{black!70}{#2}} \\[1pt]
         \tikz\node[font=\tiny\ttfamily, text=iotGreen!70]{#6}; \\[1pt]
         \tikz\node[font=\tiny, text=black!60]{#7};
     };
@@ -862,7 +938,7 @@
 \newcommand{\createIPS}[6]{
     \node[ips] (#1) at (#3,#4) {
         \textbf{#5} \\[2pt]
-        \tikz\node[ip label]{#2}; \\[2pt]
+        \iptext{#2} \\[2pt]
         \tikz\node[font=\tiny\bfseries, text=appliancePurple!90]{#6};
     };
 }
@@ -872,7 +948,7 @@
 \newcommand{\createProxy}[6]{
     \node[proxy] (#1) at (#3,#4) {
         \textbf{#5} \\[2pt]
-        \tikz\node[ip label]{#2}; \\[1pt]
+        \iptext{#2} \\[1pt]
         \tikz\node[font=\tiny\ttfamily, text=appliancePurple!80]{#6};
     };
 }
@@ -882,7 +958,7 @@
 \newcommand{\createWAF}[6]{
     \node[waf] (#1) at (#3,#4) {
         \textbf{#5} \\[2pt]
-        \tikz\node[ip label]{#2}; \\[2pt]
+        \iptext{#2} \\[2pt]
         \tikz\node[font=\tiny\bfseries, text=appliancePurple!90]{WAF}; \\[1pt]
         \tikz\node[font=\tiny\ttfamily, text=black!60]{Rules: #6};
     };
@@ -897,7 +973,7 @@
 \newcommand{\createStorage}[6]{
     \node[storage] (#1) at (#3,#4) {
         \textbf{#5} \\[2pt]
-        \tikz\node[ip label]{#2}; \\[1pt]
+        \iptext{#2} \\[1pt]
         \tikz\node[font=\tiny\ttfamily, text=storageYellow!90]{#6};
     };
 }
@@ -907,7 +983,7 @@
 \newcommand{\createNAS}[7]{
     \node[nas] (#1) at (#3,#4) {
         \textbf{#5} \\[2pt]
-        \tikz\node[ip label]{#2}; \\[1pt]
+        \iptext{#2} \\[1pt]
         \tikz\node[font=\tiny\bfseries, text=storageYellow!90]{NAS}; \\[1pt]
         \tikz\node[font=\tiny\ttfamily, text=black!60]{#6 | #7};
     };
@@ -918,7 +994,7 @@
 \newcommand{\createSAN}[7]{
     \node[storage, minimum height=2.5cm] (#1) at (#3,#4) {
         \textbf{#5} \\[2pt]
-        \tikz\node[ip label]{#2}; \\[2pt]
+        \iptext{#2} \\[2pt]
         \tikz\node[font=\tiny\bfseries, text=storageYellow!90]{SAN}; \\[1pt]
         \tikz\node[font=\tiny\ttfamily, text=black!60]{#6}; \\[1pt]
         \tikz\node[font=\tiny\ttfamily, text=storageYellow!80]{#7};
@@ -934,7 +1010,7 @@
 \newcommand{\createWirelessAP}[6]{
     \node[wireless ap] (#1) at (#3,#4) {
         \tikz\node[font=\small\bfseries]{#5}; \\[2pt]
-        \tikz\node[ip label]{#2}; \\[2pt]
+        \iptext{#2} \\[2pt]
         \tikz\node[font=\tiny\ttfamily, text=wirelessTeal!80]{SSID: #6};
     };
     % Add wireless signal indicators
