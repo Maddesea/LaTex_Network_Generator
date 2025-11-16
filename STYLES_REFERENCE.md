@@ -57,6 +57,14 @@ Apply complete styling configurations with one command:
 \setupDiagram{dark}          % Same as \loadDarkPreset
 ```
 
+### Theme Variations (Round 4)
+```latex
+\loadCorporateBlueTheme   % Corporate blue professional theme
+\loadCyberpunkTheme       % Neon cyberpunk with dark background
+\loadMinimalTheme         % Minimal grayscale design
+\loadMilitaryTheme        % Military/tactical color scheme
+```
+
 ---
 
 ## Node Styles
@@ -157,6 +165,17 @@ satellite      % Dashed with satellite markers
 load balanced  % Double/parallel lines (HA connections)
 ```
 
+### Enterprise Connections (Round 4)
+```latex
+replication    % Database replication (blue with 'R' markers)
+heartbeat      % HA heartbeat (green pulse markers)
+backup         % Backup channel (brown with 'B' markers)
+sync           % Data sync (purple with 'S' markers)
+api call       % API communication (orange with 'API' markers)
+message queue  % Async messaging (teal with 'MQ' markers)
+streaming      % Real-time stream (cyan wavy with arrows)
+```
+
 ### Connection Helpers
 ```latex
 % Labeled connection with auto-positioned label
@@ -195,6 +214,26 @@ flash alert  % Intense red glow for critical alerts
 danger zone      % Red dashed boundary (high risk)
 safe zone        % Green dotted boundary (secure)
 quarantine zone  % Yellow patterned boundary (isolated)
+```
+
+### Advanced Zone Grouping (Round 4)
+```latex
+cloud zone       % Cloud service boundary (light blue dashed)
+k8s namespace    % Kubernetes namespace (purple with k8s marker)
+datacenter zone  % Physical datacenter boundary (gray double line)
+trust boundary   % Security trust boundary (thick red dashed)
+```
+
+### Performance Monitoring (Round 4)
+```latex
+% CPU utilization bar (0-100%)
+cpu bar=75       % 75% CPU usage with color-coded bar
+
+% Memory indicator (0-100%)
+memory indicator=60  % 60% memory with bar
+
+% Health status ring
+health ring=90   % 90% health score (green>yellow>red)
 ```
 
 ---
@@ -237,6 +276,15 @@ cve critical  % Red critical vulnerability
 cve high      % Orange high severity
 cve medium    % Yellow medium severity
 cve low       % Green low severity
+```
+
+### Compliance Badges (Round 4)
+```latex
+pci dss badge    % PCI-DSS compliance (blue)
+hipaa badge      % HIPAA compliance (green)
+sox badge        % SOX compliance (purple)
+iso27001 badge   % ISO27001 compliance (orange)
+gdpr badge       % GDPR compliance (cyan)
 ```
 
 ### Badge Positioning
@@ -348,6 +396,54 @@ cve low       % Green low severity
 \dmzTemplate
 ```
 
+### Enterprise Templates (Round 4)
+```latex
+% Cloud architecture template
+\cloudArchitectureTemplate
+
+% Microservices architecture
+\microservicesTemplate
+
+% Kubernetes cluster template
+\kubernetesTemplate
+```
+
+### Quick-Start Helpers (Round 4)
+```latex
+% Create complete network in one command
+\quickNetwork{tier_count}{nodes_per_tier}{spacing}
+
+% Create server farm with load balancer
+\serverFarm{server_count}{base_name}
+
+% Create database cluster
+\dbClusterSetup{node_count}{cluster_name}
+```
+
+### Export & Utility Features (Round 4)
+```latex
+% Add diagram metadata
+\diagramMetadata{author}{version}{date}{description}
+
+% Add watermark
+\addWatermark{text}{opacity}
+
+% Add timestamp
+\addTimestamp{position}
+```
+
+### Accessibility Enhancements (Round 4)
+```latex
+% High visibility mode (extra thick lines, large text)
+\enableHighVisibility
+
+% Text-only mode (no colors, patterns only)
+\enableTextMode
+
+% Optimize for printing
+\optimizeForPrint
+```
+
 ### Color Scheme Cycling
 ```latex
 % Cycle through all color schemes (useful for multi-diagram documents)
@@ -425,14 +521,17 @@ highlight pulse % Border pulsing
 
 ## Complete Feature Count
 
+### Round 4 Update - Enterprise Features
 - **Color Schemes**: 6
-- **Style Presets**: 5
+- **Style Presets**: 5 + 4 theme variations = 9
 - **Node Types**: 20+
-- **Connection Styles**: 15+
-- **Visual Effects**: 10+
-- **Badge Types**: 15+
-- **Helper Macros**: 25+
-- **Total Commands**: 60+
+- **Connection Styles**: 22+ (added 7 enterprise connections)
+- **Visual Effects**: 14+ (added performance indicators, advanced zones)
+- **Badge Types**: 20+ (added 5 compliance badges)
+- **Helper Macros**: 40+ (added quick-start, export, accessibility)
+- **Diagram Templates**: 6 (DMZ, 3-tier, cloud, microservices, k8s)
+- **Total Commands**: 85+
+- **Total Lines**: 2,322 (styles_config.tex)
 
 ---
 

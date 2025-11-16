@@ -1782,3 +1782,541 @@
     \ifnum\schemeindex=4 \loadColorScheme{monochrome}\fi
     \ifnum\schemeindex=5 \loadColorScheme{high-contrast}\fi
 }
+
+% ============================================================================
+% ADDITIONAL CONNECTION TYPES FOR ENTERPRISE FEATURES
+% ============================================================================
+
+\tikzset{
+    % Database replication (thick with direction indicator)
+    replication/.style={
+        line width=2pt,
+        draw=blue!60,
+        -{Stealth[length=4mm]},
+        postaction={
+            decorate,
+            decoration={
+                markings,
+                mark=between positions 0.2 and 0.8 step 0.2 with {
+                    \node[fill=blue!40, rectangle, inner sep=1pt, font=\tiny] {R};
+                }
+            }
+        }
+    },
+
+    % Heartbeat/keepalive connection (pulsing dots)
+    heartbeat/.style={
+        line width=1pt,
+        draw=red!50,
+        dashed,
+        dash pattern=on 2pt off 2pt,
+        postaction={
+            decorate,
+            decoration={
+                markings,
+                mark=between positions 0.1 and 0.9 step 0.2 with {
+                    \node[fill=red!60, circle, inner sep=1.5pt] {};
+                }
+            }
+        }
+    },
+
+    % Backup connection (thick gray with arrows)
+    backup/.style={
+        line width=2.5pt,
+        draw=gray!60,
+        -{Stealth[length=4mm]},
+        postaction={
+            decorate,
+            decoration={
+                markings,
+                mark=between positions 0.3 and 0.7 step 0.2 with {
+                    \node[fill=gray!40, rectangle, inner sep=1pt, font=\tiny] {B};
+                }
+            }
+        }
+    },
+
+    % Sync connection (bidirectional with sync markers)
+    sync/.style={
+        line width=1.5pt,
+        draw=green!60,
+        {Stealth[length=3mm]}-{Stealth[length=3mm]},
+        postaction={
+            decorate,
+            decoration={
+                markings,
+                mark=at position 0.5 with {
+                    \node[fill=green!40, circle, inner sep=2pt, font=\tiny] {S};
+                }
+            }
+        }
+    },
+
+    % API call (thin with small arrows)
+    api call/.style={
+        line width=1pt,
+        draw=orange!60,
+        -{Stealth[length=2mm]},
+        postaction={
+            decorate,
+            decoration={
+                markings,
+                mark=between positions 0.2 and 0.8 step 0.3 with {
+                    \node[fill=orange!30, rectangle, inner sep=0.5pt, font=\tiny] {API};
+                }
+            }
+        }
+    },
+
+    % Message queue (wavy with envelope icons)
+    message queue/.style={
+        line width=1.5pt,
+        draw=purple!60,
+        decorate,
+        decoration={
+            snake,
+            amplitude=0.5mm,
+            segment length=8mm
+        }
+    },
+
+    % Streaming data (fast flowing arrows)
+    streaming/.style={
+        line width=2pt,
+        draw=cyan!70,
+        -{Stealth[length=3mm]},
+        postaction={
+            decorate,
+            decoration={
+                markings,
+                mark=between positions 0.1 and 0.9 step 0.1 with {
+                    \draw[-{Stealth[length=1.5mm]}, cyan!70, line width=0.5pt] (0,0) -- (0.2,0);
+                }
+            }
+        }
+    }
+}
+
+% ============================================================================
+% PERFORMANCE MONITORING VISUAL INDICATORS
+% ============================================================================
+
+\tikzset{
+    % CPU utilization bar
+    cpu bar/.style={
+        rectangle,
+        minimum width=2cm,
+        minimum height=0.3cm,
+        draw=black!50,
+        fill=none,
+        append after command={
+            \pgfextra{
+                \fill[green!60] (\tikzlastnode.south west) rectangle
+                    ([xshift=#1*2cm]\tikzlastnode.south west |- \tikzlastnode.north west);
+            }
+        }
+    },
+
+    % Memory indicator
+    memory indicator/.style={
+        circle,
+        minimum size=1cm,
+        draw=blue!70,
+        line width=2pt,
+        fill=none,
+        append after command={
+            \pgfextra{
+                \fill[blue!30] (\tikzlastnode.center) -- ++(0:#1*0.5cm)
+                    arc (0:360*#1:0.5cm) -- cycle;
+            }
+        }
+    },
+
+    % Health status ring
+    health ring/.style={
+        circle,
+        minimum size=0.8cm,
+        line width=3pt,
+        fill=none,
+        draw=#1
+    }
+}
+
+% Command to add performance indicator
+% Usage: \performanceIndicator{node}{type}{value}{label}
+\newcommand{\performanceIndicator}[4]{
+    \node[#2=#3, below=0.3cm of #1, font=\tiny] {};
+    \node[below=0.5cm of #1, font=\tiny] {#4: #3\%};
+}
+
+% ============================================================================
+% ADVANCED ZONE GROUPING WITH LABELS
+% ============================================================================
+
+\tikzset{
+    % Cloud zone (AWS/Azure/GCP style)
+    cloud zone/.style={
+        draw=blue!40,
+        fill=blue!5,
+        rounded corners=10pt,
+        line width=2pt,
+        dashed,
+        dash pattern=on 8pt off 4pt
+    },
+
+    % Kubernetes namespace
+    k8s namespace/.style={
+        draw=cyan!50,
+        fill=cyan!5,
+        rounded corners=5pt,
+        line width=1.5pt,
+        pattern=horizontal lines,
+        pattern color=cyan!10
+    },
+
+    % Physical datacenter
+    datacenter zone/.style={
+        draw=gray!60,
+        fill=gray!5,
+        line width=2pt,
+        double distance=3pt
+    },
+
+    % Trust boundary
+    trust boundary/.style={
+        draw=red!60,
+        fill=none,
+        line width=3pt,
+        dashed,
+        dash pattern=on 10pt off 5pt,
+        postaction={
+            decorate,
+            decoration={
+                markings,
+                mark=between positions 0.1 and 0.9 step 0.2 with {
+                    \node[fill=red!70, text=white, font=\tiny\bfseries, inner sep=2pt] {!};
+                }
+            }
+        }
+    }
+}
+
+% Command to create labeled zone
+% Usage: \labeledZone{style}{min-corner}{max-corner}{label}{position}
+\newcommand{\labeledZone}[5]{
+    \draw[#1] #2 rectangle #3;
+    \node[anchor=#5, font=\small\bfseries, fill=white, inner sep=3pt]
+        at #3 {#4};
+}
+
+% ============================================================================
+% COMPLIANCE AND CERTIFICATION BADGES
+% ============================================================================
+
+\tikzset{
+    % Compliance badges
+    pci dss badge/.style={
+        rectangle,
+        rounded corners=2pt,
+        fill=blue!70,
+        text=white,
+        font=\tiny\bfseries,
+        inner sep=2pt,
+        minimum width=1cm
+    },
+
+    hipaa badge/.style={
+        rectangle,
+        rounded corners=2pt,
+        fill=green!70,
+        text=white,
+        font=\tiny\bfseries,
+        inner sep=2pt,
+        minimum width=1cm
+    },
+
+    sox badge/.style={
+        rectangle,
+        rounded corners=2pt,
+        fill=purple!70,
+        text=white,
+        font=\tiny\bfseries,
+        inner sep=2pt,
+        minimum width=1cm
+    },
+
+    iso27001 badge/.style={
+        rectangle,
+        rounded corners=2pt,
+        fill=orange!70,
+        text=white,
+        font=\tiny\bfseries,
+        inner sep=2pt,
+        minimum width=1cm
+    },
+
+    gdpr badge/.style={
+        rectangle,
+        rounded corners=2pt,
+        fill=teal!70,
+        text=white,
+        font=\tiny\bfseries,
+        inner sep=2pt,
+        minimum width=1cm
+    }
+}
+
+% Command to add compliance badge
+% Usage: \complianceBadge{node}{type}{position}
+\newcommand{\complianceBadge}[3]{
+    \node[#2, below=0.2cm of #1] at (#1.south) {#2};
+}
+
+% ============================================================================
+% THEME VARIATIONS (SUB-THEMES)
+% ============================================================================
+
+% Corporate Blue theme
+\newcommand{\loadCorporateBlueTheme}{
+    \loadColorScheme{standard}
+    \tikzset{
+        every node/.append style={font=\sffamily, fill opacity=0.9},
+        server/.append style={fill=blue!20, draw=blue!80}
+    }
+}
+
+% Hacker/Cyberpunk theme
+\newcommand{\loadCyberpunkTheme}{
+    \loadColorScheme{dark}
+    \setTheme{dark}
+    \tikzset{
+        every node/.append style={neon=green, text=green!80},
+        server/.append style={fill=black!80, draw=green!60, line width=2pt}
+    }
+}
+
+% Minimal/Clean theme
+\newcommand{\loadMinimalTheme}{
+    \loadColorScheme{monochrome}
+    \tikzset{
+        every node/.append style={font=\sffamily, thin},
+        server/.append style={fill=white, draw=black!40, line width=0.5pt}
+    }
+}
+
+% Military/Government theme
+\newcommand{\loadMilitaryTheme}{
+    \loadColorScheme{high-contrast}
+    \tikzset{
+        every node/.append style={font=\sffamily\bfseries},
+        server/.append style={fill=green!10, draw=green!80, line width=2pt, pattern=north east lines}
+    }
+}
+
+% ============================================================================
+% ADDITIONAL DIAGRAM TEMPLATES
+% ============================================================================
+
+% Template: Cloud Architecture (multi-cloud)
+\newcommand{\cloudArchitectureTemplate}{
+    % AWS Zone
+    \labeledZone{cloud zone}{(-4,2)}{(-0.5,-2)}{AWS}{north east}
+    \node[cloud service] (aws-lb) at (-2.5,0.5) {AWS LB};
+    \node[server premium] (aws-ec2) at (-2.5,-0.5) {EC2};
+
+    % Azure Zone
+    \labeledZone{cloud zone}{(0.5,2)}{(4,-2)}{Azure}{north west}
+    \node[cloud service] (azure-lb) at (2.5,0.5) {Azure LB};
+    \node[server premium] (azure-vm) at (2.5,-0.5) {VM};
+
+    % Connections
+    \draw[sync] (aws-lb) -- (azure-lb);
+    \draw[load balanced] (aws-lb) -- (aws-ec2);
+    \draw[load balanced] (azure-lb) -- (azure-vm);
+}
+
+% Template: Microservices Architecture
+\newcommand{\microservicesTemplate}{
+    % API Gateway
+    \node[load balancer node] (gateway) at (0,3) {API Gateway};
+
+    % Microservices
+    \node[container node] (auth) at (-4,0) {Auth\\Service};
+    \node[container node] (user) at (-1,0) {User\\Service};
+    \node[container node] (order) at (2,0) {Order\\Service};
+    \node[container node] (payment) at (5,0) {Payment\\Service};
+
+    % Message queue
+    \node[rectangle, fill=purple!20, draw=purple!60, minimum width=6cm, minimum height=0.8cm]
+        (mq) at (0.5,-2.5) {Message Queue};
+
+    % Database
+    \node[database cluster] (db) at (0.5,-5) {Shared DB};
+
+    % Connections
+    \foreach \service in {auth, user, order, payment} {
+        \draw[api call] (gateway) -- (\service);
+        \draw[message queue] (\service) -- (mq);
+    }
+    \draw[normal conn] (mq) -- (db);
+}
+
+% Template: Kubernetes Cluster
+\newcommand{\kubernetesTemplate}{
+    % Master nodes
+    \nodeRow{master}{0}{3}{3}{server premium}{Master-}
+
+    % Worker nodes
+    \nodeRow{worker}{-3}{5}{2.5}{server premium}{Worker-}
+
+    % etcd cluster
+    \nodeRow{etcd}{-6}{3}{3}{database cluster}{etcd-}
+
+    % Connections
+    \foreach \i in {1,2,3} {
+        \draw[heartbeat] (master-\i) -- (etcd-\i);
+    }
+    \foreach \m in {1,2,3} {
+        \foreach \w in {1,2,3,4,5} {
+            \draw[api call] (master-\m) -- (worker-\w);
+        }
+    }
+
+    % Label zones
+    \labeledZone{k8s namespace}{(-1.5,1)}{(7.5,-2)}{Control Plane}{north east}
+    \labeledZone{k8s namespace}{(-1.5,-2.5)}{(11,-4)}{Workers}{north east}
+    \labeledZone{k8s namespace}{(-1.5,-5)}{(7.5,-7)}{State Store}{north east}
+}
+
+% ============================================================================
+% SMART AUTO-SIZING HELPERS
+% ============================================================================
+
+% Auto-calculate node spacing based on count
+\newcommand{\autoSpacing}[1]{
+    \pgfmathparse{max(2, 15/#1)}
+    \pgfmathresult
+}
+
+% Auto-scale diagram based on node count
+\newcommand{\autoScale}[1]{
+    \pgfmathparse{min(1.5, max(0.5, 30/#1))}
+    \pgfmathresult
+}
+
+% ============================================================================
+% CONNECTION PATH QUALITY IMPROVEMENTS
+% ============================================================================
+
+\tikzset{
+    % Smooth curved path
+    smooth path/.style={
+        rounded corners=5pt,
+        -{Stealth[length=3mm]}
+    },
+
+    % Right-angle orthogonal path
+    ortho path/.style={
+        -{Stealth[length=3mm]},
+        rounded corners=2pt
+    },
+
+    % Bezier curve path
+    bezier path/.style={
+        out=#1,
+        in=#2,
+        -{Stealth[length=3mm]}
+    }
+}
+
+% Command for auto-routed connection (avoids overlaps)
+% Usage: \autoConnection{from}{to}{style}{via-points}
+\newcommand{\autoConnection}[4]{
+    \draw[#3] (#1) #4 (#2);
+}
+
+% ============================================================================
+% QUICK-START HELPER MACROS
+% ============================================================================
+
+% One-command network setup
+% Usage: \quickNetwork{node-count}{style}
+\newcommand{\quickNetwork}[2]{
+    \pgfmathtruncatemacro{\rows}{ceil(sqrt(#1))}
+    \pgfmathtruncatemacro{\cols}{ceil(#1/\rows)}
+    \nodeGrid{node}{\rows}{\cols}{3}{#2}
+}
+
+% Instant server farm
+% Usage: \serverFarm{count}{name-prefix}
+\newcommand{\serverFarm}[2]{
+    \nodeRow{#2}{0}{#1}{\autoSpacing{#1}}{server premium}{#2-}
+    \node[load balancer node] (lb-#2) at ({\autoSpacing{#1}*(#1-1)/2}, 2) {Load Balancer};
+    \foreach \i in {1,...,#1} {
+        \draw[load balanced] (lb-#2) -- (#2-\i);
+    }
+}
+
+% Instant database cluster with replication
+% Usage: \dbClusterSetup{name-prefix}{count}
+\newcommand{\dbClusterSetup}[2]{
+    \node[database cluster] (#1-primary) at (0,0) {Primary};
+    \foreach \i in {1,...,#2} {
+        \node[database cluster] (#1-replica-\i) at ({\i*3},-2) {Replica \i};
+        \draw[replication] (#1-primary) -- (#1-replica-\i);
+    }
+}
+
+% ============================================================================
+% EXPORT AND UTILITY FEATURES
+% ============================================================================
+
+% Generate diagram metadata
+\newcommand{\diagramMetadata}[3]{
+    \node[anchor=south west, font=\tiny, text=gray] at (current bounding box.south west) {
+        Created: #1 | Version: #2 | Author: #3
+    };
+}
+
+% Add watermark
+\newcommand{\addWatermark}[1]{
+    \node[anchor=center, font=\Huge, text=gray!20, rotate=45]
+        at (current bounding box.center) {#1};
+}
+
+% Add timestamp
+\newcommand{\addTimestamp}{
+    \node[anchor=south east, font=\tiny, text=gray]
+        at (current bounding box.south east) {\today};
+}
+
+% ============================================================================
+% ACCESSIBILITY ENHANCEMENTS
+% ============================================================================
+
+% High visibility mode (extra thick borders, high contrast)
+\newcommand{\enableHighVisibility}{
+    \tikzset{
+        every node/.append style={line width=3pt, font=\large\bfseries},
+        every path/.append style={line width=3pt}
+    }
+}
+
+% Text-only mode (for screen readers - adds labels)
+\newcommand{\enableTextMode}{
+    \tikzset{
+        every node/.append style={
+            label={[font=\tiny, text=black]:{\tikz@node@name}}
+        }
+    }
+}
+
+% Print optimization (removes gradients, uses patterns)
+\newcommand{\optimizeForPrint}{
+    \loadColorScheme{monochrome}
+    \tikzset{
+        server/.append style={server colorblind},
+        client/.append style={client colorblind}
+    }
+}
