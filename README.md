@@ -97,7 +97,18 @@ Real-time Security Operations Center view:
 
 **Compile:** `pdflatex example_soc_dashboard.tex`
 
+### 🎨 Theme Showcase (`example_theme_showcase.tex`)
+Color scheme comparison example:
+- Same network rendered in all 7 color themes
+- Easy theme switching demonstration
+- Theme selection instructions
+- Use case guidance for each theme
+
+**Compile:** `pdflatex example_theme_showcase.tex`
+
 **Tip:** These examples are fully documented and can be used as templates for your own diagrams. Each demonstrates different feature subsets optimized for specific use cases.
+
+**Quick Start:** See the [templates/](templates/) directory for ready-to-use templates that you can copy and customize.
 
 ## File Structure
 
@@ -152,6 +163,16 @@ In `network_diagram_generator.tex`:
 \renewcommand{\pageSize}{a3}  % Options: a4, a3, a2, a1, a0, letter
 \setPageSize{\pageSize}
 ```
+
+## Complete Feature Reference
+
+For a comprehensive catalog of all 60+ commands, see **[FEATURES.md](FEATURES.md)** - includes:
+- All threat intelligence commands with examples
+- MITRE ATT&CK technique reference
+- Complete compliance framework support
+- Defensive control catalog
+- Color scheme documentation
+- Quick command index
 
 ## Available Node Types
 
