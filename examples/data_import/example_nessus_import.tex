@@ -1,0 +1,109 @@
+% example_nessus_import.tex - Demonstrates Nessus vulnerability scan import
+% Compile with: lualatex example_nessus_import.tex
+% NOTE: Requires LuaLaTeX for XML parsing
+
+\documentclass[tikz,border=10pt]{standalone}
+
+% Load required packages
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric, arrows.meta, positioning, backgrounds, fit, calc, decorations.pathmorphing, shadows}
+\usepackage{ifthen}
+
+% Include all modules from the parent directory
+\input{../../styles_config.tex}
+\input{../../node_definitions.tex}
+\input{../../network_layout.tex}
+\input{../../connection_renderer.tex}
+\input{../../threat_indicators.tex}
+\input{../../data_import.tex}
+
+\begin{document}
+\begin{tikzpicture}[
+    scale=\diagramScale,
+    every node/.style={transform shape}
+]
+
+% ============================================================================
+% NESSUS VULNERABILITY SCAN IMPORT EXAMPLE
+% ============================================================================
+% This example demonstrates importing vulnerability assessment data from
+% Nessus scans (.nessus files)
+%
+% Features demonstrated:
+%   - Automatic host discovery from Nessus reports
+%   - Vulnerability extraction with CVE and CVSS scores
+%   - Automatic threat badge assignment based on severity
+%   - Vulnerability count display (Critical/High/Medium)
+%
+% This approach is ideal for:
+%   - Security assessment reporting
+%   - Vulnerability management visualization
+%   - Risk assessment documentation
+%   - Compliance audit trails
+% ============================================================================
+
+\message{========================================}
+\message{Nessus Vulnerability Scan Import}
+\message{========================================}
+
+% Import vulnerability data from Nessus scan
+\renewcommand{\renderNetworkNodes}{
+    \importNessusXML{nessus-scan.nessus}
+}
+
+% Render the network with vulnerabilities
+\renderNetworkNodes
+
+% Add security zones based on discovered hosts
+\begin{scope}[on background layer]
+    % Vulnerable hosts zone
+    \node[
+        draw=threatCritical,
+        fill=threatCritical!5,
+        rounded corners=5pt,
+        inner sep=10pt,
+        fit={(nessus_1) (nessus_2) (nessus_3) (nessus_4)},
+        label={[anchor=north west, fill=threatCritical!20, text=white, font=\bfseries]north west:Vulnerable Hosts}
+    ] {};
+\end{scope}
+
+% Legend with vulnerability summary
+\node[legend box, anchor=south west] at (-3,-4) {
+    \small\bfseries Nessus Scan Results \\[2pt]
+    \tiny
+    Data imported from: \\
+    • nessus-scan.nessus \\[2pt]
+    Vulnerability Counts: \\
+    • Critical (CVSS 9.0+) \\
+    • High (CVSS 7.0-8.9) \\
+    • Medium (CVSS 4.0-6.9) \\[2pt]
+    Format: Host (C/H/M)
+};
+
+% Add threat dashboard
+\node[
+    draw=black!20,
+    fill=white,
+    rounded corners=3pt,
+    anchor=south east,
+    inner sep=5pt
+] at (12,-4) {
+    \tiny\bfseries Security Posture \\[2pt]
+    \begin{tabular}{ll}
+        Critical: & 3 \\
+        High: & 4 \\
+        Medium: & 4 \\
+        \hline
+        Total: & 11 \\
+    \end{tabular}
+};
+
+% Metadata
+\node[font=\tiny, anchor=south east, text=black!60] at (12,-5) {
+    Generated: \today \\
+    Nessus Import Module \\
+    Agent 6: Enhanced Features
+};
+
+\end{tikzpicture}
+\end{document}

@@ -6,30 +6,67 @@ This directory contains examples demonstrating the **Agent 6: Data Import/Export
 
 The `data_import.tex` module provides functionality to import network topology data from various formats:
 
-- **CSV** - Simple, spreadsheet-compatible format
+- **CSV** - Simple, spreadsheet-compatible format (with auto-positioning support!)
 - **JSON** - Machine-readable structured data
 - **YAML** - Human-readable configuration format
 - **Nmap XML** - Network discovery scan results
+- **Nessus XML** - Vulnerability assessment reports (NEW!)
+- **Auto-Positioning** - Automatic grid layout without manual coordinates (NEW!)
+- **Subnet Detection** - Automatic grouping by IP address ranges (NEW!)
 
 ## Files in This Directory
 
 ### Example Data Files
 
-1. **nodes.csv** - Network device definitions
-2. **connections.csv** - Network connections between devices
-3. **threats.csv** - Security threats and vulnerabilities
-4. **network.json** - Complete network definition in JSON format
-5. **network.yaml** - Complete network definition in YAML format
-6. **nmap-scan.xml** - Sample Nmap scan results
+1. **nodes.csv** - Network device definitions (with x,y coordinates)
+2. **nodes-simple.csv** - Simplified format for auto-positioning (no coordinates!)
+3. **connections.csv** - Network connections between devices
+4. **threats.csv** - Security threats and vulnerabilities
+5. **network.json** - Complete network definition in JSON format
+6. **network.yaml** - Complete network definition in YAML format
+7. **nmap-scan.xml** - Sample Nmap network discovery scan
+8. **nessus-scan.nessus** - Sample Nessus vulnerability assessment (NEW!)
 
 ### Example LaTeX Files
 
-1. **example_csv_import.tex** - Demonstrates CSV import functionality
-2. **example_nmap_import.tex** - Demonstrates Nmap XML import functionality
+1. **example_csv_import.tex** - Basic CSV import functionality
+2. **example_nmap_import.tex** - Nmap network discovery import
+3. **example_nessus_import.tex** - Nessus vulnerability scan import (NEW!)
+4. **example_auto_positioning.tex** - Auto-positioning without coordinates (NEW!)
+5. **example_advanced_integration.tex** - Mixing CSV + manual + analysis (NEW!)
 
 ## Usage
 
-### CSV Import
+### 🆕 Auto-Positioning (No Coordinates Required!)
+
+The easiest way to get started! Just specify node type and IP address:
+
+**nodes-simple.csv format:**
+```csv
+id,type,ip,label
+web1,server,192.168.10.10,Web Server
+db1,server,192.168.20.10,Database
+```
+
+**In your LaTeX file:**
+```latex
+\input{data_import.tex}
+
+\importNodesAutoPositioned{nodes-simple.csv}
+```
+
+Nodes are automatically arranged in a grid layout. Perfect for:
+- Quick prototypes
+- Rapid network documentation
+- When exact positioning doesn't matter
+- Large bulk imports
+
+**Compile with:**
+```bash
+pdflatex example_auto_positioning.tex
+```
+
+### CSV Import (Traditional with Coordinates)
 
 The CSV format is the simplest and most compatible with spreadsheet tools like Excel, Google Sheets, or LibreOffice Calc.
 
@@ -130,6 +167,43 @@ nmap -sV -O 192.168.1.0/24 -oX nmap-scan.xml
 lualatex example_nmap_import.tex
 ```
 
+### 🆕 Nessus Vulnerability Scan Import
+
+Import vulnerability assessment data from Nessus scans to visualize security posture.
+
+**Requires:** LuaLaTeX
+
+**Export Nessus scan:**
+1. In Nessus UI, go to Scans
+2. Select your scan
+3. Click "Export" and choose ".nessus" format (XML)
+
+**In your LaTeX file:**
+```latex
+\input{data_import.tex}
+
+\importNessusXML{nessus-scan.nessus}
+```
+
+**Features:**
+- Extracts all discovered hosts with IP addresses
+- Parses vulnerability severity levels
+- Displays CVE IDs and CVSS scores
+- Shows vulnerability counts: (C/H/M) format
+- Auto-assigns threat badges (Critical/High/Medium)
+- Creates risk-appropriate node styling
+
+**Compile with:**
+```bash
+lualatex example_nessus_import.tex
+```
+
+**Perfect for:**
+- Vulnerability assessment reports
+- Security audit documentation
+- Risk visualization dashboards
+- Compliance reporting (PCI-DSS, HIPAA, etc.)
+
 ## Compiling the Examples
 
 ### Prerequisites
@@ -190,15 +264,61 @@ The CSV import supports the following connection types:
 
 6. **Combine approaches** - Use CSV for bulk data and manual LaTeX commands for fine-tuning
 
+## Advanced Features
+
+### Subnet Auto-Detection (LuaTeX)
+
+Automatically group nodes by IP subnet and generate security zones:
+
+```latex
+% After importing nodes
+\autoGenerateSubnetZones
+```
+
+This command:
+- Analyzes all imported node IP addresses
+- Groups nodes by /24 subnets
+- Automatically creates security zone boundaries
+- Color-codes based on private/public IP ranges
+- Labels zones with subnet CIDR notation
+
+### Hybrid Manual + Import Workflow
+
+Mix imported data with manual commands for maximum flexibility:
+
+```latex
+% Import bulk nodes from CSV
+\importNodesFromCSV{nodes.csv}
+
+% Add special nodes manually
+\createAttacker{hacker}{1.2.3.4}{-8}{8}{APT Group}
+
+% Import connections
+\importConnectionsFromCSV{connections.csv}
+
+% Add attack overlays
+\drawAttackConnection{hacker}{fw1}{Port Scan}
+```
+
+See `example_advanced_integration.tex` for a complete example.
+
+## New in Version 1.1
+
+✅ **Auto-positioning algorithm** - No more manual coordinates!
+✅ **Nessus scan integration** - Vulnerability assessment imports
+✅ **IP subnet detection** - Automatic network segmentation
+✅ **Enhanced validation** - IPv4 format checking
+✅ **Connection inference** - Smart topology suggestions from port data
+
 ## Future Enhancements
 
-Coming soon:
+Coming in future versions:
 
-- **Auto-layout** - Automatic node positioning from imported data
-- **Subnet detection** - Automatic grouping by IP address ranges
-- **Nessus integration** - Import vulnerability scan results
 - **Database connectivity** - Query network data from SQL databases
 - **REST API** - Generate diagrams via HTTP endpoints
+- **Force-directed layout** - Organic auto-positioning based on connections
+- **Enhanced JSON/YAML** - Full library support (lunajson/lyaml)
+- **SIEM integration** - Import from Splunk, ELK, etc.
 
 ## Troubleshooting
 

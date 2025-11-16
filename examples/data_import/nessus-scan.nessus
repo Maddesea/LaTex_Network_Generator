@@ -1,0 +1,102 @@
+<?xml version="1.0" ?>
+<NessusClientData_v2>
+  <Report name="Network Vulnerability Scan" xmlns:cm="http://www.nessus.org/cm">
+
+    <ReportHost name="192.168.1.10">
+      <HostProperties>
+        <tag name="host-fqdn">webserver.example.com</tag>
+        <tag name="operating-system">Linux Kernel 5.4</tag>
+        <tag name="host-ip">192.168.1.10</tag>
+      </HostProperties>
+
+      <!-- Critical vulnerability -->
+      <ReportItem port="443" svc_name="https" protocol="tcp" severity="4" pluginID="12345" pluginName="SSL/TLS Vulnerability">
+        <cve>CVE-2024-1234</cve>
+        <cvss_base_score>9.8</cvss_base_score>
+        <description>Critical SSL/TLS vulnerability allowing remote code execution</description>
+        <solution>Update OpenSSL to version 3.0.8 or later</solution>
+      </ReportItem>
+
+      <!-- High vulnerability -->
+      <ReportItem port="80" svc_name="http" protocol="tcp" severity="3" pluginID="12346" pluginName="Web Server Vulnerability">
+        <cve>CVE-2024-5678</cve>
+        <cvss_base_score>7.5</cvss_base_score>
+        <description>Web server allows directory traversal</description>
+      </ReportItem>
+
+      <!-- Medium vulnerability -->
+      <ReportItem port="22" svc_name="ssh" protocol="tcp" severity="2" pluginID="12347" pluginName="SSH Configuration Issue">
+        <cvss_base_score>5.3</cvss_base_score>
+        <description>SSH server allows weak ciphers</description>
+      </ReportItem>
+    </ReportHost>
+
+    <ReportHost name="192.168.1.20">
+      <HostProperties>
+        <tag name="host-fqdn">dbserver.example.com</tag>
+        <tag name="operating-system">Linux Kernel 5.10</tag>
+        <tag name="host-ip">192.168.1.20</tag>
+      </HostProperties>
+
+      <!-- Critical vulnerability -->
+      <ReportItem port="3306" svc_name="mysql" protocol="tcp" severity="4" pluginID="12348" pluginName="MySQL Authentication Bypass">
+        <cve>CVE-2024-9999</cve>
+        <cvss_base_score>9.1</cvss_base_score>
+        <description>MySQL allows authentication bypass</description>
+        <solution>Upgrade MySQL to 8.0.32</solution>
+      </ReportItem>
+
+      <!-- High vulnerability -->
+      <ReportItem port="3306" svc_name="mysql" protocol="tcp" severity="3" pluginID="12349" pluginName="MySQL Privilege Escalation">
+        <cve>CVE-2024-8888</cve>
+        <cvss_base_score>8.2</cvss_base_score>
+        <description>Local privilege escalation in MySQL</description>
+      </ReportItem>
+    </ReportHost>
+
+    <ReportHost name="192.168.1.30">
+      <HostProperties>
+        <tag name="host-fqdn">fileserver.example.com</tag>
+        <tag name="operating-system">Windows Server 2019</tag>
+        <tag name="host-ip">192.168.1.30</tag>
+      </HostProperties>
+
+      <!-- High vulnerability -->
+      <ReportItem port="445" svc_name="microsoft-ds" protocol="tcp" severity="3" pluginID="12350" pluginName="SMB Signing Not Required">
+        <cvss_base_score>7.0</cvss_base_score>
+        <description>SMB signing is not required, allowing man-in-the-middle attacks</description>
+      </ReportItem>
+
+      <!-- Medium vulnerabilities -->
+      <ReportItem port="3389" svc_name="ms-wbt-server" protocol="tcp" severity="2" pluginID="12351" pluginName="RDP NLA Not Enabled">
+        <cvss_base_score>5.9</cvss_base_score>
+        <description>RDP Network Level Authentication not enforced</description>
+      </ReportItem>
+
+      <ReportItem port="445" svc_name="microsoft-ds" protocol="tcp" severity="2" pluginID="12352" pluginName="SMBv1 Enabled">
+        <cvss_base_score>5.3</cvss_base_score>
+        <description>Obsolete SMBv1 protocol is enabled</description>
+      </ReportItem>
+    </ReportHost>
+
+    <ReportHost name="192.168.1.100">
+      <HostProperties>
+        <tag name="host-fqdn">workstation01.example.com</tag>
+        <tag name="operating-system">Windows 10</tag>
+        <tag name="host-ip">192.168.1.100</tag>
+      </HostProperties>
+
+      <!-- Medium vulnerability -->
+      <ReportItem port="135" svc_name="epmap" protocol="tcp" severity="2" pluginID="12353" pluginName="Windows RPC Vulnerability">
+        <cvss_base_score>5.5</cvss_base_score>
+        <description>Windows RPC service has known vulnerabilities</description>
+      </ReportItem>
+
+      <!-- Low/Info -->
+      <ReportItem port="0" svc_name="general" protocol="tcp" severity="0" pluginID="12354" pluginName="System Information">
+        <description>System information disclosure</description>
+      </ReportItem>
+    </ReportHost>
+
+  </Report>
+</NessusClientData_v2>
