@@ -1141,3 +1141,439 @@
         node[midway, below, font=\tiny\bfseries, fill=\slaColor!20, inner sep=2pt]
             {SLA: #3\% - \slaStatus};
 }
+}
+
+% ============================================================================
+% ADVANCED CONNECTION HIGHLIGHTING AND EMPHASIS
+% ============================================================================
+
+% Highlight specific connection with glow effect
+% Usage: \highlightConnection{from}{to}{color}{label}
+\newcommand{\highlightConnection}[4]{
+    % Background glow layers
+    \draw[draw=#3!30, line width=6pt, opacity=0.3] (#1) -- (#2);
+    \draw[draw=#3!50, line width=4pt, opacity=0.5] (#1) -- (#2);
+    % Main connection
+    \draw[draw=#3, line width=2pt, -{Stealth[length=3mm]}] (#1) -- (#2)
+        node[midway, above, font=\tiny\bfseries, fill=white, inner sep=2pt] {#4};
+}
+
+% Pulsing connection (for critical paths)
+% Usage: \drawPulsingConnection{from}{to}{label}
+\newcommand{\drawPulsingConnection}[3]{
+    \draw[draw=red!70, line width=2pt, -{Stealth[length=3mm]},
+          decoration={markings,
+              mark=between positions 0.1 and 0.9 step 0.1 with {
+                  \node[circle, fill=red!70, inner sep=1.5pt, opacity=0.8] {};
+              }}, postaction={decorate}]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny\bfseries, fill=red!10, inner sep=2pt] {#3}
+        node[midway, below, font=\tiny, fill=red!20, inner sep=1pt] {CRITICAL};
+}
+
+% Emphasized connection with shadow
+% Usage: \drawEmphasizedConnection{from}{to}{label}
+\newcommand{\drawEmphasizedConnection}[3]{
+    % Shadow
+    \draw[draw=black!30, line width=2pt, -{Stealth[length=3mm]}]
+        ([shift={(0.5pt,-0.5pt)}]#1) -- ([shift={(0.5pt,-0.5pt)}]#2);
+    % Main connection
+    \draw[draw=blue!70, line width=2pt, -{Stealth[length=3mm]}] (#1) -- (#2)
+        node[midway, above, font=\tiny\bfseries, fill=white, inner sep=2pt,
+             drop shadow] {#3};
+}
+
+% Annotated connection with markers
+% Usage: \drawAnnotatedConnection{from}{to}{marker_positions}{label}
+\newcommand{\drawAnnotatedConnection}[4]{
+    \draw[normal conn, -{Stealth[length=2.5mm]}] (#1) -- (#2)
+        node[midway, above, font=\tiny, fill=white, inner sep=1pt] {#4};
+    % Add markers at specified positions
+    \foreach \pos in {#3} {
+        \node[circle, draw=blue!70, fill=blue!20, inner sep=1pt,
+              font=\tiny\bfseries] at ($(#1)!\pos!(#2)$) {!};
+    }
+}
+
+% Connection with directional emphasis
+% Usage: \drawDirectionalEmphasis{from}{to}{label}
+\newcommand{\drawDirectionalEmphasis}[3]{
+    \draw[draw=purple!70, line width=1.5pt,
+          decoration={markings,
+              mark=between positions 0.2 and 0.8 step 0.15 with {
+                  \arrow[scale=1.5]{Stealth[length=3mm, fill=purple!70]}
+              }}, postaction={decorate}]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny, fill=white, inner sep=1pt] {#3};
+}
+
+% ============================================================================
+% LOAD BALANCING AND REDUNDANCY VISUALIZATION
+% ============================================================================
+
+% Load balanced connection group
+% Usage: \drawLoadBalancedConnections{from}{lb_node}{targets}{algorithm}
+\newcommand{\drawLoadBalancedConnections}[4]{
+    % Connection to load balancer
+    \draw[draw=green!60!blue, line width=2pt, -{Stealth[length=3mm]}]
+        (#1) -- (#2);
+    % Load balancer node emphasis
+    \node[draw=green!60!blue, line width=2pt, circle, inner sep=8pt,
+          fill=green!10] at (#2) {};
+    \node[above=10pt, fill=green!60!blue, text=white, font=\tiny\bfseries,
+          rounded corners=2pt, inner sep=2pt] at (#2) {LB: #4};
+    % Connections to targets
+    \foreach \target in {#3} {
+        \draw[draw=green!60!blue, line width=1pt, -{Stealth[length=2.5mm]}]
+            (#2) -- (\target);
+    }
+}
+
+% Redundant connection pair
+% Usage: \drawRedundantConnections{from}{to}{label}
+\newcommand{\drawRedundantConnections}[3]{
+    % Primary path (top)
+    \draw[draw=green!70, line width=1.5pt, -{Stealth[length=3mm]},
+          transform canvas={yshift=2pt}]
+        (#1) -- (#2);
+    % Secondary path (bottom)
+    \draw[draw=orange!70, line width=1.5pt, dashed,
+          dash pattern=on 3pt off 2pt, -{Stealth[length=3mm]},
+          transform canvas={yshift=-2pt}]
+        (#1) -- (#2);
+    % Label
+    \node[above=5pt, font=\tiny, fill=white, inner sep=1pt] at ($(#1)!0.5!(#2)$) {#3};
+    \node[below=5pt, font=\tiny, fill=green!15, inner sep=1pt]
+        at ($(#1)!0.5!(#2)$) {Primary};
+    \node[below=10pt, font=\tiny, fill=orange!15, inner sep=1pt]
+        at ($(#1)!0.5!(#2)$) {Backup};
+}
+
+% Active-Active redundancy
+% Usage: \drawActiveActiveConnections{from}{to}{label}
+\newcommand{\drawActiveActiveConnections}[3]{
+    % Dual active paths
+    \draw[draw=blue!70, line width=1.5pt, -{Stealth[length=3mm]},
+          transform canvas={yshift=2pt}]
+        (#1) -- (#2);
+    \draw[draw=blue!70, line width=1.5pt, -{Stealth[length=3mm]},
+          transform canvas={yshift=-2pt}]
+        (#1) -- (#2);
+    % Label
+    \node[above=5pt, font=\tiny\bfseries, fill=blue!15, inner sep=2pt]
+        at ($(#1)!0.5!(#2)$) {#3 (A-A)};
+}
+
+% Failover connection
+% Usage: \drawFailoverConnection{from}{to}{state}{label}
+\newcommand{\drawFailoverConnection}[4]{
+    \ifthenelse{\equal{#3}{active}}{
+        \def\failColor{green!70}
+        \def\failState{ACTIVE}
+        \def\failStyle{solid}
+    }{
+        \def\failColor{gray!60}
+        \def\failState{STANDBY}
+        \def\failStyle{dashed}
+    }
+    \draw[draw=\failColor, line width=1.5pt, \failStyle,
+          -{Stealth[length=3mm]}] (#1) -- (#2)
+        node[midway, above, font=\tiny, fill=white, inner sep=1pt] {#4}
+        node[midway, below, font=\tiny, fill=\failColor!15, inner sep=1pt] {\failState};
+}
+
+% ============================================================================
+% MULTI-PATH ROUTING VISUALIZATION
+% ============================================================================
+
+% ECMP (Equal-Cost Multi-Path) routing
+% Usage: \drawECMPPaths{from}{to}{path_count}{label}
+\newcommand{\drawECMPPaths}[4]{
+    \pgfmathsetmacro{\spacing}{2/#3}
+    \foreach \i in {1,...,#3} {
+        \pgfmathsetmacro{\yoffset}{-1 + (\i-0.5)*\spacing}
+        \draw[draw=blue!60, line width=0.8pt, -{Stealth[length=2mm]},
+              transform canvas={yshift=\yoffset pt}]
+            (#1) -- (#2);
+    }
+    \node[above=4pt, font=\tiny\bfseries, fill=blue!10, inner sep=2pt]
+        at ($(#1)!0.5!(#2)$) {#4};
+    \node[below=4pt, font=\tiny, fill=blue!15, inner sep=1pt]
+        at ($(#1)!0.5!(#2)$) {ECMP: #3 paths};
+}
+
+% Primary and backup path
+% Usage: \drawPrimaryBackupPaths{from}{to}{via_primary}{via_backup}{label}
+\newcommand{\drawPrimaryBackupPaths}[5]{
+    % Primary path
+    \draw[draw=green!70, line width=1.5pt, -{Stealth[length=3mm]}]
+        (#1) -- (#3) -- (#2)
+        node[pos=0.25, above, font=\tiny, fill=green!15, inner sep=1pt] {Primary};
+    % Backup path
+    \draw[draw=orange!70, line width=1pt, dashed,
+          dash pattern=on 3pt off 2pt, -{Stealth[length=2.5mm]}]
+        (#1) -- (#4) -- (#2)
+        node[pos=0.75, below, font=\tiny, fill=orange!15, inner sep=1pt] {Backup};
+    % Main label
+    \node[above=8pt, font=\tiny\bfseries, fill=white, inner sep=2pt]
+        at ($(#1)!0.5!(#2)$) {#5};
+}
+
+% Meshed redundant paths
+% Usage: \drawMeshedPaths{nodes}{label}
+\newcommand{\drawMeshedPaths}[2]{
+    \foreach \source [count=\si] in {#1} {
+        \foreach \target [count=\ti] in {#1} {
+            \ifnum\si<\ti
+                \draw[draw=blue!50, line width=0.5pt, opacity=0.6,
+                      -{Stealth[length=1.5mm]}]
+                    (\source) -- (\target);
+            \fi
+        }
+    }
+    % Mesh label
+    \node[fill=blue!20, font=\tiny\bfseries, rounded corners=2pt,
+          inner sep=2pt] {#2};
+}
+
+% ============================================================================
+% NETWORK SEGMENTATION AND ISOLATION
+% ============================================================================
+
+% Firewall-protected connection
+% Usage: \drawFirewallConnection{from}{to}{firewall}{rules}{label}
+\newcommand{\drawFirewallConnection}[5]{
+    % Connection to firewall
+    \draw[draw=red!70, line width=1.2pt, -{Stealth[length=3mm]}]
+        (#1) -- (#3);
+    % Firewall symbol
+    \node[draw=red!70, line width=2pt, rectangle, inner sep=6pt,
+          fill=red!10, pattern=north east lines, pattern color=red!30]
+        at (#3) {};
+    \node[above=8pt, fill=red!70, text=white, font=\tiny\bfseries,
+          rounded corners=2pt, inner sep=1pt] at (#3) {FW};
+    \node[below=8pt, font=\tiny, fill=red!15, inner sep=1pt,
+          align=center] at (#3) {#4};
+    % Connection from firewall
+    \draw[draw=red!70, line width=1.2pt, -{Stealth[length=3mm]}]
+        (#3) -- (#2)
+        node[midway, above, font=\tiny] {#5};
+}
+
+% DMZ connection
+% Usage: \drawDMZConnection{from}{dmz_node}{to}{label}
+\newcommand{\drawDMZConnection}[4]{
+    \draw[draw=yellow!70!orange, line width=1.2pt, -{Stealth[length=3mm]}]
+        (#1) -- (#2);
+    \draw[draw=yellow!70!orange, line width=1.2pt, -{Stealth[length=3mm]}]
+        (#2) -- (#3);
+    % DMZ indicator
+    \node[draw=yellow!70!orange, line width=2pt, trapezium,
+          trapezium left angle=70, trapezium right angle=110,
+          inner sep=5pt, fill=yellow!15] at (#2) {};
+    \node[above=8pt, fill=yellow!70!orange, text=white,
+          font=\tiny\bfseries, rounded corners=2pt, inner sep=1pt]
+        at (#2) {DMZ};
+    \node[midway, above, font=\tiny] at ($(#1)!0.5!(#3)$) {#4};
+}
+
+% Air-gapped connection (no direct path)
+% Usage: \drawAirGap{from}{to}{label}
+\newcommand{\drawAirGap}[3]{
+    % Draw partial connections
+    \draw[draw=red!70, line width=1pt, dashed, dash pattern=on 2pt off 2pt]
+        (#1) -- ($(#1)!0.45!(#2)$);
+    \draw[draw=red!70, line width=1pt, dashed, dash pattern=on 2pt off 2pt]
+        ($(#1)!0.55!(#2)$) -- (#2);
+    % Air gap indicator
+    \node[fill=red!80, text=white, font=\tiny\bfseries, circle,
+          inner sep=3pt] at ($(#1)!0.5!(#2)$) {X};
+    \node[above=5pt, fill=red!15, font=\tiny, inner sep=1pt]
+        at ($(#1)!0.5!(#2)$) {#3};
+    \node[below=5pt, fill=red!20, font=\tiny\bfseries, inner sep=1pt]
+        at ($(#1)!0.5!(#2)$) {AIR GAP};
+}
+
+% Trust boundary crossing
+% Usage: \drawTrustBoundary{from}{to}{from_zone}{to_zone}{label}
+\newcommand{\drawTrustBoundary}[5]{
+    \draw[draw=purple!70, line width=1.5pt, -{Stealth[length=3mm]}]
+        (#1) -- (#2);
+    % Boundary marker
+    \node[regular polygon, regular polygon sides=6, draw=purple!70,
+          line width=2pt, fill=purple!15, minimum size=10pt]
+        at ($(#1)!0.5!(#2)$) {};
+    % Zone labels
+    \node[above=6pt, font=\tiny, fill=purple!10, inner sep=1pt]
+        at ($(#1)!0.5!(#2)$) {#5};
+    \node[below=6pt, font=\tiny, fill=white, inner sep=1pt]
+        at ($(#1)!0.5!(#2)$) {#3 $\rightarrow$ #4};
+}
+
+% ============================================================================
+% ADVANCED ANNOTATION AND CALLOUTS
+% ============================================================================
+
+% Connection with detailed callout
+% Usage: \drawConnectionWithCallout{from}{to}{callout_text}{callout_pos}{label}
+\newcommand{\drawConnectionWithCallout}[5]{
+    \draw[normal conn, -{Stealth[length=2.5mm]}] (#1) -- (#2)
+        node[midway, above, font=\tiny] {#5};
+    % Callout
+    \node[rectangle callout, callout absolute pointer={($(#1)!#4!(#2)$)},
+          fill=yellow!20, draw=orange!70, line width=0.5pt,
+          font=\tiny, inner sep=3pt, align=left]
+        at ($(#1)!#4!(#2) + (1.5,1)$) {#3};
+}
+
+% Connection with inline metric badges
+% Usage: \drawConnectionWithBadges{from}{to}{badge1}{badge2}{label}
+\newcommand{\drawConnectionWithBadges}[5]{
+    \draw[normal conn, -{Stealth[length=2.5mm]}] (#1) -- (#2)
+        node[midway, above, font=\tiny] {#5};
+    % Badges
+    \node[circle, fill=blue!70, text=white, font=\tiny\bfseries,
+          minimum size=6pt, inner sep=1pt]
+        at ($(#1)!0.33!(#2)$) {#3};
+    \node[circle, fill=green!70, text=white, font=\tiny\bfseries,
+          minimum size=6pt, inner sep=1pt]
+        at ($(#1)!0.67!(#2)$) {#4};
+}
+
+% Connection with performance heatmap
+% Usage: \drawHeatmapConnection{from}{to}{temp_value}{label}
+\newcommand{\drawHeatmapConnection}[4]{
+    \pgfmathsetmacro{\temp}{#3}
+    % Color gradient based on "temperature" (0-100)
+    \ifnum\temp<25
+        \def\heatColor{blue!70}
+    \else
+        \ifnum\temp<50
+            \def\heatColor{green!70}
+        \else
+            \ifnum\temp<75
+                \def\heatColor{yellow!80!orange}
+            \else
+                \def\heatColor{red!70}
+            \fi
+        \fi
+    \fi
+    \draw[draw=\heatColor, line width=2pt, -{Stealth[length=3mm]}]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny\bfseries, fill=white, inner sep=1pt] {#4}
+        node[midway, below, font=\tiny, fill=\heatColor!20, inner sep=1pt]
+            {Load: #3\%};
+}
+
+% ============================================================================
+% COMPLIANCE AND AUDIT FEATURES
+% ============================================================================
+
+% PCI-DSS compliant connection
+% Usage: \drawPCICompliantConnection{from}{to}{encryption}{label}
+\newcommand{\drawPCICompliantConnection}[4]{
+    \draw[draw=green!60!blue, line width=1.5pt, double=green!30,
+          double distance=1pt, -{Stealth[length=3mm]}]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny\bfseries, fill=white, inner sep=2pt] {#4}
+        node[midway, below, font=\tiny, fill=green!15, inner sep=2pt]
+            {PCI-DSS | #3};
+}
+
+% HIPAA-compliant connection
+% Usage: \drawHIPAAConnection{from}{to}{phi_level}{label}
+\newcommand{\drawHIPAAConnection}[4]{
+    \draw[draw=blue!70, line width=1.5pt, -{Stealth[length=3mm]},
+          postaction={draw, line width=0.5pt, draw=blue!30}]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny\bfseries, fill=white, inner sep=2pt] {#4}
+        node[midway, below, font=\tiny, fill=blue!15, inner sep=2pt]
+            {HIPAA | PHI: #3};
+}
+
+% Audited connection with compliance badge
+% Usage: \drawAuditedConnection{from}{to}{standard}{status}{label}
+\newcommand{\drawAuditedConnection}[5]{
+    \ifthenelse{\equal{#4}{pass}}{
+        \def\auditColor{green!70}
+        \def\auditSymbol{\checkmark}
+    }{
+        \def\auditColor{red!70}
+        \def\auditSymbol{X}
+    }
+    \draw[draw=\auditColor, line width=1.5pt, -{Stealth[length=3mm]}]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny, fill=white, inner sep=1pt] {#5};
+    % Compliance badge
+    \node[circle, fill=\auditColor, text=white, font=\tiny\bfseries,
+          minimum size=8pt, inner sep=1pt]
+        at ($(#1)!0.5!(#2)$) {\auditSymbol};
+    \node[below=8pt, font=\tiny, fill=\auditColor!15, inner sep=1pt]
+        at ($(#1)!0.5!(#2)$) {#3};
+}
+
+% Zero Trust connection
+% Usage: \drawZeroTrustConnection{from}{to}{verification}{label}
+\newcommand{\drawZeroTrustConnection}[4]{
+    \draw[draw=purple!70, line width=1.5pt, -{Stealth[length=3mm]},
+          decoration={markings,
+              mark=between positions 0.25 and 0.75 step 0.25 with {
+                  \node[regular polygon, regular polygon sides=8,
+                        draw=purple!70, fill=purple!20, minimum size=3pt] {};
+              }}, postaction={decorate}]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny\bfseries, fill=white, inner sep=2pt] {#4}
+        node[midway, below, font=\tiny, fill=purple!15, inner sep=2pt]
+            {Zero Trust | #3};
+}
+
+% ============================================================================
+% CONNECTION COMPARISON AND DIFF VISUALIZATION
+% ============================================================================
+
+% Show connection before/after
+% Usage: \drawConnectionDiff{from}{to}{old_label}{new_label}
+\newcommand{\drawConnectionDiff}[4]{
+    % Old connection (faded, dashed)
+    \draw[draw=gray!50, line width=1pt, dashed,
+          dash pattern=on 2pt off 2pt, opacity=0.5,
+          -{Stealth[length=2mm]}]
+        (#1) -- (#2)
+        node[pos=0.3, above, font=\tiny, text=gray] {#3};
+    % New connection (solid, bright)
+    \draw[draw=blue!70, line width=1.5pt, -{Stealth[length=3mm]}]
+        (#1) -- (#2)
+        node[pos=0.7, above, font=\tiny\bfseries, fill=blue!15, inner sep=1pt] {#4};
+}
+
+% Added connection indicator
+% Usage: \drawAddedConnection{from}{to}{label}
+\newcommand{\drawAddedConnection}[3]{
+    \draw[draw=green!70, line width=1.5pt, -{Stealth[length=3mm]}]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny\bfseries, fill=green!15, inner sep=2pt] {#3}
+        node[midway, below, font=\tiny, fill=green!20, inner sep=1pt] {+NEW};
+}
+
+% Removed connection indicator
+% Usage: \drawRemovedConnection{from}{to}{label}
+\newcommand{\drawRemovedConnection}[3]{
+    \draw[draw=red!70, line width=1pt, dashed, dash pattern=on 2pt off 2pt,
+          decoration={markings,
+              mark=between positions 0.3 and 0.7 step 0.2 with {
+                  \draw[red!70, line width=1pt] (-2pt,-2pt) -- (2pt,2pt);
+                  \draw[red!70, line width=1pt] (-2pt,2pt) -- (2pt,-2pt);
+              }}, postaction={decorate}]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny, text=red!70, fill=white, inner sep=1pt] {#3}
+        node[midway, below, font=\tiny, fill=red!15, inner sep=1pt] {-REMOVED};
+}
+
+% Modified connection indicator
+% Usage: \drawModifiedConnection{from}{to}{change_desc}{label}
+\newcommand{\drawModifiedConnection}[4]{
+    \draw[draw=orange!70, line width=1.5pt, -{Stealth[length=3mm]}]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny\bfseries, fill=orange!15, inner sep=2pt] {#4}
+        node[midway, below, font=\tiny, fill=orange!20, inner sep=1pt] {~#3};
+}
