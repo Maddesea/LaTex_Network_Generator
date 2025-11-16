@@ -176,6 +176,15 @@ message queue  % Async messaging (teal with 'MQ' markers)
 streaming      % Real-time stream (cyan wavy with arrows)
 ```
 
+### Intelligent Routing (Round 5)
+```latex
+smooth curve     % Auto-calculated bezier curve
+orthogonal       % Right-angle vertical-then-horizontal
+orthogonal h     % Right-angle horizontal-then-vertical
+smart curve      % 20-degree bend left (avoids center)
+loop conn        % Self-referencing loop connection
+```
+
 ### Connection Helpers
 ```latex
 % Labeled connection with auto-positioned label
@@ -183,6 +192,30 @@ streaming      % Real-time stream (cyan wavy with arrows)
 
 % Bandwidth connection with automatic congestion coloring
 \bandwidthConnection{from}{to}{utilization%}{label}
+
+% Round 5: Advanced connection helpers
+\bundledConnection{from}{to}{count}{label}  % Shows N connections as one
+\smartConnection{from}{to}{style}           % Auto-routes best path
+```
+
+### Network Metrics (Round 5)
+```latex
+% Latency with color-coded thresholds
+\latencyIndicator{from}{to}{ms}  % Green<10ms, Yellow<50ms, Red>=50ms
+
+% Throughput display
+\throughputIndicator{from}{to}{10Gbps}
+
+% Packet loss warning
+\packetLossIndicator{from}{to}{5}  % Shows warning if >5%
+
+% Jitter quality indicators
+low jitter      % Green solid line (good quality)
+medium jitter   % Yellow dashed (moderate quality)
+high jitter     % Red dotted (poor quality)
+
+% Combined metrics in one connection
+\metricsConnection{from}{to}{15}{1Gbps}{2}  % latency, throughput, loss%
 ```
 
 ---
@@ -408,6 +441,21 @@ gdpr badge       % GDPR compliance (cyan)
 \kubernetesTemplate
 ```
 
+### Modern Architecture Templates (Round 5)
+```latex
+% Zero Trust Architecture with micro-segmentation
+\zeroTrustTemplate
+
+% SASE (Secure Access Service Edge)
+\saseTemplate
+
+% SD-WAN multi-path architecture
+\sdwanTemplate
+
+% Hybrid Cloud (on-prem + public cloud)
+\hybridCloudTemplate
+```
+
 ### Quick-Start Helpers (Round 4)
 ```latex
 % Create complete network in one command
@@ -418,6 +466,31 @@ gdpr badge       % GDPR compliance (cyan)
 
 % Create database cluster
 \dbClusterSetup{node_count}{cluster_name}
+```
+
+### Smart Auto-Sizing (Round 5)
+```latex
+% Nodes that auto-size based on content
+\smartServer{name}{x}{y}{Long Server Name Here}
+\smartClient{name}{x}{y}{Client Description}
+
+% Auto node style (can be applied to any node)
+auto node  % Automatically adjusts size to fit text
+```
+
+### Batch Operations (Round 5)
+```latex
+% Apply style to multiple nodes at once
+\batchStyle{node1,node2,node3}{glow, strong glow=red}
+
+% Add same badge to multiple nodes
+\batchBadge{srv1,srv2,srv3}{online badge}{north east}
+
+% Highlight multiple nodes
+\highlightNodes{node1,node2,node3}{red}
+
+% Connect all nodes in a list (full mesh)
+\connectAll{node1,node2,node3}{encrypted conn}
 ```
 
 ### Export & Utility Features (Round 4)
@@ -442,6 +515,44 @@ gdpr badge       % GDPR compliance (cyan)
 
 % Optimize for printing
 \optimizeForPrint
+```
+
+### Security Analysis (Round 5)
+```latex
+% Visualize attack path through multiple nodes
+\attackPath{(node1) (node2) (node3)}{path-name}{SQL Injection}
+
+% Show compromise blast radius
+\blastRadius{compromised-node}{3cm}
+
+% Defense layer boundary
+defense layer    % Green security control boundary
+
+% Attack vector
+attack vector    % Red arrow with "ATTACK" text
+
+% Security control with effectiveness
+\securityControl{(x,y)}{WAF}{85}  % Type and effectiveness %
+
+% Threat score on node (0-10 scale)
+\threatScore{node-name}{8}  % Color-coded: green<4, orange<7, red>=7
+
+% Zero Trust boundary
+zero trust       % Purple dashed boundary
+```
+
+### Network State Comparison (Round 5)
+```latex
+% Node states for diff visualization
+added node       % Green highlight with "NEW" label
+removed node     % Red faded with "REMOVED" label
+modified node    % Orange highlight with "MODIFIED" label
+
+% Change description
+\changeIndicator{node}{Modified}{Updated to v2.0}
+
+% Diff legend
+\diffLegend{x}{y}  % Shows color-coded legend
 ```
 
 ### Color Scheme Cycling
@@ -521,17 +632,20 @@ highlight pulse % Border pulsing
 
 ## Complete Feature Count
 
-### Round 4 Update - Enterprise Features
+### Round 5 Update - Advanced Automation & Intelligence
 - **Color Schemes**: 6
 - **Style Presets**: 5 + 4 theme variations = 9
 - **Node Types**: 20+
-- **Connection Styles**: 22+ (added 7 enterprise connections)
-- **Visual Effects**: 14+ (added performance indicators, advanced zones)
-- **Badge Types**: 20+ (added 5 compliance badges)
-- **Helper Macros**: 40+ (added quick-start, export, accessibility)
-- **Diagram Templates**: 6 (DMZ, 3-tier, cloud, microservices, k8s)
-- **Total Commands**: 85+
-- **Total Lines**: 2,322 (styles_config.tex)
+- **Connection Styles**: 30+ (added 8 intelligent routing + network metrics)
+- **Visual Effects**: 14+ (performance indicators, zones, security analysis)
+- **Badge Types**: 20+ (compliance, OS, status, security, CVE)
+- **Helper Macros**: 55+ (batch operations, smart sizing, metrics, security)
+- **Diagram Templates**: 10 (DMZ, 3-tier, cloud, microservices, k8s, Zero Trust, SASE, SD-WAN, hybrid)
+- **Network Metrics**: 5 (latency, throughput, packet loss, jitter, combined)
+- **Security Features**: 7 (attack paths, blast radius, defense layers, threat scores, Zero Trust)
+- **Automation Features**: 4 (smart routing, auto-sizing, batch ops, state comparison)
+- **Total Commands**: 110+
+- **Total Lines**: 2,808 (styles_config.tex)
 
 ---
 
