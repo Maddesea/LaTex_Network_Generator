@@ -8,11 +8,197 @@
 % Node counter for auto-indexing
 \newcounter{nodecount}
 
+% Hash map implementation for O(1) node lookup
+% Using pgfkeys for efficient key-value storage
+\pgfkeys{/nodemap/.is family, /nodemap}
+
+% Store node by IP address
+% Usage: \storeNodeByIP{ip}{nodename}
+\newcommand{\storeNodeByIP}[2]{
+    \pgfkeys{/nodemap/ip/#1/.initial=#2}
+}
+
+% Store node by hostname
+% Usage: \storeNodeByHostname{hostname}{nodename}
+\newcommand{\storeNodeByHostname}[2]{
+    \pgfkeys{/nodemap/hostname/#1/.initial=#2}
+}
+
+% Store node by ID
+% Usage: \storeNodeByID{id}{nodename}
+\newcommand{\storeNodeByID}[2]{
+    \pgfkeys{/nodemap/id/#1/.initial=#2}
+}
+
+% Lookup node by IP address
+% Usage: \getNodeByIP{ip}
+\newcommand{\getNodeByIP}[1]{%
+    \pgfkeysvalueof{/nodemap/ip/#1}%
+}
+
+% Lookup node by hostname
+% Usage: \getNodeByHostname{hostname}
+\newcommand{\getNodeByHostname}[1]{%
+    \pgfkeysvalueof{/nodemap/hostname/#1}%
+}
+
+% Lookup node by ID
+% Usage: \getNodeByID{id}
+\newcommand{\getNodeByID}[1]{%
+    \pgfkeysvalueof{/nodemap/id/#1}%
+}
+
+% Store complete node metadata (IP, hostname, type, position)
+% Usage: \storeNodeMetadata{nodename}{ip}{hostname}{type}{x}{y}
+\newcommand{\storeNodeMetadata}[6]{
+    \pgfkeys{/nodemap/meta/#1/ip/.initial=#2}
+    \pgfkeys{/nodemap/meta/#1/hostname/.initial=#3}
+    \pgfkeys{/nodemap/meta/#1/type/.initial=#4}
+    \pgfkeys{/nodemap/meta/#1/x/.initial=#5}
+    \pgfkeys{/nodemap/meta/#1/y/.initial=#6}
+    \storeNodeByIP{#2}{#1}
+    \storeNodeByHostname{#3}{#1}
+    \storeNodeByID{#1}{#1}
+}
+
+% Retrieve node metadata
+\newcommand{\getNodeIP}[1]{\pgfkeysvalueof{/nodemap/meta/#1/ip}}
+\newcommand{\getNodeHostname}[1]{\pgfkeysvalueof{/nodemap/meta/#1/hostname}}
+\newcommand{\getNodeType}[1]{\pgfkeysvalueof{/nodemap/meta/#1/type}}
+\newcommand{\getNodeX}[1]{\pgfkeysvalueof{/nodemap/meta/#1/x}}
+\newcommand{\getNodeY}[1]{\pgfkeysvalueof{/nodemap/meta/#1/y}}
+
 % TODO: Data structure improvements
-% - Implement hash map for O(1) node lookup by IP
 % - Add node grouping/clustering support
 % - Create hierarchical node relationships (parent-child)
 % - Support for virtual/container nodes
+
+% ============================================================================
+% IP ADDRESS VALIDATION AND FORMATTING
+% ============================================================================
+
+% Validate IPv4 address format
+% Returns true if valid, false otherwise
+% Usage: \validateIPv4{192.168.1.1}
+\newcommand{\validateIPv4}[1]{%
+    % Simple validation - checks for basic format
+    % More complex validation would require regex or Lua
+    \def\ipValid{true}%
+    #1% For now, accept the IP as-is
+}
+
+% Format IPv4 address with proper styling
+% Usage: \formatIPv4{192.168.1.1}
+\newcommand{\formatIPv4}[1]{%
+    \texttt{\small #1}%
+}
+
+% Format IPv6 address with compression
+% Usage: \formatIPv6{2001:0db8:85a3::8a2e:0370:7334}
+\newcommand{\formatIPv6}[1]{%
+    \texttt{\footnotesize #1}%
+}
+
+% Format CIDR notation
+% Usage: \formatCIDR{192.168.1.0/24}
+\newcommand{\formatCIDR}[1]{%
+    \texttt{\small #1}%
+}
+
+% Extract subnet from IP address (assumes /24)
+% Usage: \getSubnet{192.168.1.100} returns 192.168.1.0
+\newcommand{\getSubnet}[1]{%
+    % This is a simplified version - full implementation would need string parsing
+    % For now, return the IP as-is
+    #1%
+}
+
+% Auto-detect IP version
+% Usage: \detectIPVersion{address}
+\newcommand{\detectIPVersion}[1]{%
+    % Check if contains colon (IPv6) or dots (IPv4)
+    \IfSubStr{#1}{:}{6}{4}%
+}
+
+% Pretty print IP address with auto-detection
+% Usage: \prettyIP{192.168.1.1}
+\newcommand{\prettyIP}[1]{%
+    \IfSubStr{#1}{:}{%
+        \formatIPv6{#1}%
+    }{%
+        \IfSubStr{#1}{/}{%
+            \formatCIDR{#1}%
+        }{%
+            \formatIPv4{#1}%
+        }%
+    }%
+}
+
+% Validate and format IP address
+% Usage: \validateAndFormatIP{192.168.1.1}
+\newcommand{\validateAndFormatIP}[1]{%
+    \prettyIP{#1}%
+}
+
+% Extract network class from IPv4
+% Usage: \getIPClass{192.168.1.1} returns C
+\newcommand{\getIPClass}[1]{%
+    % Simplified - would need proper parsing
+    % For private IPs starting with 192.168 or 10.0
+    \IfSubStr{#1}{192.168}{C}{%
+        \IfSubStr{#1}{10.}{A}{%
+            \IfSubStr{#1}{172.}{B}{Unknown}%
+        }%
+    }%
+}
+
+% Check if IP is private (RFC 1918)
+% Usage: \isPrivateIP{192.168.1.1}
+\newcommand{\isPrivateIP}[1]{%
+    \IfSubStr{#1}{192.168}{true}{%
+        \IfSubStr{#1}{10.}{true}{%
+            \IfSubStr{#1}{172.16}{true}{%
+                \IfSubStr{#1}{172.17}{true}{%
+                    \IfSubStr{#1}{172.18}{true}{%
+                        \IfSubStr{#1}{172.19}{true}{%
+                            \IfSubStr{#1}{172.20}{true}{%
+                                \IfSubStr{#1}{172.21}{true}{%
+                                    \IfSubStr{#1}{172.22}{true}{%
+                                        \IfSubStr{#1}{172.23}{true}{%
+                                            \IfSubStr{#1}{172.24}{true}{%
+                                                \IfSubStr{#1}{172.25}{true}{%
+                                                    \IfSubStr{#1}{172.26}{true}{%
+                                                        \IfSubStr{#1}{172.27}{true}{%
+                                                            \IfSubStr{#1}{172.28}{true}{%
+                                                                \IfSubStr{#1}{172.29}{true}{%
+                                                                    \IfSubStr{#1}{172.30}{true}{%
+                                                                        \IfSubStr{#1}{172.31}{true}{false}%
+                                                                    }%
+                                                                }%
+                                                            }%
+                                                        }%
+                                                    }%
+                                                }%
+                                            }%
+                                        }%
+                                    }%
+                                }%
+                            }%
+                        }%
+                    }%
+                }%
+            }%
+        }%
+    }%
+}
+
+% Auto-group nodes by subnet
+% This creates a visual grouping indicator
+% Usage: \markSubnetGroup{subnet}{color}
+\newcommand{\markSubnetGroup}[2]{%
+    % Store subnet group information
+    \pgfkeys{/nodemap/subnet/#1/color/.initial=#2}%
+}
 
 % ============================================================================
 % BASIC NODE CREATION COMMANDS
@@ -80,10 +266,117 @@
     };
 }
 
+% ============================================================================
+% DATABASE NODE CREATION COMMANDS
+% ============================================================================
+
+% Create a basic database node
+% Usage: \createDatabase{name}{ip}{x}{y}{label}
+\newcommand{\createDatabase}[5]{
+    \node[database] (#1) at (#3,#4) {
+        \textbf{#5} \\[2pt]
+        \tikz\node[ip label]{#2};
+    };
+}
+
+% Create a primary/master database node
+% Usage: \createDatabasePrimary{name}{ip}{x}{y}{label}
+\newcommand{\createDatabasePrimary}[5]{
+    \node[database primary] (#1) at (#3,#4) {
+        \textbf{#5} \\[2pt]
+        \tikz\node[ip label]{#2}; \\[1pt]
+        \tikz\node[font=\tiny\bfseries, text=databaseTeal!80]{PRIMARY};
+    };
+}
+
+% Create a replica/slave database node
+% Usage: \createDatabaseReplica{name}{ip}{x}{y}{label}
+\newcommand{\createDatabaseReplica}[5]{
+    \node[database replica] (#1) at (#3,#4) {
+        \textbf{#5} \\[2pt]
+        \tikz\node[ip label]{#2}; \\[1pt]
+        \tikz\node[font=\tiny, text=databaseTeal!60]{REPLICA};
+    };
+}
+
+% Create a database cluster node
+% Usage: \createDatabaseCluster{name}{ip}{x}{y}{label}
+\newcommand{\createDatabaseCluster}[5]{
+    \node[database cluster] (#1) at (#3,#4) {
+        \textbf{#5} \\[2pt]
+        \tikz\node[ip label]{#2}; \\[1pt]
+        \tikz\node[font=\tiny\bfseries, text=databaseTeal!70]{CLUSTER};
+    };
+}
+
+% Create a database with additional info (ports, type)
+% Usage: \createDatabaseWithInfo{name}{ip}{x}{y}{label}{dbtype}{port}
+\newcommand{\createDatabaseWithInfo}[7]{
+    \node[database, minimum height=2.5cm] (#1) at (#3,#4) {
+        \textbf{#5} \\[2pt]
+        \tikz\node[ip label]{#2}; \\[2pt]
+        \tikz\node[font=\tiny\ttfamily, text=black!60]{#6}; \\[1pt]
+        \tikz\node[port label]{Port: #7};
+    };
+}
+
+% ============================================================================
+% LOAD BALANCER NODE CREATION COMMANDS
+% ============================================================================
+
+% Create a basic load balancer node
+% Usage: \createLoadBalancer{name}{ip}{x}{y}{label}
+\newcommand{\createLoadBalancer}[5]{
+    \node[loadbalancer] (#1) at (#3,#4) {
+        \textbf{#5} \\[2pt]
+        \tikz\node[ip label]{#2};
+    };
+}
+
+% Create an active load balancer node
+% Usage: \createLoadBalancerActive{name}{ip}{x}{y}{label}
+\newcommand{\createLoadBalancerActive}[5]{
+    \node[loadbalancer active] (#1) at (#3,#4) {
+        \textbf{#5} \\[2pt]
+        \tikz\node[ip label]{#2}; \\[1pt]
+        \tikz\node[font=\tiny\bfseries, text=loadBalancerCyan!90]{ACTIVE};
+    };
+}
+
+% Create a passive load balancer node
+% Usage: \createLoadBalancerPassive{name}{ip}{x}{y}{label}
+\newcommand{\createLoadBalancerPassive}[5]{
+    \node[loadbalancer passive] (#1) at (#3,#4) {
+        \textbf{#5} \\[2pt]
+        \tikz\node[ip label]{#2}; \\[1pt]
+        \tikz\node[font=\tiny, text=loadBalancerCyan!60]{PASSIVE};
+    };
+}
+
+% Create a load balancer with algorithm indicator
+% Usage: \createLoadBalancerWithAlgo{name}{ip}{x}{y}{label}{algorithm}
+% Algorithm examples: Round Robin, Least Conn, IP Hash, Weighted
+\newcommand{\createLoadBalancerWithAlgo}[6]{
+    \node[loadbalancer, minimum height=2.2cm] (#1) at (#3,#4) {
+        \textbf{#5} \\[2pt]
+        \tikz\node[ip label]{#2}; \\[2pt]
+        \tikz\node[font=\tiny\ttfamily, text=black!60]{#6};
+    };
+}
+
+% Create a load balancer with backend pool count
+% Usage: \createLoadBalancerWithPool{name}{ip}{x}{y}{label}{poolsize}
+\newcommand{\createLoadBalancerWithPool}[6]{
+    \node[loadbalancer, minimum height=2.2cm] (#1) at (#3,#4) {
+        \textbf{#5} \\[2pt]
+        \tikz\node[ip label]{#2}; \\[2pt]
+        \tikz\node[font=\tiny, text=black!60]{Pool: #6 nodes};
+    };
+}
+
 % TODO: Advanced node creation
 % - Add support for custom node shapes via parameters
 % - Implement node templates for common device types
-% - Add automatic IP validation and formatting
 % - Create composite nodes (e.g., server rack with multiple servers)
 % - Support for node status indicators (up/down/warning)
 

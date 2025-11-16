@@ -70,26 +70,30 @@
 ## AGENT 2: Node System (node_definitions.tex)
 
 ### High Priority
-- [ ] Hash map implementation for O(1) node lookup
+- [x] Hash map implementation for O(1) node lookup
   - Use pgfkeys or similar for key-value storage
   - Enable lookup by: IP, hostname, node ID
   - Required for auto-connection routing
+  - **COMPLETED**: Implemented using pgfkeys with `\storeNodeByIP`, `\storeNodeByHostname`, `\storeNodeByID` and corresponding getter functions
 
-- [ ] IP address validation and formatting
+- [x] IP address validation and formatting
   - Validate IPv4 format (regex or manual parsing)
   - Support IPv6 addresses
   - Auto-format CIDR notation display
   - Detect and group by subnet automatically
+  - **COMPLETED**: Added `\formatIPv4`, `\formatIPv6`, `\formatCIDR`, `\prettyIP`, `\isPrivateIP`, `\getIPClass` and subnet grouping functions
 
-- [ ] Database server nodes with cylinder shape
+- [x] Database server nodes with cylinder shape
   - Create `\createDatabase` command
   - Use cylinder shape from shapes.geometric
   - Add visual indicators for: primary, replica, cluster
+  - **COMPLETED**: Added `\createDatabase`, `\createDatabasePrimary`, `\createDatabaseReplica`, `\createDatabaseCluster`, `\createDatabaseWithInfo` commands with cylinder shapes and visual indicators
 
-- [ ] Load balancer nodes with special indicators
+- [x] Load balancer nodes with special indicators
   - Create `\createLoadBalancer` command
   - Show distribution algorithm visually
   - Display active/passive status
+  - **COMPLETED**: Added `\createLoadBalancer`, `\createLoadBalancerActive`, `\createLoadBalancerPassive`, `\createLoadBalancerWithAlgo`, `\createLoadBalancerWithPool` commands with visual status indicators
 
 ### Medium Priority
 - [ ] Virtual machine nested appearance

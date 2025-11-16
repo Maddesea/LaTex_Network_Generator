@@ -12,6 +12,8 @@
 \definecolor{firewallRed}{RGB}{231, 76, 60}
 \definecolor{switchPurple}{RGB}{155, 89, 182}
 \definecolor{cloudGray}{RGB}{149, 165, 166}
+\definecolor{databaseTeal}{RGB}{22, 160, 133}
+\definecolor{loadBalancerCyan}{RGB}{41, 128, 185}
 
 % Threat indicator colors
 \definecolor{threatCritical}{RGB}{192, 57, 43}
@@ -124,6 +126,68 @@
         line width=2pt,
         minimum width=2cm,
         minimum height=2cm
+    },
+
+    % Database server style (cylinder shape)
+    database/.style={
+        base node,
+        cylinder,
+        shape border rotate=90,
+        aspect=0.25,
+        fill=databaseTeal!20,
+        draw=databaseTeal!80,
+        line width=1.5pt,
+        minimum height=2cm,
+        minimum width=2.5cm
+    },
+
+    % Database primary (master) style
+    database primary/.style={
+        database,
+        fill=databaseTeal!30,
+        line width=2pt
+    },
+
+    % Database replica (slave) style
+    database replica/.style={
+        database,
+        fill=databaseTeal!15,
+        dashed,
+        dash pattern=on 3pt off 2pt
+    },
+
+    % Database cluster node style
+    database cluster/.style={
+        database,
+        fill=databaseTeal!25,
+        double,
+        double distance=1pt
+    },
+
+    % Load balancer style
+    loadbalancer/.style={
+        base node,
+        trapezium,
+        trapezium left angle=60,
+        trapezium right angle=120,
+        fill=loadBalancerCyan!20,
+        draw=loadBalancerCyan!80,
+        line width=2pt,
+        minimum height=2cm
+    },
+
+    % Active load balancer
+    loadbalancer active/.style={
+        loadbalancer,
+        fill=loadBalancerCyan!30,
+        line width=2.5pt
+    },
+
+    % Passive load balancer
+    loadbalancer passive/.style={
+        loadbalancer,
+        fill=loadBalancerCyan!10,
+        dashed
     }
 }
 
