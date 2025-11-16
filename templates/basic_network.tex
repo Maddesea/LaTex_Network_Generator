@@ -1,0 +1,63 @@
+% Basic Network Template
+% A simple network diagram template - perfect for getting started
+%
+% Usage: Copy this file and modify the nodes and connections
+% Compile with: pdflatex basic_network.tex
+
+\documentclass[border=5mm]{standalone}
+\usepackage{tikz}
+\usepackage{xcolor}
+\usepackage{ifthen}
+
+\usetikzlibrary{shapes, arrows, shadows, decorations.markings, patterns}
+
+% Load the styling system
+\input{../styles_config.tex}
+
+\begin{document}
+
+% Choose your color scheme (uncomment one)
+\useDefaultColors
+% \useColorblindSafe
+% \useDarkMode
+
+\begin{tikzpicture}[scale=1.0]
+
+    % Title
+    \node[font=\Large\bfseries] at (3,6) {My Network Diagram};
+
+    % Internet/External
+    \node[cloud] (internet) at (3,5) {Internet};
+
+    % Firewall
+    \node[server] (firewall) at (3,3.5) {Firewall\\10.0.0.1};
+
+    % Internal Servers
+    \node[server] (web) at (0,2) {Web Server\\192.168.1.10};
+    \node[server] (db) at (6,2) {Database\\192.168.1.20};
+
+    % Clients
+    \node[client] (pc1) at (0,0) {PC 1\\192.168.1.101};
+    \node[client] (pc2) at (3,0) {PC 2\\192.168.1.102};
+    \node[client] (pc3) at (6,0) {PC 3\\192.168.1.103};
+
+    % Connections
+    \draw[normal conn] (internet) -- (firewall);
+    \draw[encrypted conn] (firewall) -- (web);
+    \draw[encrypted conn] (firewall) -- (db);
+    \draw[normal conn] (web) -- (pc1);
+    \draw[normal conn] (web) -- (pc2);
+    \draw[normal conn] (db) -- (pc3);
+
+    % Legend
+    \node[legend box, anchor=north west] at (-1,5) {
+        \begin{tabular}{ll}
+            \textbf{Legend} \\[2pt]
+            \legendNormalConn \\
+            \legendEncryptedConn \\
+        \end{tabular}
+    };
+
+\end{tikzpicture}
+
+\end{document}

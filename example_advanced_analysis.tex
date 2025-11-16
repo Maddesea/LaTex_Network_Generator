@@ -1,0 +1,199 @@
+% example_advanced_analysis.tex
+% Demonstrates advanced network analysis features:
+% - Network validation and verification
+% - Auto-documentation generation
+% - Diagram comparison
+% - Security assessment
+%
+% Usage: \generateNetworkDiagram{example_advanced_analysis}
+
+% ============================================================================
+% EXAMPLE: NETWORK VALIDATION AND HEALTH MONITORING
+% ============================================================================
+
+% Create a sample network with intentional issues for demonstration
+\createServer{web1}{192.168.10.10}{-6}{3}{Web Server 01}
+\createServer{web2}{192.168.10.11}{-3}{3}{Web Server 02}
+\createServer{web3}{192.168.10.10}{0}{3}{Web Server 03}  % Duplicate IP!
+
+\createDatabasePrimary{db1}{192.168.20.10}{-6}{0}{Primary DB}
+\createDatabaseReplica{db2}{192.168.20.11}{-3}{0}{Replica DB}
+
+\createLoadBalancerActive{lb1}{192.168.5.10}{-4.5}{6}{Load Balancer}{round-robin}
+
+% Add OS badges
+\addOSBadge{web1}{ubuntu}
+\addOSBadge{web2}{ubuntu}
+\addOSBadge{web3}{redhat}
+\addStatusIndicator{web1}{online}
+\addStatusIndicator{web2}{online}
+\addStatusIndicator{web3}{degraded}
+
+% Register nodes for validation
+\registerIPAddress{web1}{192.168.10.10}
+\registerIPAddress{web2}{192.168.10.11}
+\registerIPAddress{web3}{192.168.10.10}  % Will detect conflict
+\registerIPAddress{db1}{192.168.20.10}
+\registerIPAddress{db2}{192.168.20.11}
+\registerIPAddress{lb1}{192.168.5.10}
+
+% Register ports for conflict detection
+\registerNodePort{web1}{192.168.10.10}{80}{nginx}
+\registerNodePort{web1}{192.168.10.10}{443}{nginx-ssl}
+\registerNodePort{web2}{192.168.10.11}{80}{nginx}
+\registerNodePort{web2}{192.168.10.11}{443}{nginx-ssl}
+
+% Add inventory entries
+\addInventoryEntry{web1}{Web Server 01}{192.168.10.10}{server}{online}
+\addInventoryEntry{web2}{Web Server 02}{192.168.10.11}{server}{online}
+\addInventoryEntry{web3}{Web Server 03}{192.168.10.10}{server}{degraded}
+\addInventoryEntry{db1}{Primary DB}{192.168.20.10}{database}{online}
+\addInventoryEntry{db2}{Replica DB}{192.168.20.11}{database}{online}
+\addInventoryEntry{lb1}{Load Balancer}{192.168.5.10}{loadbalancer}{online}
+
+% Connections
+\draw[normal conn] (lb1) -- (web1);
+\draw[normal conn] (lb1) -- (web2);
+\draw[normal conn] (lb1) -- (web3);
+\draw[encrypted conn] (web1) -- (db1);
+\draw[encrypted conn] (web2) -- (db1);
+\draw[encrypted conn] (web3) -- (db1);
+\draw[normal conn, bend left=15] (db1) -- (db2);
+
+% Create subnet boundaries
+\begin{scope}[on background layer]
+    \createSubnet{webnet}{Web Tier}{192.168.10.0/24}{(web1)(web2)(web3)}{high}
+    \createSubnet{dbnet}{Database Tier}{192.168.20.0/24}{(db1)(db2)}{high}
+\end{scope}
+
+% ============================================================================
+% VALIDATION REPORT
+% ============================================================================
+
+% Generate validation report showing IP conflicts
+\generateValidationReport{-9}{-5}
+
+% Display network health badge
+\displayNetworkHealth{8}{6}
+
+% ============================================================================
+% SECURITY ASSESSMENT EXAMPLE
+% ============================================================================
+
+% Register vulnerabilities
+\registerVulnerability{web3}{CVE-2024-1234}{critical}{9.8}
+\registerVulnerability{web3}{CVE-2024-5678}{high}{7.5}
+\registerVulnerability{web1}{CVE-2023-9999}{medium}{5.2}
+\registerVulnerability{db1}{CVE-2024-1111}{low}{3.1}
+
+% Register exposed services
+\registerExposedService{lb1}{443}{HTTPS}{public}
+\registerExposedService{web1}{80}{HTTP}{dmz}
+\registerExposedService{web2}{80}{HTTP}{dmz}
+\registerExposedService{web3}{80}{HTTP}{dmz}
+
+% Add vulnerability badges
+\addVulnerabilityBadge{web3}{2}{critical}
+\addThreatBadge{web3}{critical}
+
+% Mark internet-exposed node
+\markInternetExposed{lb1}
+
+% ============================================================================
+% AUTO-DOCUMENTATION EXAMPLE
+% ============================================================================
+
+% Generate network summary card at top
+\generateNetworkSummaryCard{0}{9.5}{Production Web Cluster}
+
+% Generate simple node list
+\generateNodeList{-9}{2}
+
+% ============================================================================
+% SECURITY DASHBOARD
+% ============================================================================
+
+% Display comprehensive security dashboard
+\generateSecurityDashboard{-9}{-9}
+
+% ============================================================================
+% DIAGRAM METADATA
+% ============================================================================
+
+% Add diagram title
+\diagramTitle{Advanced Analysis Example}{Network Validation, Security Assessment, and Auto-Documentation}
+
+% Generate legend with all connection types
+\node[legend box, anchor=south east] at (9.5,-9) {
+    \begin{minipage}{6cm}
+    \textbf{Legend} \\[3pt]
+
+    \textbf{Connections:} \\
+    \tikz\draw[encrypted conn] (0,0) -- (0.8,0); Encrypted (TLS) \\
+    \tikz\draw[normal conn] (0,0) -- (0.8,0); Normal \\[2pt]
+
+    \textbf{Status Indicators:} \\
+    \tikz\node[circle, fill=green!70, inner sep=2pt] {}; Online \\
+    \tikz\node[circle, fill=yellow!70, inner sep=2pt] {}; Degraded \\
+    \tikz\node[circle, fill=red!70, inner sep=2pt] {}; Offline \\[2pt]
+
+    \textbf{Security Badges:} \\
+    \tikz\node[circle, fill=red, inner sep=2pt, minimum size=0.5cm] {2}; Vulns \\
+    \tikz\node[rectangle, fill=red!80, text=white, font=\tiny, inner sep=2pt] {EXPOSED}; Public \\[2pt]
+
+    \textbf{Issues Detected:} \\
+    \textcolor{red}{1 IP conflict} \\
+    \textcolor{orange}{2 critical vulnerabilities}
+    \end{minipage}
+};
+
+% Add metadata footer
+\node[font=\tiny, anchor=south east] at (9.5,-9.8) {
+    Generated: \today\ | LaTeX Network Diagram Generator v1.2 | Advanced Analysis Demo
+};
+
+% Export network report to log
+\exportNetworkReport
+
+% ============================================================================
+% ANNOTATIONS FOR DEMONSTRATION
+% ============================================================================
+
+% Annotate the IP conflict
+\node[
+    rectangle,
+    draw=red!80,
+    fill=red!10,
+    rounded corners=3pt,
+    font=\tiny\bfseries,
+    inner sep=3pt,
+    anchor=west
+] at (0.5,4.5) {
+    IP CONFLICT: web1 and web3 share 192.168.10.10
+};
+
+% Annotate critical vulnerability
+\node[
+    rectangle,
+    draw=red!80,
+    fill=red!10,
+    rounded corners=3pt,
+    font=\tiny\bfseries,
+    inner sep=3pt,
+    anchor=east
+] at (-0.5,1.5) {
+    CRITICAL: web3 has CVE-2024-1234 (CVSS 9.8)
+};
+
+% Annotate internet exposure
+\node[
+    rectangle,
+    draw=orange!80,
+    fill=orange!10,
+    rounded corners=3pt,
+    font=\tiny\bfseries,
+    inner sep=3pt,
+    anchor=south
+] at (-4.5,7) {
+    EXPOSED: Load balancer accessible from internet
+};

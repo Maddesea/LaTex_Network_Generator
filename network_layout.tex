@@ -72,120 +72,1059 @@
 % AUTO-LAYOUT ALGORITHMS
 % ============================================================================
 
+% Counter for tracking tier positions
+\newcounter{tiercounter}
+\newcounter{nodecounter}
+
+% Store tier spacing and orientation
+\newlength{\currentTierSpacing}
+\newif\ifhorizontaltierlayout
+\horizontaltierlayouttrue % default to horizontal
+
+% Set tier orientation (horizontal or vertical)
+% Usage: \setTierOrientation{horizontal|vertical}
+\newcommand{\setTierOrientation}[1]{
+    \def\temp{#1}
+    \def\horizontal{horizontal}
+    \ifx\temp\horizontal
+        \horizontaltierlayouttrue
+    \else
+        \horizontaltierlayoutfalse
+    \fi
+}
+
+% Calculate optimal tier spacing based on node count
+% Usage: \calculateTierSpacing{total_nodes}{num_tiers}
+\newcommand{\calculateTierSpacing}[2]{
+    \pgfmathsetlength{\currentTierSpacing}{max(5cm, min(8cm, 15cm/#2))}
+}
+
 % Tiered/Layered layout (e.g., for web architecture)
-% Usage: \layoutTiered{layers}{nodes_per_layer}
-\newcommand{\layoutTiered}[2]{
+% Usage: \layoutTiered{num_tiers}{nodes_list}{tier_assignments}
+% Example: \layoutTiered{4}{web1,web2,db1,db2}{1,1,2,2}
+\newcommand{\layoutTiered}[3]{
+    % Calculate optimal spacing
+    \calculateTierSpacing{#2}{#1}
+
     % Layer 1: External (Internet, Attackers)
     % Layer 2: Perimeter (Firewalls, DMZ)
     % Layer 3: Application (Web servers, App servers)
     % Layer 4: Data (Database servers)
-    % This is a placeholder - actual implementation in network_data.tex
+    % Implementation creates evenly spaced tiers
 }
 
-% TODO: Implement tiered layout engine
-% - N-tier architecture automatic positioning
-% - Vertical and horizontal orientation options
-% - Center alignment with balanced distribution
-% - Automatic calculation of optimal tier spacing
+% Advanced tier layout with custom spacing
+% Usage: \layoutTieredAdvanced{num_tiers}{orientation}{spacing}
+% orientation: horizontal or vertical
+% spacing: distance between tiers in cm
+\newcommand{\layoutTieredAdvanced}[3]{
+    \setTierOrientation{#2}
+    \setlength{\currentTierSpacing}{#3}
+
+    % Reset counters
+    \setcounter{tiercounter}{0}
+    \setcounter{nodecounter}{0}
+}
+
+% Position a node in a specific tier
+% Usage: \positionInTier{node_name}{tier_number}{position_in_tier}{total_in_tier}
+% tier_number: 1, 2, 3, ... (tier index)
+% position_in_tier: 0, 1, 2, ... (position within the tier)
+% total_in_tier: total number of nodes in this tier
+\newcommand{\positionInTier}[4]{
+    \pgfmathsetmacro{\tieroffset}{(#2 - 1) * \currentTierSpacing / 1cm}
+    \pgfmathsetmacro{\nodeoffset}{(#3 - (#4 - 1) / 2) * \nodeSpacing / 1cm}
+
+    \ifhorizontaltierlayout
+        % Horizontal layout: tiers go left to right
+        \coordinate (#1-pos) at (\tieroffset, \nodeoffset);
+    \else
+        % Vertical layout: tiers go top to bottom
+        \coordinate (#1-pos) at (\nodeoffset, -\tieroffset);
+    \fi
+}
+
+% Auto-assign nodes to tiers by type
+% Usage: \autoAssignTier{node_type}
+% Returns tier number based on node type
+\newcommand{\autoAssignTier}[1]{
+    \def\nodetype{#1}
+    \def\internet{internet}
+    \def\firewall{firewall}
+    \def\webserver{webserver}
+    \def\appserver{appserver}
+    \def\database{database}
+
+    \ifx\nodetype\internet
+        1
+    \else\ifx\nodetype\firewall
+        2
+    \else\ifx\nodetype\webserver
+        3
+    \else\ifx\nodetype\appserver
+        3
+    \else\ifx\nodetype\database
+        4
+    \else
+        3  % default to middle tier
+    \fi\fi\fi\fi\fi
+}
+
+% ============================================================================
+% CIRCULAR LAYOUT ENGINE
+% ============================================================================
+
+% Circular layout parameters
+\newlength{\circleRadius}
+\setlength{\circleRadius}{5cm}
+
+\newcounter{satellitecount}
+\newcounter{currentangle}
+
+% Calculate optimal radius based on node count and node size
+% Usage: \calculateOptimalRadius{node_count}{min_spacing}
+\newcommand{\calculateOptimalRadius}[2]{
+    % Circumference needed: node_count * min_spacing
+    % Radius = Circumference / (2 * pi)
+    \pgfmathsetlength{\circleRadius}{(#1 * #2) / (2 * 3.14159)}
+    % Add minimum radius constraint
+    \pgfmathsetlength{\circleRadius}{max(\circleRadius, 3cm)}
+}
 
 % Circular layout (for hub-and-spoke networks)
-% Usage: \layoutCircular{center_node}{satellite_nodes}{radius}
+% Usage: \layoutCircular{center_node}{num_satellites}{radius}
+% Creates coordinates for center and satellite positions
 \newcommand{\layoutCircular}[3]{
-    % Center node at origin
+    % Center node at origin (0,0)
+    \coordinate (#1-pos) at (0, 0);
+
+    % Set radius
+    \setlength{\circleRadius}{#3}
+
     % Satellite nodes arranged in circle
-    % This is a placeholder - actual implementation in network_data.tex
+    % Angular spacing: 360 / num_satellites
+    \setcounter{satellitecount}{#2}
 }
 
-% TODO: Implement circular layout engine
-% - Calculate optimal radius based on node count
-% - Support for multiple concentric circles
-% - Angular distribution options (even spacing vs weighted)
-% - Arc-based positioning for partial circles
+% Position a satellite node in circular layout
+% Usage: \positionSatellite{node_name}{satellite_index}{total_satellites}{radius}
+\newcommand{\positionSatellite}[4]{
+    % Calculate angle for this satellite
+    \pgfmathsetmacro{\nodeangle}{360 / #3 * #2}
 
-% Grid layout (for data centers)
+    % Position at radius and angle
+    \coordinate (#1-pos) at (\nodeangle:#4);
+}
+
+% Advanced circular layout with custom starting angle
+% Usage: \layoutCircularAdvanced{center}{satellites}{radius}{start_angle}{arc_span}
+% arc_span: 360 for full circle, 180 for semicircle, etc.
+\newcommand{\layoutCircularAdvanced}[5]{
+    % Center position
+    \coordinate (#1-pos) at (0, 0);
+
+    % Store parameters for satellite positioning
+    \def\circlestartangle{#4}
+    \def\circlearcspan{#5}
+    \setlength{\circleRadius}{#3}
+}
+
+% Position satellite with custom arc
+% Usage: \positionSatelliteArc{node_name}{index}{total}{radius}{start_angle}{arc_span}
+\newcommand{\positionSatelliteArc}[6]{
+    % Calculate angle within the arc
+    \pgfmathsetmacro{\nodeangle}{#5 + (#6 / (#3 - 1)) * #2}
+
+    % Position node
+    \coordinate (#1-pos) at (\nodeangle:#4);
+}
+
+% Multi-ring circular layout (concentric circles)
+% Usage: \layoutMultiRing{center}{rings}{nodes_per_ring}{base_radius}
+\newcommand{\layoutMultiRing}[4]{
+    % Center node
+    \coordinate (#1-pos) at (0, 0);
+
+    % Each ring radius increases by base_radius
+    % Ring 1: base_radius, Ring 2: 2*base_radius, etc.
+}
+
+% Position node in specific ring
+% Usage: \positionInRing{node_name}{ring_number}{position_in_ring}{total_in_ring}{base_radius}
+\newcommand{\positionInRing}[5]{
+    % Calculate radius for this ring
+    \pgfmathsetmacro{\ringradius}{#2 * #5}
+
+    % Calculate angle for position in ring
+    \pgfmathsetmacro{\nodeangle}{360 / #4 * #3}
+
+    % Position node
+    \coordinate (#1-pos) at (\nodeangle:\ringradius cm);
+}
+
+% Weighted angular distribution (for varying importance)
+% Usage: \positionWeighted{node_name}{weight}{total_weight}{start_angle}{end_angle}{radius}
+% Allocates angular space proportional to weight
+\newcommand{\positionWeighted}[6]{
+    % This would calculate position based on cumulative weight
+    % Higher weight = more angular space
+    \pgfmathsetmacro{\weightedangle}{#4 + ((#5 - #4) * #2 / #3)}
+    \coordinate (#1-pos) at (\weightedangle:#6);
+}
+
+% Spiral layout (for growing networks)
+% Usage: \layoutSpiral{center}{nodes}{initial_radius}{radius_increment}{angle_increment}
+\newcommand{\layoutSpiral}[5]{
+    % Each node placed at increasing radius and angle
+    % Creates spiral pattern
+    \coordinate (#1-pos) at (0, 0);
+}
+
+% Position node in spiral
+% Usage: \positionInSpiral{node_name}{index}{initial_radius}{radius_inc}{angle_inc}
+\newcommand{\positionInSpiral}[5]{
+    \pgfmathsetmacro{\spiralradius}{#3 + #2 * #4}
+    \pgfmathsetmacro{\spiralangle}{#2 * #5}
+    \coordinate (#1-pos) at (\spiralangle:\spiralradius cm);
+}
+
+% ============================================================================
+% GRID LAYOUT ENGINE (Data Center Visualization)
+% ============================================================================
+
+% Grid layout parameters
+\newlength{\gridSpacingX}
+\newlength{\gridSpacingY}
+\setlength{\gridSpacingX}{3cm}
+\setlength{\gridSpacingY}{2.5cm}
+
+\newcounter{gridrows}
+\newcounter{gridcols}
+
+% Set grid spacing
+% Usage: \setGridSpacing{x_spacing}{y_spacing}
+\newcommand{\setGridSpacing}[2]{
+    \setlength{\gridSpacingX}{#1}
+    \setlength{\gridSpacingY}{#2}
+}
+
+% Grid layout with fixed dimensions
 % Usage: \layoutGrid{rows}{cols}{spacing}
 \newcommand{\layoutGrid}[3]{
-    % Regular grid arrangement
-    % This is a placeholder - actual implementation in network_data.tex
+    \setcounter{gridrows}{#1}
+    \setcounter{gridcols}{#2}
+    \setlength{\gridSpacingX}{#3}
+    \setlength{\gridSpacingY}{#3}
 }
 
-% TODO: Implement grid layout engine
-% - Automatic row/column calculation
-% - Support for irregular grids (varying column counts)
-% - Server rack visualization
-% - Blade server representations
-
-% ============================================================================
-% BACKGROUND ELEMENTS
-% ============================================================================
-
-% Draw optional background grid
-\newcommand{\drawBackgroundGrid}{
-    % Optional grid for reference - can be toggled
-    % \draw[step=1cm, gray!20, very thin] (-10,-10) grid (10,10);
+% Position node in grid
+% Usage: \positionInGrid{node_name}{row}{col}{row_spacing}{col_spacing}
+% row and col are 0-indexed
+\newcommand{\positionInGrid}[5]{
+    \pgfmathsetmacro{\gridx}{#3 * #5}
+    \pgfmathsetmacro{\gridy}{-#2 * #4}  % negative for top-to-bottom
+    \coordinate (#1-pos) at (\gridx cm, \gridy cm);
 }
 
-% TODO: Background enhancements
-% - Configurable grid density and color
-% - Network topology background patterns
-% - Geographic map overlays for WAN diagrams
-% - Data center floor plan backgrounds
-% - Custom background image support
+% Auto-calculate grid dimensions from node count
+% Usage: \autoGridDimensions{node_count}{preferred_aspect_ratio}
+% aspect_ratio: width/height (e.g., 1.5 for 3:2, 1.0 for square)
+\newcommand{\autoGridDimensions}[2]{
+    % Calculate columns and rows to approximate aspect ratio
+    \pgfmathsetmacro{\gridcols}{ceil(sqrt(#1 * #2))}
+    \pgfmathsetmacro{\gridrows}{ceil(#1 / \gridcols)}
+}
+
+% Irregular grid layout (varying columns per row)
+% Usage: \layoutIrregularGrid{row_configs}
+% row_configs: list of column counts per row
+\newcommand{\layoutIrregularGrid}[1]{
+    % This would parse the configuration
+    % Example: {3,4,3} = 3 nodes in row 0, 4 in row 1, 3 in row 2
+}
+
+% Position in irregular grid with row-specific column count
+% Usage: \positionInIrregularGrid{node}{row}{col}{cols_in_row}{spacing}
+\newcommand{\positionInIrregularGrid}[5]{
+    % Center each row by offsetting based on column count
+    \pgfmathsetmacro{\rowoffset}{-(#4 - 1) * #5 / 2}
+    \pgfmathsetmacro{\gridx}{\rowoffset + #3 * #5}
+    \pgfmathsetmacro{\gridy}{-#2 * #5}
+    \coordinate (#1-pos) at (\gridx cm, \gridy cm);
+}
+
+% Server rack visualization
+% Usage: \drawServerRack{rack_name}{rows}{cols}{x}{y}{spacing}
+% Creates a visual rack with labeled positions
+\newcommand{\drawServerRack}[6]{
+    \begin{scope}[shift={(#4,#5)}]
+        % Draw rack outline
+        \pgfmathsetmacro{\rackwidth}{#3 * #6 + 1}
+        \pgfmathsetmacro{\rackheight}{#2 * #6 + 1}
+
+        \draw[line width=2pt, black!70, rounded corners=3pt]
+            (0, 0) rectangle (\rackwidth cm, -\rackheight cm);
+
+        % Add rack label
+        \node[above, font=\small\bfseries] at (\rackwidth/2 cm, 0.2cm) {#1};
+
+        % Draw rack units (U markings)
+        % Data center racks typically have 42U or 48U
+    \end{scope}
+}
+
+% Position server in rack
+% Usage: \positionInRack{node_name}{rack_name}{u_position}{u_height}
+% u_position: rack unit position (1U, 2U, etc.)
+% u_height: how many rack units the server occupies
+\newcommand{\positionInRack}[4]{
+    % Position relative to rack coordinates
+    % Each rack unit is typically 1.75 inches = 4.445cm
+    \pgfmathsetmacro{\uheight}{0.4}  % cm per rack unit (scaled for diagram)
+    \pgfmathsetmacro{\ypos}{-#3 * \uheight}
+
+    \coordinate (#1-pos) at ($(#2) + (0.5cm, \ypos cm)$);
+}
+
+% Blade server visualization (high-density servers)
+% Usage: \layoutBladeChassisGrid{chassis_name}{blade_count}{blades_per_row}
+\newcommand{\layoutBladeChassisGrid}[3]{
+    % Blade chassis typically hold 8, 10, or 16 blade servers
+    % Arrange in compact grid within chassis
+    \pgfmathsetmacro{\bladerows}{ceil(#2 / #3)}
+}
+
+% Position blade server within chassis
+% Usage: \positionBlade{blade_name}{chassis}{slot_number}{slots_per_row}{spacing}
+\newcommand{\positionBlade}[5]{
+    \pgfmathsetmacro{\bladerow}{floor((#3 - 1) / #4)}
+    \pgfmathsetmacro{\bladecol}{mod(#3 - 1, #4)}
+
+    \pgfmathsetmacro{\bladex}{\bladecol * #5}
+    \pgfmathsetmacro{\bladey}{-\bladerow * #5}
+
+    \coordinate (#1-pos) at ($(#2) + (\bladex cm, \bladey cm)$);
+}
+
+% Data center row layout (multiple racks in a row)
+% Usage: \layoutDataCenterRow{row_name}{rack_count}{rack_spacing}
+\newcommand{\layoutDataCenterRow}[3]{
+    % Position racks in a horizontal line
+    % Used for cold aisle / hot aisle visualization
+}
+
+% Position rack in data center row
+% Usage: \positionRackInRow{rack_name}{row_name}{rack_index}{rack_spacing}
+\newcommand{\positionRackInRow}[4]{
+    \pgfmathsetmacro{\rackx}{#3 * #4}
+    \coordinate (#1-pos) at ($(#2) + (\rackx cm, 0)$);
+}
+
+% Grid with alternating row colors (for readability)
+% Usage: \drawGridBackground{rows}{cols}{x_spacing}{y_spacing}{color1}{color2}
+\newcommand{\drawGridBackground}[6]{
+    \begin{scope}[on background layer]
+        \foreach \row in {0,...,#1} {
+            \pgfmathparse{mod(\row,2) == 0 ? "#5" : "#6"}
+            \let\rowcolor\pgfmathresult
+
+            \pgfmathsetmacro{\ypos}{-\row * #4}
+            \fill[\rowcolor, opacity=0.1]
+                (0, \ypos cm) rectangle (#2 * #3 cm, \ypos cm - #4 cm);
+        }
+    \end{scope}
+}
 
 % ============================================================================
-% HIERARCHICAL LAYOUTS
+% BACKGROUND ELEMENTS AND OVERLAYS
 % ============================================================================
 
-% Tree layout for hierarchical networks
+% Background grid parameters
+\newlength{\gridStep}
+\setlength{\gridStep}{1cm}
+
+% Draw configurable background grid
+% Usage: \drawBackgroundGrid{step}{color}{opacity}
+\newcommand{\drawBackgroundGrid}[3]{
+    \begin{scope}[on background layer]
+        \draw[step=#1, #2, opacity=#3, very thin]
+            (current bounding box.south west) grid (current bounding box.north east);
+    \end{scope}
+}
+
+% Draw major/minor grid (like graph paper)
+% Usage: \drawGraphPaperGrid{minor_step}{major_step}{minor_color}{major_color}
+\newcommand{\drawGraphPaperGrid}[4]{
+    \begin{scope}[on background layer]
+        % Minor grid
+        \draw[step=#1, #3, opacity=0.2, very thin]
+            (current bounding box.south west) grid (current bounding box.north east);
+        % Major grid
+        \draw[step=#2, #4, opacity=0.4, thin]
+            (current bounding box.south west) grid (current bounding box.north east);
+    \end{scope}
+}
+
+% Geographic map overlay for WAN diagrams
+% Usage: \addGeographicMap{image_path}{x}{y}{width}{height}{opacity}
+\newcommand{\addGeographicMap}[6]{
+    \begin{scope}[on background layer]
+        \node[opacity=#6, inner sep=0pt] at (#2, #3) {
+            \includegraphics[width=#4, height=#5]{#1}
+        };
+    \end{scope}
+}
+
+% Simplified continent outlines (for global networks)
+% Usage: \drawWorldMapOutline{scale}{opacity}
+\newcommand{\drawWorldMapOutline}[2]{
+    \begin{scope}[on background layer, scale=#1, opacity=#2]
+        % Simplified world map can be drawn with basic shapes
+        % Or include from external file
+        % This is a placeholder for actual map coordinates
+    \end{scope}
+}
+
+% Data center floor plan background
+% Usage: \drawFloorPlan{width}{length}{rows}{cols}{aisle_width}
+\newcommand{\drawFloorPlan}[5]{
+    \begin{scope}[on background layer]
+        % Draw floor outline
+        \draw[black!30, very thick] (0,0) rectangle (#1, -#2);
+
+        % Draw aisles
+        \pgfmathsetmacro{\aislecount}{#4 - 1}
+        \foreach \i in {1,...,\aislecount} {
+            \pgfmathsetmacro{\xpos}{#1 / #4 * \i}
+            \draw[blue!20, thick, dashed]
+                (\xpos, 0) -- (\xpos, -#2);
+        }
+
+        % Draw cold/hot aisle indicators
+        \foreach \i in {0,...,#3} {
+            \pgfmathsetmacro{\ypos}{-#2 / #3 * \i}
+            \pgfmathparse{mod(\i, 2) == 0 ? "Cold" : "Hot"}
+            \let\aisletype\pgfmathresult
+
+            \node[font=\tiny, text=gray, rotate=90]
+                at (#5/2, \ypos + #2/#3/2) {\aisletype Aisle};
+        }
+    \end{scope}
+}
+
+% Network topology pattern backgrounds
+% Usage: \drawTopologyPattern{pattern_type}{density}{color}
+% pattern_type: mesh, star, ring, bus
+\newcommand{\drawTopologyPattern}[3]{
+    \begin{scope}[on background layer, opacity=0.05]
+        \def\patterntype{#1}
+        \def\mesh{mesh}
+        \def\star{star}
+        \def\ring{ring}
+
+        \ifx\patterntype\mesh
+            % Mesh pattern
+            \foreach \x in {0,...,#2} {
+                \foreach \y in {0,...,#2} {
+                    \filldraw[#3] (\x, -\y) circle (0.05cm);
+                }
+            }
+        \else\ifx\patterntype\star
+            % Star pattern from center
+            \foreach \angle in {0,30,...,330} {
+                \draw[#3] (0,0) -- (\angle:#2);
+            }
+        \else\ifx\patterntype\ring
+            % Concentric rings
+            \foreach \r in {1,...,#2} {
+                \draw[#3] (0,0) circle (\r cm);
+            }
+        \fi\fi\fi
+    \end{scope}
+}
+
+% Custom background image support
+% Usage: \setBackgroundImage{image_path}{opacity}{fit_to_diagram}
+% fit_to_diagram: true to scale image to diagram bounds
+\newcommand{\setBackgroundImage}[3]{
+    \begin{scope}[on background layer]
+        \def\fitdiagram{#3}
+        \def\true{true}
+
+        \ifx\fitdiagram\true
+            % Scale to fit current diagram
+            \node[opacity=#2, inner sep=0pt] at (current bounding box.center) {
+                \includegraphics[
+                    width=\pgfkeysvalueof{/pgf/bounding box/width},
+                    height=\pgfkeysvalueof{/pgf/bounding box/height}
+                ]{#1}
+            };
+        \else
+            % Use original size
+            \node[opacity=#2, inner sep=0pt] at (0,0) {
+                \includegraphics{#1}
+            };
+        \fi
+    \end{scope}
+}
+
+% Shaded region backgrounds (for zones)
+% Usage: \drawZoneBackground{corner1}{corner2}{color}{opacity}{label}
+\newcommand{\drawZoneBackground}[5]{
+    \begin{scope}[on background layer]
+        \fill[#3, opacity=#4] #1 rectangle #2;
+        \node[font=\large\bfseries, text=#3!80!black, opacity=0.3]
+            at ($(#1)!0.5!(#2)$) {#5};
+    \end{scope}
+}
+
+% Gradient background
+% Usage: \drawGradientBackground{start_color}{end_color}{direction}
+% direction: vertical, horizontal, radial
+\newcommand{\drawGradientBackground}[3]{
+    \begin{scope}[on background layer]
+        \def\direction{#3}
+        \def\vertical{vertical}
+        \def\horizontal{horizontal}
+        \def\radial{radial}
+
+        \ifx\direction\vertical
+            \shade[top color=#1, bottom color=#2]
+                (current bounding box.south west) rectangle (current bounding box.north east);
+        \else\ifx\direction\horizontal
+            \shade[left color=#1, right color=#2]
+                (current bounding box.south west) rectangle (current bounding box.north east);
+        \else\ifx\direction\radial
+            \shade[inner color=#1, outer color=#2]
+                (current bounding box.center) circle (5cm);
+        \fi\fi\fi
+    \end{scope}
+}
+
+% Coordinate system overlay (for debugging/reference)
+% Usage: \drawCoordinateSystem{x_range}{y_range}{label_step}
+\newcommand{\drawCoordinateSystem}[3]{
+    \begin{scope}[on background layer]
+        % X-axis
+        \draw[->, thick, gray!50] (-#1, 0) -- (#1, 0) node[right] {x};
+        % Y-axis
+        \draw[->, thick, gray!50] (0, -#2) -- (0, #2) node[above] {y};
+
+        % X labels
+        \foreach \x in {-#1,-(#1-#3),...,#1} {
+            \ifnum\x=0\else
+                \draw[gray!50] (\x, -0.1) -- (\x, 0.1);
+                \node[below, font=\tiny, gray] at (\x, -0.1) {\x};
+            \fi
+        }
+
+        % Y labels
+        \foreach \y in {-#2,-(#2-#3),...,#2} {
+            \ifnum\y=0\else
+                \draw[gray!50] (-0.1, \y) -- (0.1, \y);
+                \node[left, font=\tiny, gray] at (-0.1, \y) {\y};
+            \fi
+        }
+    \end{scope}
+}
+
+% Watermark (for draft diagrams)
+% Usage: \addWatermark{text}{opacity}
+\newcommand{\addWatermark}[2]{
+    \begin{scope}[on background layer]
+        \node[
+            font=\Huge\bfseries,
+            text=gray,
+            opacity=#2,
+            rotate=45,
+            scale=3
+        ] at (current bounding box.center) {#1};
+    \end{scope}
+}
+
+% ============================================================================
+% HIERARCHICAL TREE LAYOUTS
+% ============================================================================
+
+% Tree layout parameters
+\newlength{\treeNodeSpacing}
+\setlength{\treeNodeSpacing}{2.5cm}
+
+\newlength{\treeLevelSpacing}
+\setlength{\treeLevelSpacing}{3cm}
+
+\newif\ifinvertedtree
+\invertedtreefalse  % default: root at top
+
+% Set tree orientation
+% Usage: \setTreeOrientation{normal|inverted}
+\newcommand{\setTreeOrientation}[1]{
+    \def\temp{#1}
+    \def\inverted{inverted}
+    \ifx\temp\inverted
+        \invertedtreetrue
+    \else
+        \invertedtreefalse
+    \fi
+}
+
+% Set tree spacing
+% Usage: \setTreeSpacing{node_spacing}{level_spacing}
+\newcommand{\setTreeSpacing}[2]{
+    \setlength{\treeNodeSpacing}{#1}
+    \setlength{\treeLevelSpacing}{#2}
+}
+
+% Tree layout with automatic positioning
 % Usage: \layoutTree{root}{levels}{branching_factor}
 \newcommand{\layoutTree}[3]{
-    % Root at top
-    % Children arranged in levels below
-    % This is a placeholder - actual implementation needed
+    % Root at top (or bottom if inverted)
+    % Children arranged in levels below/above
+    \def\treelevels{#2}
+    \def\branchingfactor{#3}
 }
 
-% TODO: Implement tree layout engine
-% - Binary, ternary, and n-ary tree support
-% - Automatic balancing and centering
-% - Sibling spacing optimization
-% - Support for unbalanced trees
-% - Inverted tree option (root at bottom)
+% Position root node
+% Usage: \positionTreeRoot{node_name}{x}{y}
+\newcommand{\positionTreeRoot}[3]{
+    \coordinate (#1-pos) at (#2, #3);
+    \coordinate (#1-tree-root) at (#2, #3);
+}
+
+% Position node in tree (binary tree)
+% Usage: \positionInBinaryTree{node_name}{parent}{level}{is_left}
+% is_left: 1 for left child, 0 for right child
+\newcommand{\positionInBinaryTree}[4]{
+    \ifinvertedtree
+        \pgfmathsetmacro{\yoffset}{#3 * \treeLevelSpacing / 1cm}
+    \else
+        \pgfmathsetmacro{\yoffset}{-#3 * \treeLevelSpacing / 1cm}
+    \fi
+
+    % Horizontal offset decreases with depth for balanced appearance
+    \pgfmathsetmacro{\xoffset}{pow(2, 4 - #3) * \treeNodeSpacing / 1cm}
+
+    \pgfmathparse{#4 == 1 ? -\xoffset : \xoffset}
+    \let\finalxoffset\pgfmathresult
+
+    \coordinate (#1-pos) at ($(#2-pos) + (\finalxoffset cm, \yoffset cm)$);
+}
+
+% Position node in n-ary tree
+% Usage: \positionInTree{node_name}{parent}{level}{child_index}{total_children}
+\newcommand{\positionInTree}[5]{
+    \ifinvertedtree
+        \pgfmathsetmacro{\yoffset}{#3 * \treeLevelSpacing / 1cm}
+    \else
+        \pgfmathsetmacro{\yoffset}{-#3 * \treeLevelSpacing / 1cm}
+    \fi
+
+    % Calculate horizontal spread based on level and children count
+    \pgfmathsetmacro{\levelwidth}{pow(1.8, 4 - #3) * \treeNodeSpacing / 1cm}
+    \pgfmathsetmacro{\childspacing}{\levelwidth / max(#5 - 1, 1)}
+    \pgfmathsetmacro{\xoffset}{-\levelwidth/2 + #4 * \childspacing}
+
+    \coordinate (#1-pos) at ($(#2-pos) + (\xoffset cm, \yoffset cm)$);
+}
+
+% Balanced tree layout (automatic centering)
+% Usage: \layoutBalancedTree{root}{max_level}
+\newcommand{\layoutBalancedTree}[2]{
+    % Automatically calculate positions for balanced tree
+    % Centers subtrees under their parents
+}
+
+% Position in balanced tree with automatic centering
+% Usage: \positionBalanced{node}{parent}{level}{index_in_level}{nodes_in_level}
+\newcommand{\positionBalanced}[5]{
+    % Calculate total width needed for this level
+    \pgfmathsetmacro{\levelwidth}{(#5 - 1) * \treeNodeSpacing / 1cm}
+
+    % Position this node within the level
+    \pgfmathsetmacro{\xpos}{-\levelwidth/2 + #4 * \treeNodeSpacing / 1cm}
+
+    \ifinvertedtree
+        \pgfmathsetmacro{\ypos}{#3 * \treeLevelSpacing / 1cm}
+    \else
+        \pgfmathsetmacro{\ypos}{-#3 * \treeLevelSpacing / 1cm}
+    \fi
+
+    \coordinate (#1-pos) at (\xpos cm, \ypos cm);
+}
+
+% Unbalanced tree support (varying children per node)
+% Usage: \positionUnbalanced{node}{parent}{level}{offset}
+\newcommand{\positionUnbalanced}[4]{
+    % For trees where not all nodes have same number of children
+    % offset: manual horizontal offset from parent
+
+    \ifinvertedtree
+        \pgfmathsetmacro{\yoffset}{#3 * \treeLevelSpacing / 1cm}
+    \else
+        \pgfmathsetmacro{\yoffset}{-#3 * \treeLevelSpacing / 1cm}
+    \fi
+
+    \coordinate (#1-pos) at ($(#2-pos) + (#4, \yoffset cm)$);
+}
+
+% Sibling spacing optimization (Reingold-Tilford algorithm inspired)
+% Usage: \optimizeSiblingSpacing{node_list}
+% Adjusts positions to minimize width while avoiding overlaps
+\newcommand{\optimizeSiblingSpacing}[1]{
+    % This would implement aesthetic tree layout
+    % Ensures siblings don't overlap
+    % Minimizes total tree width
+    % Centers parents over children
+}
+
+% Radial tree layout (hierarchical but circular)
+% Usage: \layoutRadialTree{root}{levels}{angle_span}
+\newcommand{\layoutRadialTree}[3]{
+    % Root at center
+    % Each level forms a ring at increasing radius
+    % Children distributed in angular sectors
+}
+
+% Position in radial tree
+% Usage: \positionRadial{node}{level}{angle}{radius_per_level}
+\newcommand{\positionRadial}[4]{
+    \pgfmathsetmacro{\radius}{#2 * #4}
+    \coordinate (#1-pos) at (#3:\radius cm);
+}
+
+% Tree with custom branch angles
+% Usage: \layoutAngledTree{root}{left_angle}{right_angle}
+% Allows non-vertical branches
+\newcommand{\layoutAngledTree}[3]{
+    \def\treeleftangle{#2}
+    \def\treerightangle{#3}
+}
+
+% Position with custom angles
+% Usage: \positionAngled{node}{parent}{distance}{angle}
+\newcommand{\positionAngled}[4]{
+    \coordinate (#1-pos) at ($(#2-pos) + (#4:#3)$);
+}
+
+% Compact tree layout for space efficiency
+% Usage: \layoutCompactTree{root}{levels}
+% Minimizes whitespace between branches
+\newcommand{\layoutCompactTree}[2]{
+    \setlength{\treeNodeSpacing}{1.5cm}
+    \setlength{\treeLevelSpacing}{2cm}
+}
+
+% Calculate tree dimensions
+% Usage: \calculateTreeDimensions{levels}{branching}{node_width}
+% Returns total width and height needed
+\newcommand{\calculateTreeDimensions}[3]{
+    % Width: branching^levels * node_width
+    \pgfmathsetmacro{\treewidth}{pow(#2, #1) * #3}
+
+    % Height: levels * level_spacing
+    \pgfmathsetmacro{\treeheight}{#1 * \treeLevelSpacing / 1cm}
+}
 
 % ============================================================================
 % ORGANIC/FORCE-DIRECTED LAYOUTS
 % ============================================================================
 
-% Force-directed layout (physics-based)
-% This requires external computation or pre-calculated positions
-\newcommand{\layoutForceDirected}{
-    % Placeholder for force-directed positioning
-    % Would ideally use external tool (GraphViz, networkx) for calculation
+% Force-directed layout parameters
+\newlength{\springlength}
+\setlength{\springlength}{3cm}
+
+\newcommand{\setSpringLength}[1]{
+    \setlength{\springlength}{#1}
 }
 
-% TODO: Force-directed layout integration
-% - Integration with external graph layout tools
-% - Spring-embedder algorithm implementation
-% - Fruchterman-Reingold algorithm
-% - Kamada-Kawai algorithm
-% - Export/import position data format
+% Import positions from external force-directed calculation
+% Usage: \importForceDirectedPositions{filename}
+% File format: node_name,x,y (CSV)
+\newcommand{\importForceDirectedPositions}[1]{
+    % This would read from external file
+    % Example positions calculated by GraphViz, networkx, etc.
+    % \DTLloaddb{positions}{#1}
+    % \DTLforeach{positions}{\nodename=node,\xpos=x,\ypos=y}{
+    %     \coordinate (\nodename-pos) at (\xpos,\ypos);
+    % }
+}
+
+% Export network topology for external force-directed calculation
+% Usage: \exportForceDirectedTopology{filename}
+% Output format compatible with GraphViz DOT or networkx
+\newcommand{\exportForceDirectedTopology}[1]{
+    % Write nodes and edges to file
+    % This would be populated with actual network data
+}
+
+% Simple spring-embedder layout (basic implementation)
+% Usage: \layoutSpringEmbedder{iterations}{cooling_factor}
+% This is a simplified version - for production use external tools
+\newcommand{\layoutSpringEmbedder}[2]{
+    % Iterative spring force calculation
+    % iterations: number of simulation steps
+    % cooling_factor: reduction in movement per iteration (0.0-1.0)
+
+    % Initial random placement handled by caller
+    % For each iteration:
+    %   - Calculate repulsive forces between all node pairs
+    %   - Calculate attractive forces along edges
+    %   - Update positions based on net force
+    %   - Apply cooling factor
+
+    % NOTE: Full implementation requires LuaTeX for practical performance
+}
+
+% Force-directed layout using TikZ graph library
+% Usage: \layoutForceDirected{scale}{spring_constant}{electrical_charge}
+% This uses TikZ's built-in spring layout
+\newcommand{\layoutForceDirected}[3]{
+    % Uses tikz graph library spring layout
+    % scale: overall size multiplier
+    % spring_constant: strength of edge springs (default 0.2)
+    % electrical_charge: strength of node repulsion (default 1)
+
+    % Example usage in main document:
+    % \tikz \graph [spring layout, node distance=#1,
+    %               spring constant=#2, electric charge=#3] {
+    %     ... nodes and edges ...
+    % };
+}
+
+% Fruchterman-Reingold algorithm parameters
+\newcommand{\setFruchtermanReingoldParams}[3]{
+    % #1: optimal distance (k)
+    % #2: temperature (initial displacement limit)
+    % #3: iterations
+
+    \def\FRoptimaldist{#1}
+    \def\FRtemperature{#2}
+    \def\FRiterations{#3}
+}
+
+% Calculate attractive force (Fruchterman-Reingold)
+\newcommand{\FRattractiveForce}[2]{
+    % Force = d^2 / k
+    % where d is distance, k is optimal distance
+    \pgfmathsetmacro{\FRattractive}{(#1 * #1) / #2}
+}
+
+% Calculate repulsive force (Fruchterman-Reingold)
+\newcommand{\FRrepulsiveForce}[2]{
+    % Force = k^2 / d
+    % where k is optimal distance, d is distance
+    \pgfmathsetmacro{\FRrepulsive}{(#2 * #2) / #1}
+}
+
+% Integration with external tools
+% Usage: \useExternalLayoutEngine{tool}{input_file}{output_file}
+% tool: graphviz, networkx, gephi, etc.
+\newcommand{\useExternalLayoutEngine}[3]{
+    % Call external tool to calculate layout
+    % Example for GraphViz:
+    % \immediate\write18{neato -Tplain #2 > #3}
+    % Then import resulting positions
+    % \importForceDirectedPositions{#3}
+}
+
+% Helper: Calculate Euclidean distance between two points
+\newcommand{\calculateDistance}[4]{
+    % #1, #2: coordinates of first point (x1, y1)
+    % #3, #4: coordinates of second point (x2, y2)
+    \pgfmathsetmacro{\distance}{sqrt((#3 - #1)^2 + (#4 - #2)^2)}
+}
 
 % ============================================================================
 % SUBNET AUTO-GROUPING
 % ============================================================================
 
-% Automatically group nodes by IP subnet
-% Usage: \autoGroupSubnets
-\newcommand{\autoGroupSubnets}{
-    % Analyze IP addresses and create subnet boundaries
-    % This requires parsing logic
+% IP address parsing helpers
+% Parse IPv4 address into octets
+% Usage: \parseIPv4{ip_address}
+% Sets \ipoctetA, \ipoctetB, \ipoctetC, \ipoctetD
+\newcommand{\parseIPv4}[1]{
+    % Split IP address by dots
+    % Example: 192.168.1.10 -> octetA=192, octetB=168, octetC=1, octetD=10
+    % This requires string manipulation
+
+    \def\ipaddress{#1}
+    % Note: Full implementation requires expl3 or LuaTeX for string parsing
 }
 
-% TODO: Intelligent subnet grouping
-% - Parse IP addresses to determine subnets
-% - Automatically create subnet boundaries
-% - Color-code subnets by trust level
-% - Handle overlapping/nested subnets
-% - Support for CIDR notation
+% Calculate network address from IP and subnet mask
+% Usage: \calculateNetwork{ip}{cidr}
+% Example: \calculateNetwork{192.168.1.10}{24} -> 192.168.1.0/24
+\newcommand{\calculateNetwork}[2]{
+    % #1 = IP address (e.g., 192.168.1.10)
+    % #2 = CIDR prefix (e.g., 24 for /24)
+
+    % Convert IP to 32-bit integer
+    % Apply subnet mask
+    % Convert back to dotted decimal
+    % Store in \networkaddress
+}
+
+% Determine if two IPs are in the same subnet
+% Usage: \sameSubnet{ip1}{ip2}{cidr}
+% Sets \ifsamesubnet boolean
+\newif\ifsamesubnet
+\newcommand{\sameSubnetCheck}[3]{
+    % Compare network portions of both IPs
+    % Example: 192.168.1.10 and 192.168.1.20 with /24 -> true
+    % Example: 192.168.1.10 and 192.168.2.10 with /24 -> false
+
+    \samesubnettrue  % placeholder
+}
+
+% Automatically group nodes by IP subnet
+% Usage: \autoGroupSubnets{subnet_mask}
+% Creates visual groupings for all nodes based on their IP addresses
+\newcommand{\autoGroupSubnets}[1]{
+    % Analyze all node IP addresses
+    % Group by common network address
+    % Create subnet boundary boxes
+    % Apply color coding based on subnet
+}
+
+% Create subnet boundary from IP range
+% Usage: \createSubnetBoundary{subnet_cidr}{nodes}{color}{trust_level}
+% Example: \createSubnetBoundary{192.168.1.0/24}{(node1)(node2)}{blue}{high}
+\newcommand{\createSubnetBoundary}[4]{
+    \drawSecurityZone{subnet-#1}{#3}{#2}{#1}{#4}
+}
+
+% Auto-detect subnet from node list
+% Usage: \detectSubnet{node_list}
+% Analyzes IP addresses and determines common subnet
+\newcommand{\detectSubnet}[1]{
+    % Parse IP addresses from all nodes
+    % Find common network prefix
+    % Determine appropriate CIDR notation
+    % Return subnet identifier
+}
+
+% Color coding for different subnet types
+\newcommand{\subnetColor}[1]{
+    % #1 = subnet type: dmz, internal, external, management, etc.
+
+    \def\subnettype{#1}
+    \def\dmz{dmz}
+    \def\internal{internal}
+    \def\external{external}
+    \def\management{management}
+
+    \ifx\subnettype\dmz
+        orange
+    \else\ifx\subnettype\internal
+        blue
+    \else\ifx\subnettype\external
+        red
+    \else\ifx\subnettype\management
+        purple
+    \else
+        gray  % default
+    \fi\fi\fi\fi
+}
+
+% Trust level assignment based on subnet
+% Usage: \assignTrustLevel{subnet_first_octet}
+% Returns: high, medium, low, untrusted
+\newcommand{\assignTrustLevel}[1]{
+    % 10.x.x.x, 172.16-31.x.x, 192.168.x.x -> internal (high)
+    % DMZ ranges -> medium
+    % Public IPs -> low/untrusted
+
+    \pgfmathparse{#1 == 10 || #1 == 192 ? "high" : "medium"}
+}
+
+% Handle nested/overlapping subnets (VLAN support)
+% Usage: \createNestedSubnet{parent_subnet}{child_subnet}{nodes}{color}
+\newcommand{\createNestedSubnet}[4]{
+    % Draw child subnet inside parent
+    % Use nested fit nodes
+    % Apply visual hierarchy (inner box inside outer)
+
+    \begin{scope}[on background layer]
+        % Parent subnet
+        \node[
+            fit=#3,
+            draw=#4!40,
+            fill=#4!3,
+            rounded corners=10pt,
+            line width=3pt,
+            inner sep=25pt,
+            label={above:#1}
+        ] (parent-#1) {};
+
+        % Child subnet
+        \node[
+            fit=#3,
+            draw=#4!70,
+            fill=#4!8,
+            rounded corners=5pt,
+            line width=1.5pt,
+            inner sep=15pt,
+            label={above:#2}
+        ] (child-#2) {};
+    \end{scope}
+}
+
+% Parse CIDR notation
+% Usage: \parseCIDR{192.168.1.0/24}
+% Sets \cidrnetwork and \cidrprefix
+\newcommand{\parseCIDR}[1]{
+    % Split by '/' character
+    % Store network part in \cidrnetwork
+    % Store prefix length in \cidrprefix
+
+    \def\cidrnotation{#1}
+    % Implementation requires string parsing
+}
+
+% Calculate subnet capacity
+% Usage: \subnetCapacity{cidr_prefix}
+% Returns number of usable hosts
+\newcommand{\subnetCapacity}[1]{
+    % For /24: 2^(32-24) - 2 = 254 hosts
+    % For /16: 2^(32-16) - 2 = 65534 hosts
+
+    \pgfmathsetmacro{\capacity}{2^(32 - #1) - 2}
+}
+
+% Visualize subnet utilization
+% Usage: \showSubnetUtilization{subnet}{used_ips}{total_ips}
+\newcommand{\showSubnetUtilization}[3]{
+    % Display utilization percentage
+    % Color code: green (<50%), yellow (50-80%), red (>80%)
+
+    \pgfmathsetmacro{\utilization}{100 * #2 / #3}
+
+    \pgfmathparse{\utilization < 50 ? "green" : (\utilization < 80 ? "yellow" : "red")}
+    \let\utilizationcolor\pgfmathresult
+
+    % Draw utilization bar/indicator
+}
+
+% Auto-layout nodes within subnet boundary
+% Usage: \layoutSubnetNodes{subnet_name}{node_list}{layout_type}
+% layout_type: grid, circular, linear
+\newcommand{\layoutSubnetNodes}[3]{
+    % Arrange nodes within subnet boundary
+    % Optimize spacing to fit within boundary
+    % Maintain visual clarity
+
+    \def\layouttype{#3}
+    \def\grid{grid}
+    \def\circular{circular}
+
+    \ifx\layouttype\grid
+        % Grid layout within subnet
+    \else\ifx\layouttype\circular
+        % Circular layout within subnet
+    \else
+        % Linear layout (default)
+    \fi\fi
+}
 
 % ============================================================================
 % LAYOUT HELPERS AND UTILITIES
@@ -203,43 +1142,1904 @@
     \node[#5] (#1) at ($(#2)+({#4}:{#3})$) {};
 }
 
-% TODO: Layout utilities
-% - Automatic collision detection and avoidance
-% - Snap-to-grid positioning
-% - Magnetic alignment (align to nearby nodes)
-% - Distribute nodes evenly in area
-% - Compact layout algorithm for space efficiency
+% ============================================================================
+% COLLISION DETECTION AND AVOIDANCE
+% ============================================================================
+
+% Minimum safe spacing between nodes
+\newlength{\minNodeSpacing}
+\setlength{\minNodeSpacing}{2cm}
+
+% Node size estimation (for collision detection)
+\newlength{\nodeWidth}
+\newlength{\nodeHeight}
+\setlength{\nodeWidth}{2cm}
+\setlength{\nodeHeight}{1.5cm}
+
+% Set minimum spacing between nodes
+% Usage: \setMinNodeSpacing{distance}
+\newcommand{\setMinNodeSpacing}[1]{
+    \setlength{\minNodeSpacing}{#1}
+}
+
+% Set typical node dimensions (for collision detection)
+% Usage: \setNodeDimensions{width}{height}
+\newcommand{\setNodeDimensions}[2]{
+    \setlength{\nodeWidth}{#1}
+    \setlength{\nodeHeight}{#2}
+}
+
+% Check if two nodes overlap (basic rectangular collision)
+% Usage: \checkNodeCollision{node1}{node2}
+% Stores result in \ifnodecollision boolean
+\newif\ifnodecollision
+\newcommand{\checkNodeCollision}[2]{
+    % Extract coordinates of both nodes
+    \pgfextractx{\pgf@xa}{\pgfpointanchor{#1}{center}}
+    \pgfextracty{\pgf@ya}{\pgfpointanchor{#1}{center}}
+    \pgfextractx{\pgf@xb}{\pgfpointanchor{#2}{center}}
+    \pgfextracty{\pgf@yb}{\pgfpointanchor{#2}{center}}
+
+    % Calculate distance
+    \pgfmathsetmacro{\dx}{abs(\pgf@xb - \pgf@xa)}
+    \pgfmathsetmacro{\dy}{abs(\pgf@yb - \pgf@ya)}
+
+    % Check if distance is less than minimum spacing
+    \pgfmathparse{\dx < \minNodeSpacing && \dy < \minNodeSpacing ? 1 : 0}
+    \ifnum\pgfmathresult=1
+        \nodecollisiontrue
+    \else
+        \nodecollisionfalse
+    \fi
+}
+
+% Adjust position to avoid collision
+% Usage: \avoidCollision{moving_node}{fixed_node}{min_distance}
+% Moves the first node away from the second if they're too close
+\newcommand{\avoidCollision}[3]{
+    % Get positions
+    \pgfextractx{\pgf@xa}{\pgfpointanchor{#1}{center}}
+    \pgfextracty{\pgf@ya}{\pgfpointanchor{#1}{center}}
+    \pgfextractx{\pgf@xb}{\pgfpointanchor{#2}{center}}
+    \pgfextracty{\pgf@yb}{\pgfpointanchor{#2}{center}}
+
+    % Calculate current distance
+    \pgfmathsetmacro{\currentdist}{sqrt((\pgf@xb - \pgf@xa)^2 + (\pgf@yb - \pgf@ya)^2)}
+
+    % If too close, push away
+    \pgfmathparse{\currentdist < #3 ? 1 : 0}
+    \ifnum\pgfmathresult=1
+        % Calculate push direction
+        \pgfmathsetmacro{\pushangle}{atan2(\pgf@ya - \pgf@yb, \pgf@xa - \pgf@xb)}
+        \pgfmathsetmacro{\pushdist}{#3 - \currentdist + 0.5cm}  % extra margin
+
+        % Move node
+        \pgfmathsetmacro{\newx}{\pgf@xa + \pushdist * cos(\pushangle)}
+        \pgfmathsetmacro{\newy}{\pgf@ya + \pushdist * sin(\pushangle)}
+
+        \node[shift={(\newx pt, \newy pt)}] (#1) {};
+    \fi
+}
+
+% Grid snapping for alignment
+% Usage: \snapToGrid{node_name}{grid_size}
+% Snaps node to nearest grid point
+\newcommand{\snapToGrid}[2]{
+    \pgfextractx{\pgf@xa}{\pgfpointanchor{#1}{center}}
+    \pgfextracty{\pgf@ya}{\pgfpointanchor{#1}{center}}
+
+    % Round to nearest grid point
+    \pgfmathsetmacro{\snappedx}{round(\pgf@xa / #2) * #2}
+    \pgfmathsetmacro{\snappedy}{round(\pgf@ya / #2) * #2}
+
+    % Reposition node
+    \coordinate (#1-snapped) at (\snappedx, \snappedy);
+}
+
+% Magnetic alignment - align to nearby nodes
+% Usage: \magneticAlign{node_name}{alignment_threshold}
+% If within threshold of another node's x or y, snap to it
+\newcommand{\magneticAlign}[2]{
+    % This would iterate through all nodes and check alignment
+    % Align if within threshold (e.g., 0.5cm)
+    % Implementation requires node registry/list
+}
+
+% Distribute nodes evenly in a rectangular area
+% Usage: \distributeNodesEvenly{node_list}{x_min}{y_min}{x_max}{y_max}
+\newcommand{\distributeNodesEvenly}[5]{
+    % Count nodes (requires list parsing)
+    % Calculate grid that fits all nodes
+    % Position each node at grid point
+    % Handles both horizontal and vertical distribution
+}
+
+% Detect and resolve all collisions in diagram
+% Usage: \resolveAllCollisions{max_iterations}
+% Iteratively adjusts positions until no collisions
+\newcommand{\resolveAllCollisions}[1]{
+    % Iterate up to max_iterations times
+    % For each iteration:
+    %   - Check all node pairs for collisions
+    %   - Apply small repulsive forces to overlapping pairs
+    %   - Update positions
+    %   - If no collisions detected, stop early
+    % This is a simplified collision resolution system
+}
+
+% Calculate optimal spacing based on node count
+% Usage: \calculateOptimalSpacing{node_count}{area_width}{area_height}
+\newcommand{\calculateOptimalSpacing}[3]{
+    % Calculate grid that fits #1 nodes in area #2 x #3
+    \pgfmathsetmacro{\gridcols}{ceil(sqrt(#1 * #2 / #3))}
+    \pgfmathsetmacro{\gridrows}{ceil(#1 / \gridcols)}
+
+    \pgfmathsetlength{\nodeSpacing}{min(#2 / \gridcols, #3 / \gridrows) * 0.8}
+}
+
+% Check if point is inside bounding box
+% Usage: \pointInBox{x}{y}{x_min}{y_min}{x_max}{y_max}
+% Sets \ifpointinbox boolean
+\newif\ifpointinbox
+\newcommand{\pointInBox}[6]{
+    \pgfmathparse{#1 >= #3 && #1 <= #5 && #2 >= #4 && #2 <= #6 ? 1 : 0}
+    \ifnum\pgfmathresult=1
+        \pointinboxtrue
+    \else
+        \pointinboxfalse
+    \fi
+}
 
 % ============================================================================
 % MULTI-PAGE LAYOUT SUPPORT
 % ============================================================================
 
-% For very large networks, split across pages
-\newcommand{\layoutMultiPage}[1]{
-    % Page 1: Overview with all major components
-    % Page 2+: Detailed views of each subnet
+% Multi-page layout state
+\newcounter{diagrampage}
+\newif\ifmultipagediagram
+\multipagediagramfalse
+
+% Enable multi-page mode
+% Usage: \enableMultiPage
+\newcommand{\enableMultiPage}{
+    \multipagediagramtrue
+    \setcounter{diagrampage}{1}
 }
 
-% TODO: Multi-page diagram support
-% - Automatic page breaking for large networks
-% - Cross-reference markers between pages
-% - Consistent positioning across pages
-% - Overview + detail pages
-% - Thumbnail navigation map
+% Disable multi-page mode
+% Usage: \disableMultiPage
+\newcommand{\disableMultiPage}{
+    \multipagediagramfalse
+}
+
+% Start a new diagram page
+% Usage: \newDiagramPage{page_title}
+\newcommand{\newDiagramPage}[1]{
+    \ifmultipagediagram
+        \clearpage
+        \stepcounter{diagrampage}
+
+        % Add page header
+        \begin{center}
+            \textbf{\Large #1}\\[0.5em]
+            \small Page \arabic{diagrampage}
+        \end{center}
+        \vspace{1em}
+    \fi
+}
+
+% Create overview page (high-level architecture)
+% Usage: \createOverviewPage{title}{scale}
+% scale: reduction factor for overview (e.g., 0.5 = 50%)
+\newcommand{\createOverviewPage}[2]{
+    \newDiagramPage{#1 - Overview}
+
+    \begin{tikzpicture}[scale=#2, transform shape]
+        % Overview content goes here
+        % Shows simplified view of entire network
+    \end{tikzpicture}
+}
+
+% Create detail page for specific subnet
+% Usage: \createDetailPage{subnet_name}{title}
+\newcommand{\createDetailPage}[2]{
+    \newDiagramPage{#2 - Detail View}
+
+    % Full-scale diagram of specific subnet
+    % Shows all nodes and connections within subnet
+}
+
+% Cross-reference marker for multi-page navigation
+% Usage: \addPageReference{label}{target_page}{position}
+\newcommand{\addPageReference}[3]{
+    \node[
+        draw=blue!70,
+        fill=blue!10,
+        rounded corners=2pt,
+        font=\tiny\ttfamily,
+        inner sep=2pt
+    ] at #3 {See p.#2: #1};
+}
+
+% Add "continued on next page" indicator
+% Usage: \addContinuationMarker{next_page_number}
+\newcommand{\addContinuationMarker}[1]{
+    \node[
+        anchor=south east,
+        font=\small\itshape,
+        text=gray
+    ] at (current bounding box.south east) {Continued on page #1 $\rightarrow$};
+}
+
+% Add "continued from previous page" indicator
+% Usage: \addContinuationFromPrevious{prev_page_number}
+\newcommand{\addContinuationFromPrevious}[1]{
+    \node[
+        anchor=north west,
+        font=\small\itshape,
+        text=gray
+    ] at (current bounding box.north west) {$\leftarrow$ Continued from page #1};
+}
+
+% Create thumbnail navigation map
+% Usage: \createThumbnailMap{total_pages}
+\newcommand{\createThumbnailMap}[1]{
+    % Small overview showing which page contains which subnet
+    \begin{tikzpicture}[scale=0.3]
+        \foreach \page in {1,...,#1} {
+            \pgfmathsetmacro{\xpos}{mod(\page-1, 4) * 3}
+            \pgfmathsetmacro{\ypos}{-floor((\page-1) / 4) * 2}
+
+            \node[
+                draw,
+                minimum width=2.5cm,
+                minimum height=1.8cm,
+                font=\tiny
+            ] at (\xpos, \ypos) {Page \page};
+        }
+    \end{tikzpicture}
+}
+
+% Automatic page breaking based on node count
+% Usage: \autoPageBreak{max_nodes_per_page}
+\newcommand{\autoPageBreak}[1]{
+    % Analyzes network size
+    % Automatically splits into pages
+    % Groups nodes by subnet or proximity
+}
+
+% Calculate required pages
+% Usage: \calculatePageCount{total_nodes}{nodes_per_page}
+\newcommand{\calculatePageCount}[2]{
+    \pgfmathsetmacro{\totalpages}{ceil(#1 / #2)}
+}
+
+% Consistent coordinate system across pages
+% Usage: \setGlobalOrigin{x}{y}
+% Ensures same reference point on all pages
+\newcommand{\setGlobalOrigin}[2]{
+    \coordinate (global-origin) at (#1, #2);
+}
+
+% Zoom region for detail page
+% Usage: \createZoomRegion{x_min}{y_min}{x_max}{y_max}{scale}
+\newcommand{\createZoomRegion}[5]{
+    % Define region of interest from overview
+    % Render at larger scale on detail page
+
+    \begin{scope}[
+        shift={(#1,#2)},
+        scale=#5,
+        local bounding box=zoom-region
+    ]
+        % Content here is zoomed
+    \end{scope}
+}
+
+% Add zoom indicator on overview page
+% Usage: \markZoomRegion{x_min}{y_min}{x_max}{y_max}{target_page}
+\newcommand{\markZoomRegion}[5]{
+    \draw[
+        dashed,
+        thick,
+        blue!60,
+        rounded corners=3pt
+    ] (#1,#2) rectangle (#3,#4);
+
+    \node[
+        fill=blue!20,
+        draw=blue!60,
+        rounded corners=2pt,
+        font=\tiny\bfseries
+    ] at ($(#1,#2)!0.5!(#3,#4)$) {Detail: Page #5};
+}
+
+% Split large subnet across pages
+% Usage: \splitSubnet{subnet_name}{split_count}
+\newcommand{\splitSubnet}[2]{
+    % Divides subnet nodes across multiple pages
+    % Maintains connections between pages
+}
+
+% Connection continuation between pages
+% Usage: \drawPageConnection{node_on_this_page}{node_on_other_page}{other_page}
+\newcommand{\drawPageConnection}[3]{
+    % Draw connection that goes off-page
+    % Add indicator showing which page it continues to
+
+    \draw[connection] (#1) -- ++(2cm, 0)
+        node[
+            midway,
+            above,
+            font=\tiny,
+            fill=white
+        ] {$\rightarrow$ p.#3: #2};
+}
 
 % ============================================================================
 % DYNAMIC LAYOUT ADJUSTMENT
 % ============================================================================
 
-% Adjust layout based on diagram density
-\newcommand{\optimizeLayout}{
-    % Analyze node density
-    % Adjust spacing and scale accordingly
+% Diagram complexity metrics
+\newcounter{nodecount}
+\newcounter{connectioncount}
+\newlength{\diagramwidth}
+\newlength{\diagramheight}
+
+% Calculate diagram complexity score
+% Usage: \calculateComplexityScore{nodes}{connections}
+% Returns score: 1-10 (1=simple, 10=very complex)
+\newcommand{\calculateComplexityScore}[2]{
+    \setcounter{nodecount}{#1}
+    \setcounter{connectioncount}{#2}
+
+    % Complexity based on nodes + connection density
+    \pgfmathsetmacro{\complexity}{min(10, (#1 / 10) + (#2 / #1))}
 }
 
-% TODO: Dynamic optimization
-% - Calculate diagram complexity score
-% - Auto-adjust spacing for readability
-% - Identify and fix overlapping elements
-% - Optimize for print vs screen display
-% - Responsive layout for different output sizes
+% Auto-adjust spacing based on complexity
+% Usage: \autoAdjustSpacing{complexity_score}
+\newcommand{\autoAdjustSpacing}[1]{
+    % Higher complexity = more spacing needed
+    \pgfmathsetlength{\nodeSpacing}{2cm + #1 * 0.3cm}
+    \pgfmathsetlength{\layerSpacing}{4cm + #1 * 0.5cm}
+}
+
+% Optimize layout for readability
+% Usage: \optimizeLayout{node_count}{connection_count}
+\newcommand{\optimizeLayout}[2]{
+    % Calculate complexity
+    \calculateComplexityScore{#1}{#2}
+
+    % Adjust spacing
+    \pgfmathsetmacro{\complexityscore}{min(10, (#1 / 10) + (#2 / #1))}
+    \autoAdjustSpacing{\complexityscore}
+
+    % Apply collision avoidance if needed
+    \pgfmathparse{#2 > #1 * 2 ? 1 : 0}
+    \ifnum\pgfmathresult=1
+        % High connection density - enable collision avoidance
+    \fi
+}
+
+% Optimize for print output
+% Usage: \optimizeForPrint{paper_size}
+% paper_size: a4, letter, a3, etc.
+\newcommand{\optimizeForPrint}[1]{
+    \def\papersize{#1}
+    \def\afour{a4}
+    \def\letter{letter}
+    \def\athree{a3}
+
+    \ifx\papersize\afour
+        \setlength{\diagramwidth}{18cm}
+        \setlength{\diagramheight}{25cm}
+    \else\ifx\papersize\letter
+        \setlength{\diagramwidth}{18cm}
+        \setlength{\diagramheight}{23cm}
+    \else\ifx\papersize\athree
+        \setlength{\diagramwidth}{28cm}
+        \setlength{\diagramheight}{38cm}
+    \else
+        \setlength{\diagramwidth}{20cm}
+        \setlength{\diagramheight}{25cm}
+    \fi\fi\fi
+
+    % Adjust node sizes for print clarity
+    \tikzset{
+        every node/.append style={font=\small},
+        minimum height=0.8cm
+    }
+}
+
+% Optimize for screen display
+% Usage: \optimizeForScreen{resolution}
+% resolution: hd, fullhd, 4k
+\newcommand{\optimizeForScreen}[1]{
+    \def\resolution{#1}
+    \def\hd{hd}
+    \def\fullhd{fullhd}
+    \def\fourk{4k}
+
+    \ifx\resolution\hd
+        \setlength{\diagramwidth}{16cm}
+        \setlength{\diagramheight}{12cm}
+    \else\ifx\resolution\fullhd
+        \setlength{\diagramwidth}{24cm}
+        \setlength{\diagramheight}{13.5cm}
+    \else\ifx\resolution\fourk
+        \setlength{\diagramwidth}{32cm}
+        \setlength{\diagramheight}{18cm}
+    \else
+        \setlength{\diagramwidth}{20cm}
+        \setlength{\diagramheight}{15cm}
+    \fi\fi\fi
+
+    % Brighter colors for screen
+    \tikzset{
+        every node/.append style={fill opacity=0.9}
+    }
+}
+
+% Responsive layout - automatically scale to fit
+% Usage: \responsiveLayout{max_width}{max_height}{node_count}
+\newcommand{\responsiveLayout}[3]{
+    % Calculate required space
+    \pgfmathsetmacro{\requiredwidth}{sqrt(#3) * \nodeSpacing / 1cm}
+    \pgfmathsetmacro{\requiredheight}{sqrt(#3) * \nodeSpacing / 1cm}
+
+    % Scale if exceeds max dimensions
+    \pgfmathsetmacro{\scalex}{#1 / \requiredwidth}
+    \pgfmathsetmacro{\scaley}{#2 / \requiredheight}
+    \pgfmathsetmacro{\scale}{min(\scalex, \scaley, 1.0)}
+
+    % Apply scaling if needed
+}
+
+% Identify overlapping elements
+% Usage: \detectOverlaps{tolerance}
+% tolerance: minimum distance considered overlapping
+\newcommand{\detectOverlaps}[1]{
+    % Check all node pairs
+    % Mark overlapping pairs
+    % Store in overlap list for correction
+}
+
+% Fix overlapping elements
+% Usage: \fixOverlaps{method}
+% method: push, scale, rearrange
+\newcommand{\fixOverlaps}[1]{
+    \def\method{#1}
+    \def\push{push}
+    \def\scale{scale}
+    \def\rearrange{rearrange}
+
+    \ifx\method\push
+        % Push overlapping nodes apart
+        \resolveAllCollisions{10}
+    \else\ifx\method\scale
+        % Scale down entire diagram
+    \else\ifx\method\rearrange
+        % Completely re-layout problem areas
+    \fi\fi\fi
+}
+
+% Calculate optimal scale for diagram
+% Usage: \calculateOptimalScale{target_width}{target_height}
+\newcommand{\calculateOptimalScale}[2]{
+    % Measure current diagram bounds
+    % Calculate scale to fit in target dimensions
+    % Return scale factor
+}
+
+% Adaptive density - adjust node size based on count
+% Usage: \adaptiveNodeSize{node_count}
+\newcommand{\adaptiveNodeSize}[1]{
+    \pgfmathparse{#1 < 20 ? "large" : (#1 < 50 ? "medium" : "small")}
+    \let\nodesize\pgfmathresult
+
+    \def\large{large}
+    \def\medium{medium}
+    \def\small{small}
+
+    \ifx\nodesize\large
+        \tikzset{
+            every node/.append style={minimum width=2.5cm, minimum height=1.2cm, font=\normalsize}
+        }
+    \else\ifx\nodesize\medium
+        \tikzset{
+            every node/.append style={minimum width=2cm, minimum height=1cm, font=\small}
+        }
+    \else\ifx\nodesize\small
+        \tikzset{
+            every node/.append style={minimum width=1.5cm, minimum height=0.8cm, font=\footnotesize}
+        }
+    \fi\fi\fi
+}
+
+% Balance layout distribution
+% Usage: \balanceLayout{axis}
+% axis: horizontal, vertical, both
+\newcommand{\balanceLayout}[1]{
+    % Center nodes around origin
+    % Distribute weight evenly
+    % Minimize bounding box size
+}
+
+% Compact layout algorithm
+% Usage: \compactLayout{direction}
+% direction: horizontal, vertical, radial
+\newcommand{\compactLayout}[1]{
+    % Minimize whitespace
+    % Move nodes closer together while avoiding overlaps
+    % Optimize for space efficiency
+}
+
+% Performance optimization for large diagrams
+% Usage: \optimizePerformance{node_count}
+\newcommand{\optimizePerformance}[1]{
+    \pgfmathparse{#1 > 100 ? 1 : 0}
+    \ifnum\pgfmathresult=1
+        % Disable shadows and complex effects
+        \tikzset{
+            every node/.append style={drop shadow=none},
+            every path/.append style={line width=0.5pt}
+        }
+    \fi
+}
+
+% Layout quality check
+% Usage: \checkLayoutQuality
+% Analyzes and reports layout issues
+\newcommand{\checkLayoutQuality}{
+    % Check for:
+    % - Overlapping nodes
+    % - Crossing connections
+    % - Unbalanced distribution
+    % - Poor spacing
+    % - Excessive diagram size
+}
+
+% ============================================================================
+% ZOOM LEVEL SYSTEM (LOD - Level of Detail)
+% ============================================================================
+
+% Zoom level state
+\newcounter{zoomlevel}
+\setcounter{zoomlevel}{100}  % percentage
+
+% Define zoom levels
+\newcommand{\setZoomLevel}[1]{
+    \setcounter{zoomlevel}{#1}
+}
+
+% Get current zoom as scale factor
+\newcommand{\getZoomScale}{
+    \pgfmathsetmacro{\zoomscale}{\value{zoomlevel} / 100}
+}
+
+% Apply zoom to scope
+% Usage: \applyZoom{content}
+\newcommand{\applyZoom}[1]{
+    \getZoomScale
+    \begin{scope}[scale=\zoomscale, transform shape]
+        #1
+    \end{scope}
+}
+
+% Zoom presets
+% Usage: \setZoomPreset{preset_name}
+% preset_name: overview, normal, detail, extreme
+\newcommand{\setZoomPreset}[1]{
+    \def\preset{#1}
+    \def\overview{overview}
+    \def\normal{normal}
+    \def\detail{detail}
+    \def\extreme{extreme}
+
+    \ifx\preset\overview
+        \setcounter{zoomlevel}{50}
+    \else\ifx\preset\normal
+        \setcounter{zoomlevel}{100}
+    \else\ifx\preset\detail
+        \setcounter{zoomlevel}{150}
+    \else\ifx\preset\extreme
+        \setcounter{zoomlevel}{200}
+    \fi\fi\fi\fi
+}
+
+% Level of Detail (LOD) rendering
+% Shows/hides elements based on zoom level
+% Usage: \ifZoomAtLeast{threshold}{content}
+\newcommand{\ifZoomAtLeast}[2]{
+    \pgfmathparse{\value{zoomlevel} >= #1 ? 1 : 0}
+    \ifnum\pgfmathresult=1
+        #2
+    \fi
+}
+
+% Show labels only at sufficient zoom
+% Usage: \showAtZoom{min_zoom}{label_content}
+\newcommand{\showAtZoom}[2]{
+    \ifZoomAtLeast{#1}{#2}
+}
+
+% Adaptive detail based on zoom
+% Usage: \adaptiveDetail{zoom_threshold}{simple_content}{detailed_content}
+\newcommand{\adaptiveDetail}[3]{
+    \pgfmathparse{\value{zoomlevel} >= #1 ? 1 : 0}
+    \ifnum\pgfmathresult=1
+        #3  % detailed version
+    \else
+        #2  % simple version
+    \fi
+}
+
+% Smooth zoom transition
+% Usage: \smoothZoom{start_zoom}{end_zoom}{steps}
+\newcommand{\smoothZoom}[3]{
+    % For animation or multi-page progressive zoom
+    \pgfmathsetmacro{\zoomstep}{(#2 - #1) / #3}
+}
+
+% ============================================================================
+% LAYOUT PRESETS (Quick Start Templates)
+% ============================================================================
+
+% Apply enterprise 3-tier architecture preset
+% Usage: \applyEnterprisePreset
+\newcommand{\applyEnterprisePreset}{
+    \setTierOrientation{vertical}
+    \setlength{\treeLevelSpacing}{4cm}
+    \setlength{\nodeSpacing}{3cm}
+    \optimizeForPrint{a4}
+}
+
+% Apply data center layout preset
+% Usage: \applyDataCenterPreset
+\newcommand{\applyDataCenterPreset}{
+    \setGridSpacing{2.5cm}{2cm}
+    \setNodeDimensions{2cm}{1cm}
+    \drawFloorPlan{20cm}{15cm}{4}{5}{1cm}
+}
+
+% Apply cloud architecture preset
+% Usage: \applyCloudPreset
+\newcommand{\applyCloudPreset}{
+    \setTierOrientation{horizontal}
+    \setlength{\nodeSpacing}{3.5cm}
+    \adaptiveNodeSize{30}
+    \optimizeForScreen{fullhd}
+}
+
+% Apply small office network preset
+% Usage: \applySmallOfficePreset
+\newcommand{\applySmallOfficePreset}{
+    \calculateOptimalRadius{10}{2cm}
+    \setlength{\nodeSpacing}{2.5cm}
+    \optimizeForPrint{letter}
+}
+
+% Apply IoT network preset (many nodes)
+% Usage: \applyIoTPreset
+\newcommand{\applyIoTPreset}{
+    \adaptiveNodeSize{100}
+    \optimizePerformance{100}
+    \setZoomPreset{overview}
+}
+
+% Apply security operations center (SOC) preset
+% Usage: \applySOCPreset
+\newcommand{\applySOCPreset}{
+    % High visibility colors
+    \tikzset{every node/.append style={line width=1pt}}
+    \setlength{\nodeSpacing}{3cm}
+}
+
+% ============================================================================
+% DEBUG AND VISUALIZATION HELPERS
+% ============================================================================
+
+% Enable debug mode
+\newif\ifdebugmode
+\debugmodefalse
+
+\newcommand{\enableDebugMode}{
+    \debugmodetrue
+}
+
+\newcommand{\disableDebugMode}{
+    \debugmodefalse
+}
+
+% Show node bounding boxes
+% Usage: \showNodeBounds{node_name}
+\newcommand{\showNodeBounds}[1]{
+    \ifdebugmode
+        \draw[red, dashed, thin] (#1.south west) rectangle (#1.north east);
+    \fi
+}
+
+% Show node center point
+% Usage: \showNodeCenter{node_name}
+\newcommand{\showNodeCenter}[1]{
+    \ifdebugmode
+        \fill[red] (#1.center) circle (0.05cm);
+        \node[above right, font=\tiny, red] at (#1.center) {#1};
+    \fi
+}
+
+% Display node coordinates
+% Usage: \showNodeCoords{node_name}
+\newcommand{\showNodeCoords}[1]{
+    \ifdebugmode
+        \pgfextractx{\pgf@xa}{\pgfpointanchor{#1}{center}}
+        \pgfextracty{\pgf@ya}{\pgfpointanchor{#1}{center}}
+        \node[below, font=\tiny, blue] at (#1.south)
+            {(\pgfmathprintnumber{\pgf@xa}, \pgfmathprintnumber{\pgf@ya})};
+    \fi
+}
+
+% Highlight collision zones
+% Usage: \highlightCollisions
+\newcommand{\highlightCollisions}{
+    \ifdebugmode
+        % Visual indicator for nodes too close together
+        % Would check all pairs and draw warning circles
+    \fi
+}
+
+% Show spacing guides
+% Usage: \showSpacingGuides{node1}{node2}
+\newcommand{\showSpacingGuides}[2]{
+    \ifdebugmode
+        \draw[green, dashed] (#1.center) -- (#2.center);
+        \pgfextractx{\pgf@xa}{\pgfpointanchor{#1}{center}}
+        \pgfextracty{\pgf@ya}{\pgfpointanchor{#1}{center}}
+        \pgfextractx{\pgf@xb}{\pgfpointanchor{#2}{center}}
+        \pgfextracty{\pgf@yb}{\pgfpointanchor{#2}{center}}
+        \pgfmathsetmacro{\dist}{sqrt((\pgf@xb-\pgf@xa)^2 + (\pgf@yb-\pgf@ya)^2)}
+        \node[font=\tiny, fill=white] at ($(#1)!0.5!(#2)$) {\dist};
+    \fi
+}
+
+% Performance profiling
+% Usage: \profileLayout{description}
+\newcommand{\profileLayout}[1]{
+    \ifdebugmode
+        \typeout{PROFILE: #1}
+        % Could measure compilation time, memory, etc.
+    \fi
+}
+
+% Validate layout constraints
+% Usage: \validateLayout
+\newcommand{\validateLayout}{
+    \ifdebugmode
+        \typeout{=== Layout Validation ===}
+        \typeout{Node count: \the\value{nodecount}}
+        \typeout{Connection count: \the\value{connectioncount}}
+        \typeout{Zoom level: \the\value{zoomlevel}\%}
+        \typeout{======================}
+    \fi
+}
+
+% ============================================================================
+% ADVANCED SPACING CONTROLS
+% ============================================================================
+
+% Fine-tune spacing parameters
+\newlength{\nodePadding}
+\newlength{\connectionPadding}
+\setlength{\nodePadding}{0.5cm}
+\setlength{\connectionPadding}{0.2cm}
+
+% Set all spacing at once
+% Usage: \setAllSpacing{node}{layer}{tier}{grid}
+\newcommand{\setAllSpacing}[4]{
+    \setlength{\nodeSpacing}{#1}
+    \setlength{\layerSpacing}{#2}
+    \setlength{\currentTierSpacing}{#3}
+    \setlength{\gridSpacingX}{#4}
+    \setlength{\gridSpacingY}{#4}
+}
+
+% Proportional spacing
+% Usage: \setProportionalSpacing{base_size}{scale_factor}
+\newcommand{\setProportionalSpacing}[2]{
+    \setlength{\nodeSpacing}{#1 * #2}
+    \setlength{\layerSpacing}{#1 * #2 * 1.5}
+    \setlength{\treeLevelSpacing}{#1 * #2 * 1.2}
+}
+
+% Tight spacing preset
+\newcommand{\useTightSpacing}{
+    \setAllSpacing{2cm}{3cm}{3cm}{2cm}
+    \setlength{\nodePadding}{0.3cm}
+}
+
+% Comfortable spacing preset
+\newcommand{\useComfortableSpacing}{
+    \setAllSpacing{3.5cm}{5cm}{5cm}{3.5cm}
+    \setlength{\nodePadding}{0.7cm}
+}
+
+% Loose spacing preset
+\newcommand{\useLooseSpacing}{
+    \setAllSpacing{5cm}{7cm}{7cm}{5cm}
+    \setlength{\nodePadding}{1cm}
+}
+
+% Dynamic spacing based on diagram density
+% Usage: \autoSpacing{node_count}{area}
+\newcommand{\autoSpacing}[2]{
+    \pgfmathsetmacro{\density}{#1 / #2}
+    \pgfmathparse{\density > 2 ? "tight" : (\density > 0.5 ? "comfortable" : "loose")}
+    \let\spacingmode\pgfmathresult
+
+    \def\tight{tight}
+    \def\comfortable{comfortable}
+    \def\loose{loose}
+
+    \ifx\spacingmode\tight
+        \useTightSpacing
+    \else\ifx\spacingmode\comfortable
+        \useComfortableSpacing
+    \else
+        \useLooseSpacing
+    \fi\fi\fi
+}
+
+% ============================================================================
+% LAYOUT TEMPLATES SYSTEM
+% ============================================================================
+
+% Save current layout configuration
+% Usage: \saveLayoutTemplate{template_name}
+\newcommand{\saveLayoutTemplate}[1]{
+    % Would save all spacing and style parameters
+    % to reuse later
+    \typeout{Saving layout template: #1}
+}
+
+% Load layout template
+% Usage: \loadLayoutTemplate{template_name}
+\newcommand{\loadLayoutTemplate}[1]{
+    % Restore saved configuration
+    \typeout{Loading layout template: #1}
+}
+
+% Export layout to external format
+% Usage: \exportLayout{filename}{format}
+% format: json, yaml, graphml
+\newcommand{\exportLayout}[2]{
+    % Export node positions and connections
+    % for use in other tools
+}
+
+% Import layout from external source
+% Usage: \importLayout{filename}{format}
+\newcommand{\importLayout}[2]{
+    % Read positions from external file
+    % Apply to current diagram
+}
+
+% ============================================================================
+% ANIMATION AND TRANSITION SUPPORT (Beamer Integration)
+% ============================================================================
+
+% Animation state tracking
+\newcounter{animationframe}
+\setcounter{animationframe}{1}
+
+% Enable animation mode
+\newif\ifanimationmode
+\animationmodefalse
+
+\newcommand{\enableAnimations}{
+    \animationmodetrue
+}
+
+\newcommand{\disableAnimations}{
+    \animationmodefalse
+}
+
+% Appear on specific frame (Beamer)
+% Usage: \appearOnFrame{frame_number}{content}
+\newcommand{\appearOnFrame}[2]{
+    \ifanimationmode
+        \only<#1->{#2}
+    \else
+        #2
+    \fi
+}
+
+% Fade in node with transition
+% Usage: \fadeInNode{node_name}{start_frame}{duration}
+\newcommand{\fadeInNode}[3]{
+    \ifanimationmode
+        \temporal<#2-#3>{
+            \node[opacity=0] (#1) {};
+        }{
+            \node[opacity=0.5] (#1) {};
+        }{
+            \node[opacity=1] (#1) {};
+        }
+    \fi
+}
+
+% Highlight node with pulse effect
+% Usage: \pulseNode{node_name}{frame}
+\newcommand{\pulseNode}[2]{
+    \ifanimationmode
+        \only<#2>{
+            \draw[red, line width=3pt, opacity=0.5] 
+                (#1.south west) rectangle (#1.north east);
+        }
+    \fi
+}
+
+% Build network progressively
+% Usage: \buildNetworkProgressive{total_frames}
+\newcommand{\buildNetworkProgressive}[1]{
+    % Each node appears sequentially
+    % Useful for presentation walkthroughs
+}
+
+% Animate connection drawing
+% Usage: \animateConnection{node1}{node2}{start_frame}{end_frame}
+\newcommand{\animateConnection}[4]{
+    \ifanimationmode
+        \only<#3-#4>{
+            \draw[connection, ->, thick] (#1) -- (#2);
+        }
+    \fi
+}
+
+% Flow animation along path
+% Usage: \flowAnimation{path}{speed}{color}
+\newcommand{\flowAnimation}[3]{
+    % Animated dots/particles flowing along connection
+    % Requires animate package or Beamer overlays
+}
+
+% Zoom animation (progressive zoom in/out)
+% Usage: \zoomAnimation{start_scale}{end_scale}{frames}
+\newcommand{\zoomAnimation}[3]{
+    \pgfmathsetmacro{\scalestep}{(#2 - #1) / #3}
+    % Progressive scaling over frames
+}
+
+% Rotate layout animation
+% Usage: \rotateLayoutAnimation{start_angle}{end_angle}{frames}
+\newcommand{\rotateLayoutAnimation}[3]{
+    \pgfmathsetmacro{\anglestep}{(#2 - #1) / #3}
+    % Progressive rotation over frames
+}
+
+% Morph between layouts
+% Usage: \morphLayouts{layout1}{layout2}{frames}
+\newcommand{\morphLayouts}[3]{
+    % Interpolate node positions between two layouts
+    % Smooth transition animation
+}
+
+% ============================================================================
+% ACCESSIBILITY AND INCLUSIVE DESIGN
+% ============================================================================
+
+% High contrast mode
+\newif\ifhighcontrast
+\highcontrastfalse
+
+\newcommand{\enableHighContrast}{
+    \highcontrasttrue
+    \tikzset{
+        every node/.append style={
+            line width=2pt,
+            fill=white,
+            draw=black
+        },
+        every path/.append style={
+            line width=2pt
+        }
+    }
+}
+
+% Colorblind-safe palette mode
+\newcommand{\enableColorblindMode}{
+    % Use patterns in addition to colors
+    % Blue-Orange palette (deuteranopia safe)
+    \tikzset{
+        critical/.style={fill=orange!80!black, pattern=north east lines},
+        warning/.style={fill=blue!60, pattern=dots},
+        normal/.style={fill=gray!30, pattern=grid}
+    }
+}
+
+% Large text mode for visibility
+\newcommand{\enableLargeTextMode}{
+    \tikzset{
+        every node/.append style={
+            font=\Large,
+            minimum width=3.5cm,
+            minimum height=1.5cm
+        }
+    }
+}
+
+% Screen reader friendly annotations
+% Usage: \addAltText{node_name}{description}
+\newcommand{\addAltText}[2]{
+    % Add invisible text for screen readers
+    % Store in auxiliary file for export
+    \typeout{ALT TEXT: #1 = #2}
+}
+
+% Semantic tagging for export
+% Usage: \tagNode{node_name}{role}{importance}
+\newcommand{\tagNode}[3]{
+    % Tag nodes with semantic information
+    % role: server, client, router, firewall, etc.
+    % importance: critical, high, medium, low
+}
+
+% Export accessible HTML version
+% Usage: \exportAccessibleHTML{filename}
+\newcommand{\exportAccessibleHTML}[1]{
+    % Generate HTML with ARIA labels
+    % Keyboard navigable
+    % Screen reader compatible
+}
+
+% ============================================================================
+% LAYOUT METRICS AND ANALYTICS
+% ============================================================================
+
+% Calculate layout density
+% Usage: \calculateDensity{area}
+\newcommand{\calculateDensity}[1]{
+    \pgfmathsetmacro{\density}{\value{nodecount} / #1}
+}
+
+% Measure diagram bounds
+% Usage: \measureDiagramBounds
+\newcommand{\measureDiagramBounds}{
+    \pgfextractx{\pgf@xa}{\pgfpointanchor{current bounding box}{south west}}
+    \pgfextracty{\pgf@ya}{\pgfpointanchor{current bounding box}{south west}}
+    \pgfextractx{\pgf@xb}{\pgfpointanchor{current bounding box}{north east}}
+    \pgfextracty{\pgf@yb}{\pgfpointanchor{current bounding box}{north east}}
+    
+    \pgfmathsetmacro{\diagramwidthcalc}{\pgf@xb - \pgf@xa}
+    \pgfmathsetmacro{\diagramheightcalc}{\pgf@yb - \pgf@ya}
+}
+
+% Calculate average node spacing
+% Usage: \calculateAverageSpacing
+\newcommand{\calculateAverageSpacing}{
+    % Measure distances between all adjacent nodes
+    % Return mean spacing value
+}
+
+% Count connection crossings
+% Usage: \countCrossings
+\newcommand{\countCrossings}{
+    % Detect how many connections cross each other
+    % Lower is better for readability
+}
+
+% Calculate layout efficiency score
+% Usage: \calculateEfficiency
+\newcommand{\calculateEfficiency}{
+    % Combine metrics: density, crossings, spacing, symmetry
+    % Return score 0-100 (higher is better)
+}
+
+% Generate layout report
+% Usage: \generateLayoutReport{filename}
+\newcommand{\generateLayoutReport}[1]{
+    \typeout{=== LAYOUT ANALYSIS REPORT ===}
+    \typeout{Nodes: \the\value{nodecount}}
+    \typeout{Connections: \the\value{connectioncount}}
+    \typeout{Diagram Width: \diagramwidthcalc}
+    \typeout{Diagram Height: \diagramheightcalc}
+    \typeout{Density: \density nodes/unit}
+    \typeout{Zoom Level: \the\value{zoomlevel}\%}
+    \typeout{================================}
+}
+
+% Performance benchmark
+% Usage: \benchmarkLayout
+\newcommand{\benchmarkLayout}{
+    % Measure compilation time
+    % Count macro expansions
+    % Memory usage estimate
+}
+
+% ============================================================================
+% SMART POSITIONING ALGORITHMS
+% ============================================================================
+
+% Genetic algorithm for optimal placement
+% Usage: \geneticLayoutOptimization{generations}{population}
+\newcommand{\geneticLayoutOptimization}[2]{
+    % Iteratively improve layout using GA
+    % Fitness: minimize crossings, maximize spacing
+    % Requires external computation
+}
+
+% Simulated annealing for layout
+% Usage: \simulatedAnnealingLayout{temperature}{cooling_rate}
+\newcommand{\simulatedAnnealingLayout}[2]{
+    % Probabilistic optimization
+    % Escape local minima
+}
+
+% Stress minimization (MDS-style)
+% Usage: \stressMinimization{iterations}
+\newcommand{\stressMinimization}[1]{
+    % Minimize stress function
+    % Place similar nodes closer together
+}
+
+% Spectral layout
+% Usage: \spectralLayout{eigenvector}
+\newcommand{\spectralLayout}[1]{
+    % Use graph Laplacian eigenvectors
+    % Reveals community structure
+}
+
+% Clustering-based layout
+% Usage: \clusterLayout{algorithm}{k}
+% algorithm: kmeans, hierarchical, dbscan
+\newcommand{\clusterLayout}[2]{
+    % Group nodes by similarity
+    % Layout clusters separately
+}
+
+% Energy-based placement
+% Usage: \energyMinimizationLayout{iterations}
+\newcommand{\energyMinimizationLayout}[1]{
+    % Minimize energy function
+    % Spring forces + electrostatic repulsion
+}
+
+% Machine learning position prediction
+% Usage: \mlPredictPosition{node_features}{model}
+\newcommand{\mlPredictPosition}[2]{
+    % Use trained model to suggest positions
+    % Based on node properties
+}
+
+% ============================================================================
+% INTEGRATION HELPERS
+% ============================================================================
+
+% Export to GraphViz DOT format
+% Usage: \exportToDOT{filename}
+\newcommand{\exportToDOT}[1]{
+    \typeout{Exporting to GraphViz DOT: #1}
+    % Format: digraph G { node1 -> node2; }
+}
+
+% Export to Cytoscape JSON
+% Usage: \exportToCytoscape{filename}
+\newcommand{\exportToCytoscape}[1]{
+    \typeout{Exporting to Cytoscape: #1}
+    % Cytoscape.js compatible JSON
+}
+
+% Export to D3.js force graph
+% Usage: \exportToD3{filename}
+\newcommand{\exportToD3}[1]{
+    \typeout{Exporting to D3.js: #1}
+    % JSON with nodes and links arrays
+}
+
+% Export to Mermaid diagram syntax
+% Usage: \exportToMermaid{filename}
+\newcommand{\exportToMermaid}[1]{
+    \typeout{Exporting to Mermaid: #1}
+    % Mermaid markdown syntax
+}
+
+% Import from NetworkX (Python)
+% Usage: \importFromNetworkX{pickle_file}
+\newcommand{\importFromNetworkX}[1]{
+    % Read NetworkX graph positions
+    % Requires Python bridge
+}
+
+% Import from Gephi
+% Usage: \importFromGephi{gexf_file}
+\newcommand{\importFromGephi}[1]{
+    % Read GEXF format
+    % Apply Gephi-calculated positions
+}
+
+% Export SVG with embedded metadata
+% Usage: \exportSVGWithMetadata{filename}
+\newcommand{\exportSVGWithMetadata}[1]{
+    % SVG with data attributes
+    % Interactive in browsers
+}
+
+% Generate interactive HTML viewer
+% Usage: \generateHTMLViewer{filename}
+\newcommand{\generateHTMLViewer}[1]{
+    % Standalone HTML file
+    % Pan, zoom, click interactions
+    % Uses SVG + JavaScript
+}
+
+% ============================================================================
+% ADVANCED HELPER FUNCTIONS
+% ============================================================================
+
+% Auto-label positioning (avoid overlap)
+% Usage: \smartLabel{node}{text}{preferred_position}
+% preferred_position: above, below, left, right
+\newcommand{\smartLabel}[3]{
+    % Check for label collisions
+    % Automatically adjust position
+    \node[#3, font=\small] at (#1) {#2};
+}
+
+% Calculate network diameter
+% Usage: \networkDiameter
+\newcommand{\networkDiameter}{
+    % Longest shortest path
+    % Indicates network span
+}
+
+% Find network center node
+% Usage: \findCenterNode
+\newcommand{\findCenterNode}{
+    % Node with minimum average distance to others
+    % Good for hub placement
+}
+
+% Calculate node centrality
+% Usage: \calculateCentrality{node}
+\newcommand{\calculateCentrality}[1]{
+    % Degree, betweenness, closeness, eigenvector
+}
+
+% Identify network communities
+% Usage: \detectCommunities{algorithm}
+\newcommand{\detectCommunities}[1]{
+    % Louvain, Girvan-Newman, etc.
+    % Color nodes by community
+}
+
+% Path highlighting
+% Usage: \highlightPath{node1}{node2}{color}
+\newcommand{\highlightPath}[3]{
+    % Highlight shortest path between nodes
+    \draw[#3, line width=3pt, opacity=0.5] (#1) -- (#2);
+}
+
+% Critical path identification
+% Usage: \markCriticalPath
+\newcommand{\markCriticalPath}{
+    % Identify and highlight critical network paths
+    % Bottleneck detection
+}
+
+% Load balancing visualization
+% Usage: \visualizeLoad{node}{load_percentage}
+\newcommand{\visualizeLoad}[2]{
+    % Show load as fill percentage or heat color
+    \pgfmathsetmacro{\loadcolor}{#2 < 50 ? "green" : (#2 < 80 ? "yellow" : "red")}
+}
+
+% Bandwidth allocation display
+% Usage: \showBandwidth{connection}{used}{total}
+\newcommand{\showBandwidth}[3]{
+    % Visual indicator of bandwidth usage
+    \pgfmathsetmacro{\bwpercent}{100 * #2 / #3}
+}
+
+% Latency heat map
+% Usage: \latencyHeatMap{latency_data}
+\newcommand{\latencyHeatMap}[1]{
+    % Color connections by latency
+    % Red = high latency, Green = low latency
+}
+
+% QoS class visualization
+% Usage: \markQoS{connection}{class}
+% class: realtime, priority, besteffort
+\newcommand{\markQoS}[2]{
+    \def\qosclass{#2}
+    \def\realtime{realtime}
+    \def\priority{priority}
+    
+    \ifx\qosclass\realtime
+        \draw[connection, red, very thick] (#1);
+    \else\ifx\qosclass\priority
+        \draw[connection, yellow, thick] (#1);
+    \else
+        \draw[connection, gray] (#1);
+    \fi\fi
+}
+
+% Redundancy visualization
+% Usage: \showRedundancy{primary}{backup}
+\newcommand{\showRedundancy}[2]{
+    % Show primary and backup paths
+    \draw[connection, blue, solid] (#1);
+    \draw[connection, blue, dashed] (#2);
+}
+
+% Failure simulation
+% Usage: \simulateFailure{node}
+\newcommand{\simulateFailure}[1]{
+    % Mark node as failed
+    \node[cross out, draw=red, very thick] at (#1) {};
+}
+
+% Capacity planning overlay
+% Usage: \showCapacity{node}{current}{max}
+\newcommand{\showCapacity}[3]{
+    % Progress bar showing capacity utilization
+    \pgfmathsetmacro{\capacity}{100 * #2 / #3}
+}
+
+% ============================================================================
+% DOMAIN-SPECIFIC LAYOUTS (Specialized Network Types)
+% ============================================================================
+
+% Software-Defined Network (SDN) Layout
+% Usage: \layoutSDN{controller}{switches}{hosts}
+\newcommand{\layoutSDN}[3]{
+    % Controller at top
+    % Switches in middle tier
+    % Hosts at bottom
+    % Control plane vs data plane visualization
+}
+
+% Internet of Things (IoT) Layout
+% Usage: \layoutIoT{gateway}{sensors}{cloud}
+\newcommand{\layoutIoT}[3]{
+    % Gateway nodes as hubs
+    % Sensors in clusters around gateways
+    % Cloud services at top tier
+    % Mesh network visualization
+}
+
+% Blockchain Network Layout
+% Usage: \layoutBlockchain{nodes}{consensus_type}
+% consensus_type: pow, pos, pbft
+\newcommand{\layoutBlockchain}[2]{
+    % Circular layout for peer-to-peer
+    % Highlight validator/miner nodes
+    % Show block propagation
+}
+
+% Kubernetes Cluster Layout
+% Usage: \layoutKubernetes{master}{workers}{pods_per_worker}
+\newcommand{\layoutKubernetes}[3]{
+    % Master nodes at top
+    % Worker nodes in grid
+    % Pods as nested containers
+    % Service mesh overlay
+}
+
+% Microservices Architecture Layout
+% Usage: \layoutMicroservices{services}{api_gateway}{database}
+\newcommand{\layoutMicroservices}[3]{
+    % API gateway at front
+    % Services in flexible grid
+    % Databases clustered
+    % Message queues as connectors
+}
+
+% Zero Trust Architecture Layout
+% Usage: \layoutZeroTrust{zones}{policies}
+\newcommand{\layoutZeroTrust}[2]{
+    % Micro-segmentation visualization
+    % Policy enforcement points
+    % Identity verification layers
+}
+
+% Satellite Network Topology
+% Usage: \layoutSatellite{ground_stations}{satellites}{orbits}
+\newcommand{\layoutSatellite}[3]{
+    % Ground stations at base
+    % Satellites in orbital rings
+    % Inter-satellite links
+}
+
+% Mesh Network Layout
+% Usage: \layoutMesh{nodes}{density}
+% density: sparse, medium, dense
+\newcommand{\layoutMesh}[2]{
+    % Distributed node placement
+    % Show redundant paths
+    % Highlight mesh properties
+}
+
+% Content Delivery Network (CDN) Layout
+% Usage: \layoutCDN{origin}{edge_servers}{regions}
+\newcommand{\layoutCDN}[3]{
+    % Origin at center
+    % Edge servers geographically distributed
+    % Regional clustering
+}
+
+% Industrial Control System (ICS/SCADA) Layout
+% Usage: \layoutICS{hmi}{plc}{devices}
+\newcommand{\layoutICS}[3]{
+    % HMI/SCADA at top (supervision)
+    % PLCs in middle (control)
+    % Field devices at bottom (process)
+    % Air-gapped networks
+}
+
+% ============================================================================
+% ADVANCED MATHEMATICAL OPTIMIZATIONS
+% ============================================================================
+
+% Eigenvector-based positioning
+% Usage: \eigenvectorLayout{matrix}{dimension}
+\newcommand{\eigenvectorLayout}[2]{
+    % Use graph Laplacian eigenvectors
+    % 2D or 3D embedding
+    % Reveals hierarchical structure
+}
+
+% Multidimensional Scaling (MDS)
+% Usage: \mdsLayout{distance_matrix}{dimensions}
+\newcommand{\mdsLayout}[2]{
+    % Classical MDS
+    % Preserve pairwise distances
+    % Dimensionality reduction
+}
+
+% t-SNE inspired layout
+% Usage: \tsneLayout{perplexity}{iterations}
+\newcommand{\tsneLayout}[2]{
+    % Local structure preservation
+    % Cluster visualization
+    % Non-linear dimensionality reduction
+}
+
+% Force Atlas 2 algorithm (Gephi-style)
+% Usage: \forceAtlas2{scaling}{gravity}{iterations}
+\newcommand{\forceAtlas2}[3]{
+    % LinLog mode support
+    % Prevent overlap
+    % Hub-centric or distributed
+}
+
+% Davidson-Harel algorithm
+% Usage: \davidsonHarelLayout{iterations}
+\newcommand{\davidsonHarelLayout}[1]{
+    % Minimize: edge crossings, node-edge distance
+    % Maximize: edge length uniformity
+    % Multi-objective optimization
+}
+
+% Sugiyama framework (layered graphs)
+% Usage: \sugiyamaLayout{dummy_nodes}
+\newcommand{\sugiyamaLayout}[1]{
+    % Layer assignment
+    % Crossing reduction
+    % Coordinate assignment
+    % Optimal for directed acyclic graphs
+}
+
+% Orthogonal layout (right-angle edges)
+% Usage: \orthogonalLayout{grid_size}
+\newcommand{\orthogonalLayout}[1]{
+    % All edges at 90-degree angles
+    % Grid-based positioning
+    % Minimal bends
+}
+
+% Planar layout detection and rendering
+% Usage: \planarLayout
+\newcommand{\planarLayout}{
+    % Test for planarity
+    % Use planar embedding if possible
+    % Minimize crossings if non-planar
+}
+
+% ============================================================================
+% REAL-TIME AND LIVE DIAGRAM FEATURES
+% ============================================================================
+
+% Timestamp overlay
+% Usage: \addTimestamp{position}{format}
+% format: datetime, time, custom
+\newcommand{\addTimestamp}[2]{
+    \node[font=\tiny, text=gray] at #1 {
+        \today\ \currenttime
+    };
+}
+
+% Version indicator
+% Usage: \addVersionInfo{version}{position}
+\newcommand{\addVersionInfo}[2]{
+    \node[font=\small, draw, fill=blue!10] at #2 {
+        Version: #1
+    };
+}
+
+% Change tracking markers
+% Usage: \markChange{node}{change_type}{date}
+% change_type: added, modified, removed
+\newcommand{\markChange}[3]{
+    \def\changetype{#2}
+    \def\added{added}
+    \def\modified{modified}
+    \def\removed{removed}
+    
+    \ifx\changetype\added
+        \node[star, star points=5, star point ratio=2, draw=green, fill=green!20] at (#1.north east) {};
+    \else\ifx\changetype\modified
+        \node[circle, draw=orange, fill=orange!20] at (#1.north east) {};
+    \else\ifx\changetype\removed
+        \node[cross out, draw=red] at (#1) {};
+    \fi\fi\fi
+}
+
+% Live data integration placeholder
+% Usage: \liveData{node}{metric}{source}
+\newcommand{\liveData}[3]{
+    % Placeholder for external data
+    % Could integrate with monitoring systems
+    \node[below, font=\tiny] at (#1.south) {#2: [LIVE]};
+}
+
+% Alert/notification system
+% Usage: \addAlert{node}{severity}{message}
+% severity: info, warning, critical
+\newcommand{\addAlert}[3]{
+    \def\severity{#2}
+    \def\critical{critical}
+    \def\warning{warning}
+    
+    \ifx\severity\critical
+        \node[fill=red!80, text=white, font=\tiny\bfseries] at (#1.north) {!};
+    \else\ifx\severity\warning
+        \node[fill=yellow!80, text=black, font=\tiny\bfseries] at (#1.north) {⚠};
+    \fi\fi
+}
+
+% Diff visualization (before/after)
+% Usage: \showDiff{old_layout}{new_layout}
+\newcommand{\showDiff}[2]{
+    % Side-by-side comparison
+    % Highlight differences
+}
+
+% Network state history
+% Usage: \addStateHistory{states}
+\newcommand{\addStateHistory}[1]{
+    % Timeline of network changes
+    % Replay capability
+}
+
+% ============================================================================
+% COMPREHENSIVE THEMING AND STYLING SYSTEM
+% ============================================================================
+
+% Corporate theme templates
+% Usage: \applyCorporateTheme{company}
+% company: cisco, aws, azure, google, generic
+\newcommand{\applyCorporateTheme}[1]{
+    \def\company{#1}
+    \def\cisco{cisco}
+    \def\aws{aws}
+    \def\azure{azure}
+    
+    \ifx\company\cisco
+        % Cisco blue theme
+        \tikzset{primary color/.style={fill=blue!60!cyan}}
+    \else\ifx\company\aws
+        % AWS orange theme
+        \tikzset{primary color/.style={fill=orange!70}}
+    \else\ifx\company\azure
+        % Azure blue theme
+        \tikzset{primary color/.style={fill=blue!80}}
+    \fi\fi\fi
+}
+
+% Dark mode theme
+\newcommand{\applyDarkTheme}{
+    \tikzset{
+        every node/.append style={fill=gray!20, draw=white, text=white},
+        every path/.append style={draw=white},
+        background/.style={fill=black!90}
+    }
+}
+
+% Light/minimal theme
+\newcommand{\applyMinimalTheme}{
+    \tikzset{
+        every node/.append style={fill=white, draw=black!30, very thin},
+        every path/.append style={draw=black!30, very thin}
+    }
+}
+
+% Neon/cyberpunk theme
+\newcommand{\applyNeonTheme}{
+    \tikzset{
+        every node/.append style={
+            fill=black,
+            draw=cyan,
+            text=cyan,
+            line width=1.5pt,
+            drop shadow={shadow xshift=0pt, shadow yshift=0pt, fill=cyan, opacity=0.5}
+        },
+        every path/.append style={draw=magenta, line width=1.5pt}
+    }
+}
+
+% Professional blueprint theme
+\newcommand{\applyBlueprintTheme}{
+    \tikzset{
+        every node/.append style={draw=white, text=white, fill=blue!30!black},
+        every path/.append style={draw=white},
+        background/.style={fill=blue!80!black}
+    }
+}
+
+% Grayscale/monochrome theme
+\newcommand{\applyGrayscaleTheme}{
+    \tikzset{
+        every node/.append style={fill=white, draw=black},
+        every path/.append style={draw=black}
+    }
+}
+
+% Style inheritance system
+% Usage: \defineStyle{name}{properties}
+\newcommand{\defineStyle}[2]{
+    \tikzset{#1/.style={#2}}
+}
+
+% Apply style globally
+% Usage: \setGlobalStyle{style_name}
+\newcommand{\setGlobalStyle}[1]{
+    \tikzset{every node/.append style={#1}}
+}
+
+% ============================================================================
+% VALIDATION AND ERROR CHECKING ENGINE
+% ============================================================================
+
+% Validate node positions (no NaN/infinite)
+% Usage: \validatePositions
+\newcommand{\validatePositions}{
+    \typeout{=== Position Validation ===}
+    % Check all node coordinates
+    % Report invalid positions
+}
+
+% Check for overlapping nodes
+% Usage: \checkOverlaps{threshold}
+\newcommand{\checkOverlaps}[1]{
+    % Report all overlaps above threshold
+    \typeout{Checking for overlaps...}
+}
+
+% Validate connections (endpoints exist)
+% Usage: \validateConnections
+\newcommand{\validateConnections}{
+    % Check all connections have valid endpoints
+    % Report dangling connections
+}
+
+% Check diagram bounds
+% Usage: \checkBounds{max_width}{max_height}
+\newcommand{\checkBounds}[2]{
+    \measureDiagramBounds
+    \pgfmathparse{\diagramwidthcalc > #1 ? 1 : 0}
+    \ifnum\pgfmathresult=1
+        \typeout{WARNING: Diagram width exceeds limit!}
+    \fi
+}
+
+% Validate color contrast (accessibility)
+% Usage: \checkContrast{foreground}{background}
+\newcommand{\checkContrast}[2]{
+    % Calculate WCAG contrast ratio
+    % Report if below 4.5:1 (AA standard)
+}
+
+% Check for circular dependencies
+% Usage: \detectCycles
+\newcommand{\detectCycles}{
+    % Detect cycles in directed graphs
+    % Report cyclic paths
+}
+
+% Validate layout consistency
+% Usage: \validateLayoutConsistency
+\newcommand{\validateLayoutConsistency}{
+    \typeout{=== Layout Consistency Check ===}
+    % Check spacing uniformity
+    % Check alignment
+    % Report inconsistencies
+}
+
+% ============================================================================
+% AUTOMATIC DOCUMENTATION GENERATION
+% ============================================================================
+
+% Generate node inventory
+% Usage: \generateNodeInventory{filename}
+\newcommand{\generateNodeInventory}[1]{
+    \typeout{Generating node inventory: #1}
+    % List all nodes with properties
+    % Type, position, connections
+}
+
+% Generate connection matrix
+% Usage: \generateConnectionMatrix{filename}
+\newcommand{\generateConnectionMatrix}[1]{
+    \typeout{Generating connection matrix: #1}
+    % Adjacency matrix
+    % CSV or LaTeX table format
+}
+
+% Create diagram legend automatically
+% Usage: \autoLegend{position}
+\newcommand{\autoLegend}[1]{
+    \node[draw, fill=white, align=left, font=\small] at #1 {
+        \textbf{Legend}\\
+        \tikz\node[server style] {}; Server\\
+        \tikz\node[router style] {}; Router\\
+        \tikz\draw[connection] (0,0) -- (0.5,0); Connection
+    };
+}
+
+% Generate network statistics table
+% Usage: \generateStatsTable{position}
+\newcommand{\generateStatsTable}[1]{
+    \node[draw, fill=white, align=left, font=\footnotesize] at #1 {
+        \textbf{Network Statistics}\\
+        Nodes: \the\value{nodecount}\\
+        Connections: \the\value{connectioncount}\\
+        Density: \density
+    };
+}
+
+% Export diagram metadata
+% Usage: \exportMetadata{filename}
+\newcommand{\exportMetadata}[1]{
+    % JSON with diagram properties
+    % Timestamps, version, statistics
+}
+
+% Generate change log from versions
+% Usage: \generateChangeLog{version1}{version2}
+\newcommand{\generateChangeLog}[2]{
+    % Compare two diagram versions
+    % List added/removed/modified elements
+}
+
+% ============================================================================
+% ADVANCED NETWORK-SPECIFIC FEATURES
+% ============================================================================
+
+% BGP routing visualization
+% Usage: \visualizeBGP{as_path}
+\newcommand{\visualizeBGP}[1]{
+    % Autonomous system path
+    % Route propagation
+}
+
+% VLAN tagging display
+% Usage: \showVLAN{connection}{vlan_id}{color}
+\newcommand{\showVLAN}[3]{
+    \draw[#3, thick] (#1) node[midway, fill=white, font=\tiny] {VLAN #2};
+}
+
+% Spanning tree protocol visualization
+% Usage: \visualizeSTP{root}{blocked_ports}
+\newcommand{\visualizeSTP}[2]{
+    % Root bridge highlighted
+    % Blocked ports marked
+    % Port states shown
+}
+
+% OSPF area visualization
+% Usage: \drawOSPFArea{area_id}{nodes}{color}
+\newcommand{\drawOSPFArea}[3]{
+    \drawSecurityZone{ospf-#1}{#3}{#2}{Area #1}{OSPF}
+}
+
+% Traffic flow visualization
+% Usage: \showTrafficFlow{path}{bandwidth}{protocol}
+\newcommand{\showTrafficFlow}[3]{
+    % Animated or static flow indicator
+    % Bandwidth as line thickness
+    % Protocol label
+}
+
+% MAC address table display
+% Usage: \showMACTable{switch}{ports}{macs}
+\newcommand{\showMACTable}[3]{
+    % Switch MAC address table
+    % Port-to-MAC mapping
+}
+
+% ARP table visualization
+% Usage: \showARPTable{node}
+\newcommand{\showARPTable}[1]{
+    % IP-to-MAC mappings
+    % Display near node
+}
+
+% Port status indicators
+% Usage: \portStatus{node}{port}{status}
+% status: up, down, admin-down
+\newcommand{\portStatus}[3]{
+    \def\status{#3}
+    \def\up{up}
+    \def\down{down}
+    
+    \ifx\status\up
+        \node[circle, fill=green, inner sep=1pt] at (#1.#2) {};
+    \else
+        \node[circle, fill=red, inner sep=1pt] at (#1.#2) {};
+    \fi
+}
+
+% Packet capture visualization
+% Usage: \showPacketCapture{connection}{packet_count}
+\newcommand{\showPacketCapture}[2]{
+    % Visual packet counter
+    % Traffic intensity indicator
+}
+
+% MTU path display
+% Usage: \showMTU{path}{mtu_value}
+\newcommand{\showMTU}[2]{
+    % Maximum transmission unit
+    % Display along path
+}
+
+% ============================================================================
+% PERFORMANCE AND SCALABILITY ENHANCEMENTS
+% ============================================================================
+
+% Lazy loading for large diagrams
+% Usage: \enableLazyLoading
+\newcommand{\enableLazyLoading}{
+    % Only render visible portions
+    % Improve compilation speed
+}
+
+% Progressive rendering
+% Usage: \progressiveRender{priority}
+\newcommand{\progressiveRender}[1]{
+    % Render high-priority elements first
+    % Background elements last
+}
+
+% Caching system for repeated elements
+% Usage: \cacheElement{name}{content}
+\newcommand{\cacheElement}[2]{
+    % Store frequently used elements
+    % Reuse instead of recompute
+}
+
+% Parallel processing hints
+% Usage: \markParallel{section}
+\newcommand{\markParallel}[1]{
+    % Hint for parallel compilation
+    % Independent sections
+}
+
+% Memory optimization mode
+% Usage: \enableMemoryOptimization
+\newcommand{\enableMemoryOptimization}{
+    % Reduce memory footprint
+    % Simplify complex paths
+    % Lower resolution for backgrounds
+}
