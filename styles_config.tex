@@ -5,7 +5,7 @@
 % COLOR PALETTE DEFINITIONS
 % ============================================================================
 
-% Network asset colors
+% Network asset colors (defaults - can be overridden by color schemes)
 \definecolor{serverBlue}{RGB}{52, 152, 219}
 \definecolor{clientGreen}{RGB}{46, 204, 113}
 \definecolor{routerOrange}{RGB}{230, 126, 34}
@@ -30,10 +30,51 @@
 \definecolor{bgLight}{RGB}{236, 240, 241}
 \definecolor{bgDark}{RGB}{44, 62, 80}
 
-% TODO: Add custom color scheme support
-% - Allow users to define custom palettes via config file
-% - Implement colorblind-friendly alternative palettes
-% - Add dark mode theme support
+% ============================================================================
+% COLOR SCHEME LOADER
+% ============================================================================
+
+% Command to parse and define a single color from RGB values
+\newcommand{\defineColorFromRGB}[2]{%
+    \definecolor{#1}{RGB}{#2}%
+}
+
+% Command to load a color scheme from file
+% Usage: \loadColorScheme{dark} loads color_schemes/dark.colorscheme
+\newcommand{\loadColorScheme}[1]{%
+    \IfFileExists{color_schemes/#1.colorscheme}{%
+        \message{Loading color scheme: #1}%
+        \input{color_schemes/#1.colorscheme}%
+    }{%
+        \message{Warning: Color scheme '#1' not found. Using default colors.}%
+    }%
+}
+
+% Command to set theme (dark or light) - affects background primarily
+% Usage: \setTheme{dark} or \setTheme{light}
+\newcommand{\setTheme}[1]{%
+    \ifthenelse{\equal{#1}{dark}}{%
+        \loadColorScheme{dark}%
+        \pagecolor{bgDark}%
+        \color{white}%
+    }{%
+        \ifthenelse{\equal{#1}{light}}{%
+            \loadColorScheme{default}%
+            \pagecolor{bgLight}%
+            \color{black}%
+        }{%
+            \message{Warning: Unknown theme '#1'. Use 'dark' or 'light'.}%
+        }%
+    }%
+}
+
+% Predefined color scheme shortcuts
+\newcommand{\useDefaultColors}{\loadColorScheme{default}}
+\newcommand{\useDarkMode}{\setTheme{dark}}
+\newcommand{\useLightMode}{\setTheme{light}}
+\newcommand{\useColorblindSafe}{\loadColorScheme{colorblind}}
+\newcommand{\useMonochrome}{\loadColorScheme{monochrome}}
+\newcommand{\useHighContrast}{\loadColorScheme{high-contrast}}
 
 % ============================================================================
 % NODE STYLES
@@ -127,12 +168,346 @@
     }
 }
 
-% TODO: Enhanced node styling
-% - Add icon/image support inside nodes (server icons, laptop icons, etc.)
-% - Implement multi-part nodes for showing port information
-% - Add gradient fills for premium look
-% - Create animated pulse effect for active connections
-% - Add badge/label support for OS type, status indicators
+% ============================================================================
+% GRADIENT FILL STYLES (Premium Look)
+% ============================================================================
+
+% Gradient styles for nodes - provides a modern, professional appearance
+\tikzset{
+    % Vertical gradient (top to bottom)
+    gradient server/.style={
+        base node,
+        rectangle,
+        rounded corners=3pt,
+        shading=axis,
+        top color=serverBlue!40,
+        bottom color=serverBlue!10,
+        draw=serverBlue!80,
+        line width=1.5pt
+    },
+
+    gradient client/.style={
+        base node,
+        rectangle,
+        rounded corners=2pt,
+        shading=axis,
+        top color=clientGreen!30,
+        bottom color=clientGreen!5,
+        draw=clientGreen!70,
+        line width=1pt
+    },
+
+    gradient router/.style={
+        base node,
+        trapezium,
+        trapezium left angle=70,
+        trapezium right angle=110,
+        shading=axis,
+        top color=routerOrange!35,
+        bottom color=routerOrange!10,
+        draw=routerOrange!80,
+        line width=1.5pt
+    },
+
+    gradient firewall/.style={
+        base node,
+        rectangle,
+        shading=axis,
+        top color=firewallRed!25,
+        bottom color=firewallRed!5,
+        draw=firewallRed!80,
+        line width=2pt,
+        pattern=north east lines,
+        pattern color=firewallRed!20
+    },
+
+    gradient switch/.style={
+        base node,
+        rectangle,
+        rounded corners=1pt,
+        shading=axis,
+        top color=switchPurple!25,
+        bottom color=switchPurple!5,
+        draw=switchPurple!70,
+        minimum height=1cm
+    },
+
+    % Radial gradient for special emphasis
+    radial server/.style={
+        base node,
+        rectangle,
+        rounded corners=3pt,
+        shading=radial,
+        inner color=serverBlue!20,
+        outer color=serverBlue!5,
+        draw=serverBlue!80,
+        line width=1.5pt
+    },
+
+    radial critical/.style={
+        base node,
+        rectangle,
+        rounded corners=3pt,
+        shading=radial,
+        inner color=threatCritical!40,
+        outer color=threatCritical!10,
+        draw=threatCritical!90,
+        line width=2pt
+    },
+
+    % Metallic/glossy effect for enterprise look
+    metallic server/.style={
+        base node,
+        rectangle,
+        rounded corners=3pt,
+        shading=axis,
+        top color=serverBlue!50,
+        middle color=serverBlue!20,
+        bottom color=serverBlue!40,
+        draw=serverBlue!80,
+        line width=1.5pt,
+        blur shadow={shadow blur steps=10, shadow xshift=0pt, shadow yshift=-3pt}
+    },
+
+    metallic router/.style={
+        base node,
+        trapezium,
+        trapezium left angle=70,
+        trapezium right angle=110,
+        shading=axis,
+        top color=routerOrange!50,
+        middle color=routerOrange!15,
+        bottom color=routerOrange!35,
+        draw=routerOrange!80,
+        line width=1.5pt,
+        blur shadow={shadow blur steps=10}
+    },
+
+    % Glass effect (modern UI style)
+    glass node/.style={
+        base node,
+        rectangle,
+        rounded corners=4pt,
+        shading=axis,
+        top color=white,
+        middle color=serverBlue!10,
+        bottom color=serverBlue!20,
+        draw=serverBlue!60,
+        line width=1pt,
+        opacity=0.9
+    }
+}
+
+% ============================================================================
+% ICON AND IMAGE SUPPORT FOR NODES
+% ============================================================================
+
+% Helper command to include an icon/image inside a node
+% Usage: \nodeIcon{width}{image_path}
+\newcommand{\nodeIcon}[2]{%
+    \includegraphics[width=#1]{#2}%
+}
+
+% Device icon styles - these can be used with external icon files
+% To use: place icon images in an 'icons/' directory
+% Example: \node[server, label=below:{Server Name}] {\nodeIcon{1cm}{icons/server.png}};
+
+% Fallback: Built-in TikZ icons (no external files needed)
+\newcommand{\serverIcon}[1][0.4cm]{%
+    \begin{tikzpicture}[scale=0.5, baseline=-0.5ex]
+        \fill[black!70] (-0.3,0) rectangle (0.3,0.6);
+        \fill[white] (-0.2,0.1) rectangle (-0.05,0.2);
+        \fill[white] (0.05,0.1) rectangle (0.2,0.2);
+        \fill[white] (-0.2,0.3) rectangle (-0.05,0.4);
+        \fill[white] (0.05,0.3) rectangle (0.2,0.4);
+    \end{tikzpicture}%
+}
+
+\newcommand{\laptopIcon}[1][0.4cm]{%
+    \begin{tikzpicture}[scale=0.5, baseline=-0.5ex]
+        \fill[black!70] (-0.35,0.1) rectangle (0.35,0.5);
+        \fill[white] (-0.3,0.15) rectangle (0.3,0.45);
+        \fill[black!70] (-0.45,0) rectangle (0.45,0.1);
+    \end{tikzpicture}%
+}
+
+\newcommand{\phoneIcon}[1][0.4cm]{%
+    \begin{tikzpicture}[scale=0.5, baseline=-0.5ex]
+        \fill[black!70, rounded corners=1pt] (-0.15,0) rectangle (0.15,0.6);
+        \fill[white] (-0.1,0.1) rectangle (0.1,0.5);
+        \fill[black!50] (-0.03,0.52) rectangle (0.03,0.54);
+    \end{tikzpicture}%
+}
+
+\newcommand{\routerIcon}[1][0.4cm]{%
+    \begin{tikzpicture}[scale=0.5, baseline=-0.5ex]
+        \fill[black!70] (-0.3,0.1) rectangle (0.3,0.4);
+        \fill[white] (-0.2,0.15) circle (0.05);
+        \fill[white] (0,0.15) circle (0.05);
+        \fill[white] (0.2,0.15) circle (0.05);
+        \draw[black!70, line width=1pt] (-0.2,0.4) -- (-0.2,0.6);
+        \draw[black!70, line width=1pt] (0,0.4) -- (0,0.6);
+        \draw[black!70, line width=1pt] (0.2,0.4) -- (0.2,0.6);
+    \end{tikzpicture}%
+}
+
+\newcommand{\databaseIcon}[1][0.4cm]{%
+    \begin{tikzpicture}[scale=0.5, baseline=-0.5ex]
+        \fill[black!70] (-0.25,0.15) ellipse (0.25 and 0.08);
+        \fill[black!70] (-0.25,0) -- (-0.5,0) arc (270:90:0.25 and 0.08) -- (-0.25,0.3) arc (90:270:0.25 and 0.08);
+        \fill[black!60] (0,0.15) ellipse (0.25 and 0.08);
+        \draw[black!70, line width=0.5pt] (-0.5,0) arc (270:450:0.25 and 0.08);
+    \end{tikzpicture}%
+}
+
+\newcommand{\cloudIcon}[1][0.4cm]{%
+    \begin{tikzpicture}[scale=0.5, baseline=-0.5ex]
+        \fill[black!70] (0,0.15) circle (0.15);
+        \fill[black!70] (0.2,0.2) circle (0.12);
+        \fill[black!70] (-0.15,0.2) circle (0.1);
+        \fill[black!70] (-0.25,0.1) -- (0.3,0.1) -- (0.3,0.05) -- (-0.25,0.05) -- cycle;
+    \end{tikzpicture}%
+}
+
+% Node styles with built-in icons
+\tikzset{
+    icon server/.style={
+        server,
+        label={[inner sep=2pt, font=\small]center:\serverIcon}
+    },
+    icon client/.style={
+        client,
+        label={[inner sep=2pt, font=\small]center:\laptopIcon}
+    },
+    icon router/.style={
+        router,
+        label={[inner sep=2pt, font=\small]center:\routerIcon}
+    },
+    icon database/.style={
+        server,
+        label={[inner sep=2pt, font=\small]center:\databaseIcon}
+    }
+}
+
+% TODO: Enhanced icon support
+% - Font Awesome integration for more icon options
+% - Custom SVG icon support
+% - Icon color customization
+% - Scalable icon rendering at different zoom levels
+
+% ============================================================================
+% BADGE AND LABEL SUPPORT FOR OS/STATUS INDICATORS
+% ============================================================================
+
+% Badge styles for OS indicators
+\tikzset{
+    % Windows badge
+    badge windows/.style={
+        fill=blue!70,
+        text=white,
+        font=\tiny\bfseries,
+        inner sep=2pt,
+        rounded corners=1pt,
+        minimum width=1.2em
+    },
+    % Linux badge
+    badge linux/.style={
+        fill=orange!70,
+        text=white,
+        font=\tiny\bfseries,
+        inner sep=2pt,
+        rounded corners=1pt,
+        minimum width=1.2em
+    },
+    % macOS badge
+    badge macos/.style={
+        fill=black!70,
+        text=white,
+        font=\tiny\bfseries,
+        inner sep=2pt,
+        rounded corners=1pt,
+        minimum width=1.2em
+    },
+    % Status: Online
+    badge online/.style={
+        fill=green!70,
+        text=white,
+        font=\tiny\bfseries,
+        inner sep=2pt,
+        rounded corners=1pt
+    },
+    % Status: Offline
+    badge offline/.style={
+        fill=red!70,
+        text=white,
+        font=\tiny\bfseries,
+        inner sep=2pt,
+        rounded corners=1pt
+    },
+    % Status: Warning
+    badge warning/.style={
+        fill=yellow!80,
+        text=black,
+        font=\tiny\bfseries,
+        inner sep=2pt,
+        rounded corners=1pt
+    },
+    % Status: Critical
+    badge critical/.style={
+        fill=red!80,
+        text=white,
+        font=\tiny\bfseries,
+        inner sep=2pt,
+        rounded corners=1pt
+    }
+}
+
+% Helper commands to add badges to nodes
+% Usage: Add as label or pin to a node
+% Example: \node[server, pin={[badge windows]45:Win}] at (0,0) {Server};
+
+% Corner badge positioning styles
+\tikzset{
+    top right badge/.style={
+        label={[#1, anchor=south west, xshift=0.8cm, yshift=0.4cm]north east:}
+    },
+    top left badge/.style={
+        label={[#1, anchor=south east, xshift=-0.8cm, yshift=0.4cm]north west:}
+    },
+    bottom right badge/.style={
+        label={[#1, anchor=north west, xshift=0.8cm, yshift=-0.4cm]south east:}
+    },
+    bottom left badge/.style={
+        label={[#1, anchor=north east, xshift=-0.8cm, yshift=-0.4cm]south west:}
+    }
+}
+
+% Predefined badge combinations
+\newcommand{\windowsBadge}{%
+    \node[badge windows] {Win};
+}
+
+\newcommand{\linuxBadge}{%
+    \node[badge linux] {Linux};
+}
+
+\newcommand{\macOSBadge}{%
+    \node[badge macos] {Mac};
+}
+
+\newcommand{\onlineBadge}{%
+    \node[badge online] {●};
+}
+
+\newcommand{\offlineBadge}{%
+    \node[badge offline] {●};
+}
+
+% TODO: Badge enhancements
+% - Multi-badge support (OS + Status on same node)
+% - Animated status badges (pulsing for warnings)
+% - Badge size customization
+% - More OS types (BSD, Solaris, etc.)
 
 % ============================================================================
 % CONNECTION STYLES

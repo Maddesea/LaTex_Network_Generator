@@ -1,0 +1,26 @@
+% Monochrome Color Scheme
+% Grayscale palette for high-contrast black and white printing
+% Network asset colors (varying grays)
+\definecolor{serverBlue}{RGB}{80,80,80}
+\definecolor{clientGreen}{RGB}{120,120,120}
+\definecolor{routerOrange}{RGB}{100,100,100}
+\definecolor{firewallRed}{RGB}{60,60,60}
+\definecolor{switchPurple}{RGB}{140,140,140}
+\definecolor{cloudGray}{RGB}{180,180,180}
+
+% Threat indicator colors (dark to light)
+\definecolor{threatCritical}{RGB}{40,40,40}
+\definecolor{threatHigh}{RGB}{80,80,80}
+\definecolor{threatMedium}{RGB}{120,120,120}
+\definecolor{threatLow}{RGB}{160,160,160}
+\definecolor{threatInfo}{RGB}{100,100,100}
+
+% Connection colors
+\definecolor{connNormal}{RGB}{128,128,128}
+\definecolor{connEncrypted}{RGB}{90,90,90}
+\definecolor{connSuspicious}{RGB}{110,110,110}
+\definecolor{connMalicious}{RGB}{50,50,50}
+
+% Background colors
+\definecolor{bgLight}{RGB}{250,250,250}
+\definecolor{bgDark}{RGB}{30,30,30}
