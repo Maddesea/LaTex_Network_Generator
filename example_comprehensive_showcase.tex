@@ -1,0 +1,201 @@
+% Comprehensive Showcase: Enterprise Security Architecture
+% Demonstrates multiple advanced layout features in one diagram
+\documentclass[tikz,border=10pt]{standalone}
+
+\usepackage{tikz}
+\usepackage{ifthen}
+\usepackage{xcolor}
+\usepackage{calc}
+\usepackage{xstring}
+
+\usetikzlibrary{
+    positioning,
+    shapes.geometric,
+    shapes.multipart,
+    arrows.meta,
+    decorations.pathmorphing,
+    decorations.markings,
+    backgrounds,
+    fit,
+    calc,
+    shadows.blur,
+    patterns,
+    fadings
+}
+
+\input{styles_config}
+\input{node_definitions}
+\input{network_layout}
+\input{connection_renderer}
+\input{threat_indicators}
+
+\begin{document}
+\begin{tikzpicture}[scale=0.9, transform shape, font=\sffamily]
+
+% Set output optimization for print
+\setDisplayMode{print}
+\setOutputSize{a3}
+
+% Draw background pattern
+\drawTopologyPattern{dots}
+
+% Draw security zone boundaries
+\drawZoneBoundary{0}{8}{16}{6}{Internet/DMZ Zone}{low}
+\drawZoneBoundary{0}{0}{16}{6}{Application Zone}{medium}
+\drawZoneBoundary{0}{-8}{16}{6}{Data Zone}{high}
+
+% ===== TIER 1: External/Internet =====
+\createCloud{internet}{0}{10}{Internet}
+\createAttacker{attacker1}{-6}{10}{Threat Actor}
+
+% ===== TIER 2: DMZ with HA Firewalls =====
+% Use HA pair template
+\templateHAPair{0}{7}{4}{horizontal}
+\createFirewall{fw1}{203.0.113.1}{\haX1}{\haY1}{FW-Primary}
+\createFirewall{fw2}{203.0.113.2}{\haX2}{\haY2}{FW-Backup}
+
+% DMZ Web Servers in circular layout
+\pgfmathsetmacro{\dmzRadius}{2.5}
+\foreach \i in {0,...,2} {
+    \calcCircularAngle{\i}{3}{0}{\angle}
+    \positionOnCircle{0}{5}{\dmzRadius}{\angle}{dmzPos\i}
+    \pgfmathsetmacro{\dmzIP}{10 + \i}
+    \node[server, fill=routerOrange!20, draw=routerOrange!70] (dmz\i)
+        at (dmzPos\i) {
+        \tiny DMZ-Web\i\\
+        \tiny 203.0.113.\dmzIP
+    };
+}
+
+% ===== TIER 3: Application Tier (Grid Layout) =====
+% Grid of application servers
+\foreach \row in {0,1} {
+    \foreach \col in {0,...,2} {
+        \calcGridPosition{\row}{\col}{2.5}{3}{-3}{0}{\appX}{\appY}
+        \pgfmathsetmacro{\appNum}{int(\row * 3 + \col + 1)}
+        \pgfmathsetmacro{\appIP}{20 + \appNum}
+        \node[server, fill=serverBlue!30, draw=serverBlue!80, minimum width=1.2cm] (app\appNum)
+            at (\appX, \appY) {
+            \tiny App-\appNum\\
+            \tiny 10.0.1.\appIP
+        };
+    }
+}
+
+% Load Balancer (using mirror position)
+\createRouter{lb}{10.0.1.10}{5}{1.5}{Load Balancer}
+
+% ===== TIER 4: Data Tier with HA Database Cluster =====
+% Primary and Replica databases
+\templateHAPair{-2}{-7}{3}{horizontal}
+\node[server, fill=green!20, draw=green!70, cylinder, shape border rotate=90,
+      aspect=0.25, minimum width=1.5cm, minimum height=1.2cm] (dbprimary)
+    at (\haX1, \haY1) {
+    \tiny DB Primary\\
+    \tiny 10.50.0.10
+};
+
+\node[server, fill=green!15, draw=green!60, cylinder, shape border rotate=90,
+      aspect=0.25, minimum width=1.5cm, minimum height=1.2cm] (dbreplica)
+    at (\haX2, \haY2) {
+    \tiny DB Replica\\
+    \tiny 10.50.0.11
+};
+
+% Backup server (using rotation for variety)
+\rotatePosition{4}{-7}{0}{\backupX}{\backupY}
+\createServer{backup}{10.50.0.20}{\backupX}{\backupY}{Backup}
+
+% ===== Monitoring & Management =====
+% Position using interpolation
+\interpolatePosition{-8}{0}{-8}{-7}{0.5}{\monX}{\monY}
+\createServer{monitor}{\monX}{\monY}{10.0.2.5}{Monitor}
+
+% ===== CONNECTIONS =====
+% Internet to firewalls
+\drawSuspiciousConnection{attacker1}{fw1}{Port Scan}
+\drawConnection{internet}{fw1}{HTTPS}
+\drawConnection{internet}{fw2}{HTTPS}
+
+% Firewalls to DMZ
+\drawConnection{fw1}{dmz0}{}
+\drawConnection{fw1}{dmz1}{}
+\drawConnection{fw2}{dmz2}{}
+
+% HA between firewalls
+\drawBidirectional{fw1}{fw2}{VRRP}
+
+% DMZ to Load Balancer
+\foreach \i in {0,...,2} {
+    \drawConnection{dmz\i}{lb}{}
+}
+
+% Load Balancer to Application Tier
+\foreach \i in {1,...,6} {
+    \drawEncryptedConnection{lb}{app\i}{TLS}
+}
+
+% Application to Database
+\foreach \i in {1,...,6} {
+    \drawEncryptedConnection{app\i}{dbprimary}{SQL/TLS}
+}
+
+% Database replication
+\drawBidirectional{dbprimary}{dbreplica}{Replication}
+
+% Backup connections
+\drawConnection{dbprimary}{backup}{Backup}
+\drawConnection{dbreplica}{backup}{Backup}
+
+% Monitoring connections (dashed, low priority)
+\foreach \n in {fw1,lb,dbprimary,app3} {
+    \draw[gray!40, dashed, very thin, -Stealth] (\n) -- (monitor);
+}
+
+% ===== SUBNET GROUPING WITH AUTO-COLORING =====
+\drawAutoSubnet{203.0.113.0/24}{(dmz0)(dmz1)(dmz2)}{DMZ Subnet}
+\drawAutoSubnet{10.0.1.0/24}{(app1)(app2)(app3)(app4)(app5)(app6)(lb)}{App Tier}
+\drawAutoSubnet{10.50.0.0/24}{(dbprimary)(dbreplica)(backup)}{Data Tier}
+
+% ===== THREAT INDICATORS =====
+\markVulnerability{dmz1}{CVE-2024-1234}{8.5}
+\addThreatBadge{dmz1}{high}
+\visualizeExfiltration{dbprimary}{attacker1}{50MB}
+
+% ===== ANNOTATIONS & LABELS =====
+% Use bezier curve for annotation line
+\draw[orange!70, thick, -Stealth, decorate, decoration={snake, amplitude=0.5mm}]
+    (attacker1) -- node[above, font=\tiny, fill=white] {Active Attack} (fw1);
+
+% Add complexity score visualization
+\calcComplexityScore{20}{35}{\complexity}
+\node[fill=yellow!20, draw=orange!60, rounded corners=2pt, font=\tiny, anchor=south west]
+    at (-8, -10) {Complexity: \complexity/100};
+
+% Add legend
+\begin{scope}[shift={(7, -8)}]
+    \node[font=\small\bfseries, anchor=north] at (0, 0) {Legend};
+    \draw[fill=green!60!black!10] (-0.8, -0.5) rectangle (-0.3, -0.8);
+    \node[font=\tiny, anchor=west] at (-0.2, -0.65) {High Trust};
+    \draw[fill=yellow!60!black!10] (-0.8, -1.0) rectangle (-0.3, -1.3);
+    \node[font=\tiny, anchor=west] at (-0.2, -1.15) {Medium Trust};
+    \draw[fill=red!60!black!10] (-0.8, -1.5) rectangle (-0.3, -1.8);
+    \node[font=\tiny, anchor=west] at (-0.2, -1.65) {Low Trust};
+\end{scope}
+
+% ===== TITLE AND METADATA =====
+\node[font=\Large\bfseries, anchor=north] at (0, 12.5) {Enterprise Security Architecture};
+\node[font=\small, anchor=north, gray] at (0, 11.8) {
+    Comprehensive Demo: HA Firewalls • Load Balancing • DB Replication • Threat Monitoring
+};
+
+% Add statistics
+\node[fill=blue!10, draw=blue!60, rounded corners=3pt, font=\tiny, anchor=north east]
+    at (8, 11.5) {
+    \textbf{Network Stats:}\\
+    Nodes: 20 • Connections: 35\\
+    Subnets: 3 • Vulnerabilities: 1
+};
+
+\end{tikzpicture}
+\end{document}

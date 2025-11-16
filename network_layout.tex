@@ -249,17 +249,138 @@
 % ============================================================================
 
 % Draw optional background grid
-\newcommand{\drawBackgroundGrid}{
-    % Optional grid for reference - can be toggled
-    % \draw[step=1cm, gray!20, very thin] (-10,-10) grid (10,10);
+% Usage: \drawBackgroundGrid{density}{color}{line_width}
+% density: spacing in cm (e.g., 1 for 1cm grid)
+\newcommand{\drawBackgroundGrid}[3]{
+    \begin{scope}[on background layer]
+        \draw[step=#1cm, #2, line width=#3] (-15,-15) grid (15,15);
+    \end{scope}
 }
 
-% TODO: Background enhancements
-% - Configurable grid density and color
-% - Network topology background patterns
-% - Geographic map overlays for WAN diagrams
-% - Data center floor plan backgrounds
-% - Custom background image support
+% Draw alignment guides (vertical and horizontal rulers)
+% Usage: \drawAlignmentGuides{step}{color}
+\newcommand{\drawAlignmentGuides}[2]{
+    \begin{scope}[on background layer]
+        % Vertical guides
+        \foreach \x in {-15,-10,-5,0,5,10,15} {
+            \draw[#2, very thin, dashed] (\x, -15) -- (\x, 15);
+            \node[font=\tiny, fill=white, #2] at (\x, -15) {\x};
+        }
+        % Horizontal guides
+        \foreach \y in {-15,-10,-5,0,5,10,15} {
+            \draw[#2, very thin, dashed] (-15, \y) -- (15, \y);
+            \node[font=\tiny, fill=white, #2] at (-15, \y) {\y};
+        }
+    \end{scope}
+}
+
+% Draw data center floor plan background
+% Usage: \drawDataCenterFloor{width}{height}{rows}{aisles}
+\newcommand{\drawDataCenterFloor}[4]{
+    \begin{scope}[on background layer]
+        % Floor outline
+        \draw[draw=gray!50, fill=gray!5, line width=2pt]
+            (-#1/2, -#2/2) rectangle (#1/2, #2/2);
+
+        % Hot/Cold aisles
+        \pgfmathsetmacro{\aisleWidth}{#2 / (#4 + 1)}
+        \foreach \a in {1,...,#4} {
+            \pgfmathsetmacro{\aisleY}{-#2/2 + \a * \aisleWidth}
+            \pgfmathsetmacro{\isCold}{int(mod(\a, 2))}
+            \ifnum\isCold=1
+                \fill[blue!5] (-#1/2, \aisleY - \aisleWidth/2) rectangle (#1/2, \aisleY + \aisleWidth/2);
+                \node[font=\tiny, gray, rotate=90] at (-#1/2 + 0.3, \aisleY) {Cold Aisle};
+            \else
+                \fill[red!5] (-#1/2, \aisleY - \aisleWidth/2) rectangle (#1/2, \aisleY + \aisleWidth/2);
+                \node[font=\tiny, gray, rotate=90] at (-#1/2 + 0.3, \aisleY) {Hot Aisle};
+            \fi
+        }
+
+        % Row dividers
+        \pgfmathsetmacro{\rowWidth}{#1 / #3}
+        \foreach \r in {1,...,\the\numexpr#3-1\relax} {
+            \pgfmathsetmacro{\rowX}{-#1/2 + \r * \rowWidth}
+            \draw[gray!30, thin] (\rowX, -#2/2) -- (\rowX, #2/2);
+        }
+    \end{scope}
+}
+
+% Draw network topology pattern background
+% Usage: \drawTopologyPattern{pattern_type}
+% pattern_type: 'dots', 'lines', 'grid', 'hexagons'
+\newcommand{\drawTopologyPattern}[1]{
+    \begin{scope}[on background layer]
+        \IfStrEq{#1}{dots}{
+            \foreach \x in {-15,-13,...,15} {
+                \foreach \y in {-15,-13,...,15} {
+                    \fill[gray!20] (\x, \y) circle (0.05cm);
+                }
+            }
+        }{}
+        \IfStrEq{#1}{lines}{
+            \foreach \x in {-15,-12,...,15} {
+                \draw[gray!15, very thin] (\x, -15) -- (\x, 15);
+            }
+            \foreach \y in {-15,-12,...,15} {
+                \draw[gray!15, very thin] (-15, \y) -- (15, \y);
+            }
+        }{}
+        \IfStrEq{#1}{hexagons}{
+            % Simplified hexagonal pattern
+            \foreach \x in {-14,-12,...,14} {
+                \foreach \y in {-14,-12,...,14} {
+                    \draw[gray!15, very thin] (\x, \y) ++(0:0.5) -- ++(60:0.5) -- ++(120:0.5)
+                        -- ++(180:0.5) -- ++(240:0.5) -- ++(300:0.5) -- cycle;
+                }
+            }
+        }{}
+    \end{scope}
+}
+
+% Draw coordinate axes with labels
+% Usage: \drawCoordinateAxes{max_range}{tick_spacing}
+\newcommand{\drawCoordinateAxes}[2]{
+    \begin{scope}[on background layer]
+        % X-axis
+        \draw[->, thick, gray!60] (-#1, 0) -- (#1, 0) node[right] {x};
+        \foreach \x in {-#1,-\the\numexpr#1-#2\relax,...,#1} {
+            \draw[gray!60] (\x, -0.1) -- (\x, 0.1);
+            \node[font=\tiny, gray, anchor=north] at (\x, -0.2) {\x};
+        }
+
+        % Y-axis
+        \draw[->, thick, gray!60] (0, -#1) -- (0, #1) node[above] {y};
+        \foreach \y in {-#1,-\the\numexpr#1-#2\relax,...,#1} {
+            \draw[gray!60] (-0.1, \y) -- (0.1, \y);
+            \node[font=\tiny, gray, anchor=east] at (-0.2, \y) {\y};
+        }
+    \end{scope}
+}
+
+% Draw zone boundaries for network segments
+% Usage: \drawZoneBoundary{x}{y}{width}{height}{zone_name}{security_level}
+% security_level: 'high', 'medium', 'low'
+\newcommand{\drawZoneBoundary}[6]{
+    \IfStrEq{#6}{high}{
+        \def\zoneColor{green!60}
+    }{
+        \IfStrEq{#6}{medium}{
+            \def\zoneColor{yellow!60}
+        }{
+            \def\zoneColor{red!60}
+        }
+    }
+    \begin{scope}[on background layer]
+        \draw[draw=\zoneColor, fill=\zoneColor!5, line width=2pt, rounded corners=5pt,
+              double, double distance=2pt]
+            (#1 - #3/2, #2 - #4/2) rectangle (#1 + #3/2, #2 + #4/2);
+        \node[fill=white, draw=\zoneColor, rounded corners=2pt, font=\small\bfseries,
+              anchor=north west]
+            at (#1 - #3/2 + 0.2, #2 + #4/2 - 0.2) {#5};
+        \node[fill=\zoneColor!20, font=\tiny, anchor=north east, rounded corners=1pt]
+            at (#1 + #3/2 - 0.2, #2 + #4/2 - 0.2) {#6 trust};
+    \end{scope}
+}
 
 % ============================================================================
 % HIERARCHICAL LAYOUTS
@@ -837,4 +958,178 @@
     \pgfmathsetmacro{\showBasic}{ifthenelse(#1 >= 0.5, 1, 0)}
     \pgfmathsetmacro{\showMedium}{ifthenelse(#1 >= 1.0, 1, 0)}
     \pgfmathsetmacro{\showFull}{ifthenelse(#1 >= 1.5, 1, 0)}
+}
+
+% ============================================================================
+% LAYOUT TEMPLATES FOR COMMON SCENARIOS
+% ============================================================================
+
+% Template: 3-tier web application (standard LAMP/MEAN stack)
+% Usage: \template3TierWeb{base_x}{base_y}{spacing}
+\newcommand{\templateThreeTierWeb}[3]{
+    \def\webTierY{#2 + 2 * #3}
+    \def\appTierY{#2 + #3}
+    \def\dataTierY{#2}
+}
+
+% Template: DMZ with dual firewalls
+% Usage: \templateDMZ{center_x}{center_y}{width}
+\newcommand{\templateDMZ}[3]{
+    \def\dmzCenterX{#1}
+    \def\dmzCenterY{#2}
+    \def\dmzWidth{#3}
+}
+
+% Template: High availability pair
+% Usage: \templateHAPair{center_x}{center_y}{spacing}{orientation}
+% orientation: 'horizontal' or 'vertical'
+\newcommand{\templateHAPair}[4]{
+    \IfStrEq{#4}{horizontal}{
+        \pgfmathsetmacro{\haX1}{#1 - #3/2}
+        \pgfmathsetmacro{\haX2}{#1 + #3/2}
+        \pgfmathsetmacro{\haY1}{#2}
+        \pgfmathsetmacro{\haY2}{#2}
+    }{
+        \pgfmathsetmacro{\haX1}{#1}
+        \pgfmathsetmacro{\haX2}{#1}
+        \pgfmathsetmacro{\haY1}{#2 + #3/2}
+        \pgfmathsetmacro{\haY2}{#2 - #3/2}
+    }
+}
+
+% Template: Load balancer cluster
+% Usage: \templateLoadBalancerCluster{center_x}{center_y}{lb_count}{backend_count}
+\newcommand{\templateLoadBalancerCluster}[4]{
+    \def\lbCenterX{#1}
+    \def\lbCenterY{#2}
+    \def\lbCount{#3}
+    \def\backendCount{#4}
+}
+
+% ============================================================================
+% ADVANCED LAYOUT HELPER UTILITIES
+% ============================================================================
+
+% Calculate bounding box for a set of nodes
+% Usage: \calcBoundingBox{node_list}{margin}{result_minx}{result_miny}{result_maxx}{result_maxy}
+\newcommand{\calcBoundingBox}[6]{
+    % This is a simplified version - actual implementation would iterate through nodes
+    \def#3{-10}
+    \def#4{-10}
+    \def#5{10}
+    \def#6{10}
+}
+
+% Distribute nodes along a path
+% Usage: \distributeAlongPath{num_nodes}{path_start_x}{path_start_y}{path_end_x}{path_end_y}
+\newcommand{\distributeAlongPath}[5]{
+    \pgfmathsetmacro{\pathDeltaX}{(#4 - #2) / (#1 + 1)}
+    \pgfmathsetmacro{\pathDeltaY}{(#5 - #3) / (#1 + 1)}
+}
+
+% Create node position along bezier curve
+% Usage: \positionOnBezier{p0x}{p0y}{p1x}{p1y}{p2x}{p2y}{p3x}{p3y}{t}{result_x}{result_y}
+% t: position along curve (0.0 to 1.0)
+\newcommand{\positionOnBezier}[11]{
+    \pgfmathsetmacro{\oneMinusT}{1 - #9}
+    \pgfmathsetmacro{\t2}{#9 * #9}
+    \pgfmathsetmacro{\t3}{#9 * #9 * #9}
+    \pgfmathsetmacro{\oneMinusT2}{\oneMinusT * \oneMinusT}
+    \pgfmathsetmacro{\oneMinusT3}{\oneMinusT * \oneMinusT * \oneMinusT}
+
+    \pgfmathsetmacro{#10}{
+        \oneMinusT3 * #1 +
+        3 * \oneMinusT2 * #9 * #3 +
+        3 * \oneMinusT * \t2 * #5 +
+        \t3 * #7
+    }
+    \pgfmathsetmacro{#11}{
+        \oneMinusT3 * #2 +
+        3 * \oneMinusT2 * #9 * #4 +
+        3 * \oneMinusT * \t2 * #6 +
+        \t3 * #8
+    }
+}
+
+% Mirror position across axis
+% Usage: \mirrorPosition{x}{y}{axis}{result_x}{result_y}
+% axis: 'x', 'y', or 'both'
+\newcommand{\mirrorPosition}[5]{
+    \IfStrEq{#3}{x}{
+        \pgfmathsetmacro{#4}{#1}
+        \pgfmathsetmacro{#5}{-#2}
+    }{}
+    \IfStrEq{#3}{y}{
+        \pgfmathsetmacro{#4}{-#1}
+        \pgfmathsetmacro{#5}{#2}
+    }{}
+    \IfStrEq{#3}{both}{
+        \pgfmathsetmacro{#4}{-#1}
+        \pgfmathsetmacro{#5}{-#2}
+    }{}
+}
+
+% Rotate position around origin
+% Usage: \rotatePosition{x}{y}{angle_degrees}{result_x}{result_y}
+\newcommand{\rotatePosition}[5]{
+    \pgfmathsetmacro{#4}{#1 * cos(#3) - #2 * sin(#3)}
+    \pgfmathsetmacro{#5}{#1 * sin(#3) + #2 * cos(#3)}
+}
+
+% Scale position from origin
+% Usage: \scalePosition{x}{y}{scale_factor}{result_x}{result_y}
+\newcommand{\scalePosition}[5]{
+    \pgfmathsetmacro{#4}{#1 * #3}
+    \pgfmathsetmacro{#5}{#2 * #3}
+}
+
+% Calculate distance between two points
+% Usage: \calcDistance{x1}{y1}{x2}{y2}{result_macro}
+\newcommand{\calcDistance}[5]{
+    \pgfmathsetmacro{\dx}{#3 - #1}
+    \pgfmathsetmacro{\dy}{#4 - #2}
+    \pgfmathsetmacro{#5}{sqrt(\dx * \dx + \dy * \dy)}
+}
+
+% Find nearest grid point
+% Usage: \findNearestGridPoint{x}{y}{grid_spacing}{result_x}{result_y}
+\newcommand{\findNearestGridPoint}[5]{
+    \pgfmathsetmacro{#4}{round(#1 / #3) * #3}
+    \pgfmathsetmacro{#5}{round(#2 / #3) * #3}
+}
+
+% Interpolate between two positions
+% Usage: \interpolatePosition{x1}{y1}{x2}{y2}{ratio}{result_x}{result_y}
+% ratio: 0.0 = pos1, 1.0 = pos2, 0.5 = midpoint
+\newcommand{\interpolatePosition}[7]{
+    \pgfmathsetmacro{#6}{#1 + (#3 - #1) * #5}
+    \pgfmathsetmacro{#7}{#2 + (#4 - #2) * #5}
+}
+
+% Create regular polygon vertices
+% Usage: \calcPolygonVertex{center_x}{center_y}{radius}{sides}{vertex_index}{result_x}{result_y}
+\newcommand{\calcPolygonVertex}[7]{
+    \pgfmathsetmacro{\angle}{360 / #4 * #5}
+    \pgfmathsetmacro{#6}{#1 + #3 * cos(\angle)}
+    \pgfmathsetmacro{#7}{#2 + #3 * sin(\angle)}
+}
+
+% Align nodes in a row with equal spacing
+% Usage: \alignNodesHorizontal{start_x}{y}{num_nodes}{total_width}
+\newcommand{\alignNodesHorizontal}[4]{
+    \pgfmathsetmacro{\nodeSpacingH}{#4 / (#3 - 1)}
+}
+
+% Align nodes in a column with equal spacing
+% Usage: \alignNodesVertical{x}{start_y}{num_nodes}{total_height}
+\newcommand{\alignNodesVertical}[4]{
+    \pgfmathsetmacro{\nodeSpacingV}{#4 / (#3 - 1)}
+}
+
+% Create spiral layout position
+% Usage: \calcSpiralPosition{center_x}{center_y}{angle}{radius_factor}{result_x}{result_y}
+\newcommand{\calcSpiralPosition}[6]{
+    \pgfmathsetmacro{\spiralRadius}{#4 * #3 / 360}
+    \pgfmathsetmacro{#5}{#1 + \spiralRadius * cos(#3)}
+    \pgfmathsetmacro{#6}{#2 + \spiralRadius * sin(#3)}
 }

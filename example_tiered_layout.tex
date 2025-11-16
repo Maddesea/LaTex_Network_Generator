@@ -1,0 +1,92 @@
+% Example: 4-Tier Web Application Architecture
+% Demonstrates automatic tiered layout with subnet auto-grouping
+\documentclass[tikz,border=10pt]{standalone}
+
+\usepackage{tikz}
+\usepackage{ifthen}
+\usepackage{xcolor}
+\usepackage{calc}
+\usepackage{xstring}
+
+\usetikzlibrary{
+    positioning,
+    shapes.geometric,
+    shapes.multipart,
+    arrows.meta,
+    decorations.pathmorphing,
+    decorations.markings,
+    backgrounds,
+    fit,
+    calc,
+    shadows.blur,
+    patterns,
+    fadings
+}
+
+\input{styles_config}
+\input{node_definitions}
+\input{network_layout}
+\input{connection_renderer}
+\input{threat_indicators}
+
+\begin{document}
+\begin{tikzpicture}[scale=1.0, transform shape, font=\sffamily]
+
+% Configure 4-tier layout
+\layoutTiered{4}{vertical}{6cm}
+
+% TIER 0: External (Internet & Attackers)
+\calcTierPosition{0}{0}{1}{\t0x}{\t0y}
+\createCloud{internet}{\t0x}{\t0y}{Internet}
+
+% TIER 1: Perimeter (Firewalls)
+\calcTierPosition{1}{0}{2}{\t1x1}{\t1y1}
+\calcTierPosition{1}{1}{2}{\t1x2}{\t1y2}
+\createFirewall{fw1}{203.0.113.1}{\t1x1}{\t1y1}{Primary FW}
+\createFirewall{fw2}{203.0.113.2}{\t1x2}{\t1y2}{Backup FW}
+
+% TIER 2: Application (Web Servers in circular layout)
+\calcTierPosition{2}{0}{1}{\t2x}{\t2y}
+
+% Use circular layout for web servers
+\pgfmathsetmacro{\webRadius}{3}
+\foreach \i in {0,...,3} {
+    \calcCircularAngle{\i}{4}{0}{\angle}
+    \positionOnCircle{\t2x}{\t2y}{\webRadius}{\angle}{webPos\i}
+    \pgfmathsetmacro{\webIP}{10 + \i}
+    \node[server, fill=serverBlue!30, draw=serverBlue!80] (web\i)
+        at (webPos\i) {
+        \textbf{Web \i}\\
+        \tiny 192.168.10.\webIP
+    };
+}
+
+% TIER 3: Data (Database Cluster)
+\calcTierPosition{3}{0}{2}{\t3x1}{\t3y1}
+\calcTierPosition{3}{1}{2}{\t3x2}{\t3y2}
+\createServer{db1}{10.50.20.10}{\t3x1}{\t3y1}{DB Primary}
+\createServer{db2}{10.50.20.11}{\t3x2}{\t3y2}{DB Replica}
+
+% Connections
+\drawConnection{internet}{fw1}{HTTPS}
+\drawConnection{internet}{fw2}{HTTPS}
+\drawConnection{fw1}{web0}{}
+\drawConnection{fw1}{web1}{}
+\drawConnection{fw2}{web2}{}
+\drawConnection{fw2}{web3}{}
+
+\foreach \i in {0,...,3} {
+    \drawEncryptedConnection{web\i}{db1}{TLS}
+}
+\drawBidirectional{db1}{db2}{Replication}
+
+% Auto-group by subnets
+\drawAutoSubnet{192.168.10.0/24}{(web0)(web1)(web2)(web3)}{DMZ Web Tier}
+\drawAutoSubnet{10.50.20.0/24}{(db1)(db2)}{Secure Database Tier}
+
+% Add title
+\node[font=\Large\bfseries, anchor=north] at (0, 8) {4-Tier Web Application Architecture};
+\node[font=\small, anchor=north, gray] at (0, 7.3) {Tiered Layout with Circular Web Server Arrangement};
+
+\end{tikzpicture}
+\end{document}

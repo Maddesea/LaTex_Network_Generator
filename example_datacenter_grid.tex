@@ -1,0 +1,87 @@
+% Example: Data Center Server Farm with Grid Layout
+% Demonstrates grid layout with server racks and blade enclosures
+\documentclass[tikz,border=10pt]{standalone}
+
+\usepackage{tikz}
+\usepackage{ifthen}
+\usepackage{xcolor}
+\usepackage{calc}
+\usepackage{xstring}
+
+\usetikzlibrary{
+    positioning,
+    shapes.geometric,
+    shapes.multipart,
+    arrows.meta,
+    decorations.pathmorphing,
+    decorations.markings,
+    backgrounds,
+    fit,
+    calc,
+    shadows.blur,
+    patterns,
+    fadings
+}
+
+\input{styles_config}
+\input{node_definitions}
+\input{network_layout}
+\input{connection_renderer}
+\input{threat_indicators}
+
+\begin{document}
+\begin{tikzpicture}[scale=0.8, transform shape, font=\sffamily]
+
+% Configure grid layout for 3x4 server arrangement
+\layoutGrid{-6}{4}{3.5}{4}{3}{4}
+
+% Draw server racks in grid
+\foreach \row in {0,...,2} {
+    \foreach \col in {0,...,3} {
+        \calcGridPosition{\row}{\col}{3.5}{4}{-6}{4}{\rackX}{\rackY}
+        \pgfmathsetmacro{\rackNum}{int(\row * 4 + \col + 1)}
+        \drawServerRack{rack\rackNum}{\rackX}{\rackY}{1.5}{3}{42}{Rack \rackNum}
+
+        % Place a server node in each rack
+        \pgfmathsetmacro{\serverIP}{10 + \rackNum}
+        \node[server, fill=serverBlue!20, draw=serverBlue!70, minimum width=1cm, minimum height=0.5cm]
+            (srv\rackNum) at (\rackX, \rackY) {
+            \tiny Srv-\rackNum\\
+            \tiny 10.1.1.\serverIP
+        };
+    }
+}
+
+% Draw blade enclosures at bottom
+\drawBladeEnclosure{blade1}{-4}{-4}{16}{Blade Chassis A}
+\drawBladeEnclosure{blade2}{4}{-4}{16}{Blade Chassis B}
+
+% Network core switches
+\createSwitch{sw1}{10.1.1.1}{-8}{7}{Core SW1}
+\createSwitch{sw2}{10.1.1.2}{8}{7}{Core SW2}
+
+% Connections from switches to servers (sample)
+\drawConnection{sw1}{srv1}{}
+\drawConnection{sw1}{srv2}{}
+\drawConnection{sw1}{srv5}{}
+\drawConnection{sw2}{srv4}{}
+\drawConnection{sw2}{srv8}{}
+\drawConnection{sw2}{srv12}{}
+
+% Redundant link between switches
+\drawBidirectional{sw1}{sw2}{100Gbps Link}
+
+% Subnet grouping
+\drawSubnet{datacenter}{routerOrange}{(srv1)(srv2)(srv3)(srv4)(srv5)(srv6)(srv7)(srv8)(srv9)(srv10)(srv11)(srv12)}{Data Center Network - 10.1.1.0/24}
+
+% Add floor plan labels
+\node[font=\tiny, gray, anchor=east] at (-8, 4) {Row 1};
+\node[font=\tiny, gray, anchor=east] at (-8, 0.5) {Row 2};
+\node[font=\tiny, gray, anchor=east] at (-8, -3) {Row 3};
+
+% Title
+\node[font=\Large\bfseries, anchor=north] at (0, 9) {Data Center Server Farm};
+\node[font=\small, anchor=north, gray] at (0, 8.3) {Grid Layout with 12 Server Racks \& Blade Chassis};
+
+\end{tikzpicture}
+\end{document}

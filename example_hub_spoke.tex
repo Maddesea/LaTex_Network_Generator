@@ -1,0 +1,90 @@
+% Example: Hub-and-Spoke Network with Circular Layout
+% Demonstrates circular layout with concentric rings
+\documentclass[tikz,border=10pt]{standalone}
+
+\usepackage{tikz}
+\usepackage{ifthen}
+\usepackage{xcolor}
+\usepackage{calc}
+\usepackage{xstring}
+
+\usetikzlibrary{
+    positioning,
+    shapes.geometric,
+    shapes.multipart,
+    arrows.meta,
+    decorations.pathmorphing,
+    decorations.markings,
+    backgrounds,
+    fit,
+    calc,
+    shadows.blur,
+    patterns,
+    fadings
+}
+
+\input{styles_config}
+\input{node_definitions}
+\input{network_layout}
+\input{connection_renderer}
+\input{threat_indicators}
+
+\begin{document}
+\begin{tikzpicture}[scale=1.0, transform shape, font=\sffamily]
+
+% Central hub
+\createRouter{hub}{10.0.0.1}{0}{0}{Core Router}
+
+% Inner ring: Regional routers (4 nodes)
+\pgfmathsetmacro{\innerRadius}{4}
+\foreach \i in {0,...,3} {
+    \calcCircularAngle{\i}{4}{45}{\angle}
+    \positionOnCircle{0}{0}{\innerRadius}{\angle}{regPos\i}
+    \pgfmathsetmacro{\regIP}{10 + \i}
+    \node[router, fill=routerOrange!30, draw=routerOrange!80] (regional\i)
+        at (regPos\i) {
+        \textbf{Region \i}\\
+        \tiny 10.0.\regIP.1
+    };
+    \drawConnection{hub}{regional\i}{10Gbps}
+}
+
+% Outer ring: Branch offices (8 nodes)
+\pgfmathsetmacro{\outerRadius}{7.5}
+\foreach \i in {0,...,7} {
+    \calcCircularAngle{\i}{8}{0}{\angle}
+    \positionOnCircle{0}{0}{\outerRadius}{\angle}{branchPos\i}
+    \pgfmathsetmacro{\branchIP}{20 + \i}
+    \node[server, fill=clientGreen!20, draw=clientGreen!70, minimum width=1.2cm] (branch\i)
+        at (branchPos\i) {
+        \tiny Branch \i\\
+        \tiny 10.0.\branchIP.1
+    };
+
+    % Connect each branch to nearest regional router
+    \pgfmathsetmacro{\regionNum}{int(mod(\i, 4))}
+    \drawConnection{regional\regionNum}{branch\i}{}
+}
+
+% Add cloud for internet connectivity
+\createCloud{internet}{0}{-9}{Internet}
+\drawEncryptedConnection{hub}{internet}{VPN}
+
+% Concentric circle indicators (visual guide)
+\draw[gray!30, dashed, very thin] (0,0) circle (\innerRadius cm);
+\draw[gray!30, dashed, very thin] (0,0) circle (\outerRadius cm);
+
+% Legend
+\begin{scope}[shift={(-10, -8)}]
+    \node[font=\small\bfseries, anchor=north west] at (0, 0) {Network Topology:};
+    \node[font=\tiny, anchor=north west] at (0, -0.5) {• Core: 1 Hub Router};
+    \node[font=\tiny, anchor=north west] at (0, -0.9) {• Inner Ring: 4 Regional Routers};
+    \node[font=\tiny, anchor=north west] at (0, -1.3) {• Outer Ring: 8 Branch Offices};
+\end{scope}
+
+% Title
+\node[font=\Large\bfseries, anchor=north] at (0, 10) {Hub-and-Spoke Network Topology};
+\node[font=\small, anchor=north, gray] at (0, 9.3) {Circular Layout with Concentric Rings};
+
+\end{tikzpicture}
+\end{document}
