@@ -48,12 +48,176 @@
     \draw[normal conn, bidirectional] (#1) -- node[above, font=\tiny] {#3} (#2);
 }
 
-% TODO: Enhanced connection types
-% - VPN tunnel connections with special styling
-% - Wireless connections with wave pattern
-% - Fiber optic connections with light effects
-% - Serial/legacy connections with different line style
-% - Satellite links with orbital arc paths
+% ============================================================================
+% SPECIALIZED CONNECTION TYPES
+% ============================================================================
+
+% VPN tunnel connection with dashed tube effect
+% Usage: \drawVPNTunnel{from}{to}{encryption}{label}
+\newcommand{\drawVPNTunnel}[4]{
+    % Outer tunnel (thick dashed)
+    \draw[draw=blue!50!black, line width=3pt, dashed, opacity=0.5, rounded corners=2pt]
+        (#1) -- (#2);
+    % Inner secure connection (solid)
+    \draw[draw=green!60!black, line width=1pt, -{Stealth[length=3mm]}, double distance=1pt]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny\bfseries, fill=green!20, rounded corners=2pt, inner sep=2pt] {
+            \textcolor{green!50!black}{$\blacksquare$} VPN: #3
+        }
+        node[midway, below, font=\tiny] {#4};
+}
+
+% Site-to-Site VPN with IPsec indicator
+% Usage: \drawSiteToSiteVPN{from}{to}{protocol}{label}
+\newcommand{\drawSiteToSiteVPN}[4]{
+    \draw[draw=blue!60!black, line width=2.5pt, densely dashed, double distance=2pt, -{Stealth[length=4mm]}]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny\bfseries, fill=blue!20, rounded corners=3pt, inner sep=2pt] {
+            IPsec VPN: #3
+        }
+        node[midway, below, font=\tiny] {#4};
+}
+
+% Wireless connection with wave pattern
+% Usage: \drawWirelessConnection{from}{to}{frequency}{label}
+\newcommand{\drawWirelessConnection}[4]{
+    \draw[draw=purple!60!black, line width=1pt, decorate,
+          decoration={snake, amplitude=1mm, segment length=5mm}, -{Stealth[length=3mm]}]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny, fill=purple!15, rounded corners=2pt, inner sep=2pt] {
+            \textasciitilde\textasciitilde\textasciitilde\ #3 #4
+        };
+}
+
+% WiFi connection with signal strength indicator
+% Usage: \drawWiFiConnection{from}{to}{ssid}{signal_strength}{label}
+% signal_strength: 1-5 bars
+\newcommand{\drawWiFiConnection}[5]{
+    \pgfmathsetmacro{\linewidth}{0.5 + 0.3*#4}
+    \draw[draw=purple!70!black, line width=\linewidth pt, decorate,
+          decoration={snake, amplitude=0.8mm, segment length=4mm}]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny, fill=purple!20, rounded corners=2pt, inner sep=2pt] {
+            WiFi: #3 (Signal: #4/5)
+        }
+        node[midway, below, font=\tiny] {#5};
+}
+
+% Bluetooth connection
+% Usage: \drawBluetoothConnection{from}{to}{device_name}{label}
+\newcommand{\drawBluetoothConnection}[4]{
+    \draw[draw=blue!70!cyan, line width=0.8pt, decorate,
+          decoration={zigzag, amplitude=0.8mm, segment length=3mm}, dashed]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny, fill=cyan!15, rounded corners=2pt, inner sep=2pt] {
+            BT: #3
+        }
+        node[midway, below, font=\tiny] {#4};
+}
+
+% Fiber optic connection with light beam effect
+% Usage: \drawFiberOpticConnection{from}{to}{speed}{label}
+\newcommand{\drawFiberOpticConnection}[4]{
+    % Multiple lines for light beam effect
+    \draw[draw=yellow!80!orange, line width=1.5pt, -{Stealth[length=4mm]}]
+        (#1) -- (#2);
+    \draw[draw=yellow!60!white, line width=0.8pt, opacity=0.7]
+        (#1) -- (#2);
+    \draw[draw=white, line width=0.3pt, opacity=0.5]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny\bfseries, fill=yellow!20, rounded corners=2pt, inner sep=2pt] {
+            \textcolor{orange!80!black}{$\star$} Fiber: #3
+        }
+        node[midway, below, font=\tiny] {#4};
+}
+
+% High-speed fiber backbone
+% Usage: \drawFiberBackbone{from}{to}{capacity}{label}
+\newcommand{\drawFiberBackbone}[4]{
+    \draw[draw=orange!70!yellow, line width=3pt, -{Stealth[length=5mm]}, double distance=2pt,
+          postaction={draw=white, line width=1pt, opacity=0.6}]
+        (#1) -- (#2)
+        node[midway, above, font=\small\bfseries, fill=orange!20, rounded corners=3pt, inner sep=3pt] {
+            Fiber Backbone: #3
+        }
+        node[midway, below, font=\tiny] {#4};
+}
+
+% Serial/legacy connection (RS-232, etc.)
+% Usage: \drawSerialConnection{from}{to}{baud_rate}{label}
+\newcommand{\drawSerialConnection}[4]{
+    \draw[draw=gray!60!black, line width=0.8pt, densely dotted, -{Stealth[length=2mm]}]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny, fill=gray!20, rounded corners=2pt, inner sep=2pt] {
+            Serial: #3 baud
+        }
+        node[midway, below, font=\tiny] {#4};
+}
+
+% Satellite link with orbital arc
+% Usage: \drawSatelliteLink{from}{to}{latency}{label}
+\newcommand{\drawSatelliteLink}[4]{
+    \draw[draw=cyan!60!blue, line width=1pt, bend left=30, -{Stealth[length=3mm]}, densely dashed]
+        (#1) to (#2)
+        node[midway, above, font=\tiny, fill=cyan!15, rounded corners=2pt, inner sep=2pt] {
+            \textcolor{blue!70!black}{$\bigcirc$} SAT: #3ms
+        }
+        node[midway, below, font=\tiny] {#4};
+}
+
+% Microwave link
+% Usage: \drawMicrowaveLink{from}{to}{frequency}{label}
+\newcommand{\drawMicrowaveLink}[4]{
+    \draw[draw=red!60!orange, line width=1.2pt, decorate,
+          decoration={expanding waves, angle=15, segment length=4mm}, -{Stealth[length=3mm]}]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny, fill=red!15, rounded corners=2pt, inner sep=2pt] {
+            Microwave: #3
+        }
+        node[midway, below, font=\tiny] {#4};
+}
+
+% Infrared connection
+% Usage: \drawInfraredConnection{from}{to}{range}{label}
+\newcommand{\drawInfraredConnection}[4]{
+    \draw[draw=red!70!black, line width=0.8pt, densely dashed, -{Stealth[length=2mm]}]
+        (#1) -- (#2)
+        [postaction={
+            decorate,
+            decoration={
+                markings,
+                mark=between positions 0.2 and 0.8 step 0.2 with {
+                    \node[circle, fill=red!50!black, opacity=0.4, inner sep=1pt] {};
+                }
+            }
+        }]
+        node[midway, above, font=\tiny, fill=red!15, rounded corners=2pt, inner sep=2pt] {
+            IR: #3
+        }
+        node[midway, below, font=\tiny] {#4};
+}
+
+% Power over Ethernet (PoE)
+% Usage: \drawPoEConnection{from}{to}{power}{label}
+\newcommand{\drawPoEConnection}[4]{
+    \draw[draw=yellow!70!orange, line width=1.5pt, -{Stealth[length=3mm]}, double distance=1pt]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny\bfseries, fill=yellow!25, rounded corners=2pt, inner sep=2pt] {
+            \textcolor{orange!80!black}{$\lightning$} PoE: #3W
+        }
+        node[midway, below, font=\tiny] {#4};
+}
+
+% USB connection
+% Usage: \drawUSBConnection{from}{to}{usb_version}{label}
+\newcommand{\drawUSBConnection}[4]{
+    \draw[draw=gray!70!black, line width=1pt, -{Stealth[length=3mm]}]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny, fill=gray!20, rounded corners=2pt, inner sep=2pt] {
+            USB #3
+        }
+        node[midway, below, font=\tiny] {#4};
+}
 
 % ============================================================================
 % ADVANCED CONNECTION RENDERING
@@ -467,12 +631,170 @@
         };
 }
 
-% TODO: Flow visualization enhancements
-% - Real-time traffic animation (if rendering to animated format)
-% - Packet visualization with different colors per protocol
-% - Congestion indicators (red/yellow traffic markers)
-% - Flow direction with multiple arrows
-% - Throughput heatmap coloring
+% ============================================================================
+% ENHANCED ANIMATED FLOW DIRECTION INDICATORS
+% ============================================================================
+
+% Bi-directional animated flow with different colors
+% Usage: \drawBidirectionalFlow{from}{to}{forward_protocol}{reverse_protocol}{label}
+\newcommand{\drawBidirectionalFlow}[5]{
+    % Forward flow (blue)
+    \draw[draw=blue!60!black, line width=1pt, -{Stealth[length=3mm]}]
+        ([yshift=1.5pt]#1) -- ([yshift=1.5pt]#2)
+        [postaction={
+            decorate,
+            decoration={
+                markings,
+                mark=between positions 0.1 and 0.9 step 0.15 with {
+                    \arrow{Stealth[length=2mm, fill=blue!70!black]}
+                }
+            }
+        }]
+        node[pos=0.3, above, font=\tiny] {#3};
+    % Reverse flow (green)
+    \draw[draw=green!60!black, line width=1pt, -{Stealth[length=3mm]}]
+        ([yshift=-1.5pt]#2) -- ([yshift=-1.5pt]#1)
+        [postaction={
+            decorate,
+            decoration={
+                markings,
+                mark=between positions 0.1 and 0.9 step 0.15 with {
+                    \arrow{Stealth[length=2mm, fill=green!70!black]}
+                }
+            }
+        }]
+        node[pos=0.7, below, font=\tiny] {#4};
+    \node[above, font=\tiny] at ($(#1)!0.5!(#2)$) {#5};
+}
+
+% Multi-speed flow indicator (different speeds for different traffic types)
+% Usage: \drawMultiSpeedFlow{from}{to}{speed_level}{label}
+% speed_level: 1=slow, 2=medium, 3=fast, 4=very fast
+\newcommand{\drawMultiSpeedFlow}[4]{
+    \pgfmathsetmacro{\stepsize}{0.3/(#3)}
+    \pgfmathsetmacro{\arrowsize}{1 + 0.5*#3}
+    \draw[draw=connNormal, line width=1.5pt, -{Stealth[length=3mm]}]
+        (#1) -- (#2)
+        [postaction={
+            decorate,
+            decoration={
+                markings,
+                mark=between positions 0.1 and 0.9 step \stepsize with {
+                    \arrow{Stealth[length=\arrowsize mm, fill=connNormal]}
+                }
+            }
+        }]
+        node[midway, above, font=\tiny] {#4};
+}
+
+% Colored packet flow (different colors for different protocols)
+% Usage: \drawColoredPacketFlow{from}{to}{color}{packet_size}{label}
+\newcommand{\drawColoredPacketFlow}[5]{
+    \pgfmathsetmacro{\packetsize}{0.5 + #4/2}
+    \draw[draw=#3!70!black, line width=1.5pt, -{Stealth[length=3mm]}]
+        (#1) -- (#2)
+        [postaction={
+            decorate,
+            decoration={
+                markings,
+                mark=between positions 0.1 and 0.9 step 0.15 with {
+                    \node[circle, fill=#3!80!black, inner sep=\packetsize pt] {};
+                }
+            }
+        }]
+        node[midway, above, font=\tiny] {#5};
+}
+
+% Traffic intensity visualization (pulse effect)
+% Usage: \drawPulseFlow{from}{to}{intensity}{label}
+\newcommand{\drawPulseFlow}[4]{
+    \pgfmathsetmacro{\linewidth}{0.8 + 0.4*#3}
+    \draw[draw=orange!70!black, line width=\linewidth pt, -{Stealth[length=4mm]}]
+        (#1) -- (#2)
+        [postaction={
+            decorate,
+            decoration={
+                markings,
+                mark=between positions 0 and 1 step 0.1 with {
+                    \pgfmathsetmacro{\opacity}{0.3 + 0.7*sin(\pgfkeysvalueof{/pgf/decoration/mark info/sequence number}*60)}
+                    \node[circle, fill=orange!90!black, opacity=\opacity, inner sep=1.5pt] {};
+                }
+            }
+        }]
+        node[midway, above, font=\tiny\bfseries] {#5: Intensity #3};
+}
+
+% Protocol-specific flow visualization
+% Usage: \drawProtocolFlow{from}{to}{protocol}{label}
+% protocol: HTTP, DNS, SSH, FTP, SMTP
+\newcommand{\drawProtocolFlow}[4]{
+    % Set color based on protocol
+    \ifthenelse{\equal{#3}{HTTP}}{
+        \def\flowcolor{blue}
+    }{}
+    \ifthenelse{\equal{#3}{HTTPS}}{
+        \def\flowcolor{green}
+    }{}
+    \ifthenelse{\equal{#3}{DNS}}{
+        \def\flowcolor{purple}
+    }{}
+    \ifthenelse{\equal{#3}{SSH}}{
+        \def\flowcolor{teal}
+    }{}
+    \ifthenelse{\equal{#3}{FTP}}{
+        \def\flowcolor{orange}
+    }{}
+    \ifthenelse{\equal{#3}{SMTP}}{
+        \def\flowcolor{red}
+    }{}
+    \draw[draw=\flowcolor!70!black, line width=1.5pt, -{Stealth[length=3mm]}]
+        (#1) -- (#2)
+        [postaction={
+            decorate,
+            decoration={
+                markings,
+                mark=between positions 0.1 and 0.9 step 0.2 with {
+                    \node[fill=\flowcolor!80!black, circle, inner sep=1pt] {};
+                }
+            }
+        }]
+        node[midway, above, font=\tiny, fill=\flowcolor!20, rounded corners=2pt, inner sep=2pt] {#3: #4};
+}
+
+% Congestion visualization with traffic markers
+% Usage: \drawCongestionFlow{from}{to}{congestion_percent}{label}
+\newcommand{\drawCongestionFlow}[4]{
+    \pgfmathsetmacro{\cong}{#3}
+    \ifnum\cong<30
+        \def\congcolor{green}
+        \def\conglabel{Normal}
+    \else\ifnum\cong<70
+        \def\congcolor{yellow}
+        \def\conglabel{Moderate}
+    \else
+        \def\congcolor{red}
+        \def\conglabel{Congested}
+    \fi\fi
+    \draw[draw=\congcolor!70!black, line width=2pt, -{Stealth[length=4mm]}]
+        (#1) -- (#2)
+        [postaction={
+            decorate,
+            decoration={
+                markings,
+                mark=between positions 0.1 and 0.9 step 0.12 with {
+                    \node[regular polygon, regular polygon sides=3, fill=\congcolor!90!black, inner sep=1pt] {};
+                }
+            }
+        }]
+        node[midway, above, font=\tiny\bfseries, fill=\congcolor!30, rounded corners=2pt, inner sep=2pt] {
+            #4 - \conglabel (#3\%)
+        };
+}
+
+% TODO: Advanced flow features
+% - Real-time animation support for Beamer presentations
+% - Time-series flow data visualization
+% - Flow heatmap overlays
 
 % ============================================================================
 % CONNECTION RENDERING ENGINE

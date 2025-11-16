@@ -233,15 +233,35 @@
   - Expandable bundled connections with detail view
   - Summary statistics (connection count, total bandwidth)
 
-- [ ] Animated flow direction indicators
-  - Moving dots along connection paths
-  - Speed based on traffic volume
-  - Beamer animation support
+- [x] Animated flow direction indicators
+  - Implemented bi-directional flow with different colors
+  - Multi-speed flow indicators with variable packet density
+  - Colored packet flow for protocol visualization
+  - Traffic intensity visualization with pulse effects
+  - Protocol-specific flow with color coding (HTTP, HTTPS, DNS, SSH, FTP, SMTP)
+  - Congestion visualization with traffic markers
+  - Moving arrows and dots along connection paths
 
 ### Low Priority
-- [ ] VPN tunnel special styling (dashed tube)
-- [ ] Wireless connections (wave patterns)
-- [ ] Fiber optic (light beam effects)
+- [x] VPN tunnel special styling (dashed tube)
+  - Implemented VPN tunnel with dashed tube effect
+  - Site-to-Site VPN with IPsec indicators
+  - Encrypted tunnel visualization
+- [x] Wireless connections (wave patterns)
+  - Implemented wireless connections with snake wave pattern
+  - WiFi connections with signal strength indicators (1-5 bars)
+  - Bluetooth connections with zigzag pattern
+  - Infrared connections with IR markers
+- [x] Fiber optic (light beam effects)
+  - Implemented fiber optic with multi-layer light beam effect
+  - High-speed fiber backbone visualization
+  - Star indicator for optical connections
+- [x] Additional specialized connection types
+  - Serial/legacy connections (RS-232)
+  - Satellite links with orbital arc paths
+  - Microwave links with expanding wave decoration
+  - Power over Ethernet (PoE) with lightning indicator
+  - USB connections
 - [ ] Time-series connection metrics
 
 ---
