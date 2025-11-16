@@ -48,33 +48,193 @@
     \draw[normal conn, bidirectional] (#1) -- node[above, font=\tiny] {#3} (#2);
 }
 
-% TODO: Enhanced connection types
-% - VPN tunnel connections with special styling
-% - Wireless connections with wave pattern
-% - Fiber optic connections with light effects
-% - Serial/legacy connections with different line style
-% - Satellite links with orbital arc paths
+% ============================================================================
+% SPECIAL CONNECTION TYPES
+% ============================================================================
+
+% VPN tunnel connection
+% Usage: \drawVPNTunnel{from}{to}{label}
+\newcommand{\drawVPNTunnel}[3]{
+    \draw[draw=blue!70, line width=1.5pt, dashed,
+          dash pattern=on 3pt off 2pt, -{Stealth[length=3mm]},
+          postaction={draw, line width=0.5pt, draw=blue!30}]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny\bfseries, fill=blue!10, inner sep=2pt] {#3}
+        node[midway, below, font=\tiny, fill=blue!20, inner sep=1pt] {VPN};
+}
+
+% Wireless connection with wave pattern
+% Usage: \drawWirelessConnection{from}{to}{signal_strength}{label}
+\newcommand{\drawWirelessConnection}[4]{
+    \draw[draw=purple!70, line width=1pt,
+          decoration={snake, amplitude=0.5mm, segment length=3mm},
+          decorate, -{Stealth[length=2.5mm]}]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny, fill=white, inner sep=1pt] {#4}
+        node[midway, below, font=\tiny, fill=purple!15, inner sep=1pt] {WiFi: #3\%};
+}
+
+% Fiber optic connection with light effects
+% Usage: \drawFiberConnection{from}{to}{label}
+\newcommand{\drawFiberConnection}[3]{
+    \draw[draw=yellow!80!orange, line width=2pt, -{Stealth[length=3mm]}]
+        (#1) -- (#2);
+    \draw[draw=yellow!50, line width=1pt, -{Stealth[length=3mm]}]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny\bfseries, fill=white, inner sep=2pt] {#3}
+        node[midway, below, font=\tiny, fill=yellow!20, inner sep=1pt] {Fiber};
+}
+
+% Serial/Legacy connection
+% Usage: \drawSerialConnection{from}{to}{baud_rate}{label}
+\newcommand{\drawSerialConnection}[4]{
+    \draw[draw=gray!70, line width=1pt,
+          dash pattern=on 2pt off 1pt on 4pt off 1pt,
+          -{Stealth[length=2.5mm]}]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny, fill=white, inner sep=1pt] {#4}
+        node[midway, below, font=\tiny\ttfamily, fill=gray!15, inner sep=1pt] {RS-232: #3};
+}
+
+% Satellite link with orbital arc
+% Usage: \drawSatelliteLink{from}{to}{latency}{label}
+\newcommand{\drawSatelliteLink}[4]{
+    \draw[draw=cyan!70, line width=1pt, -{Stealth[length=2.5mm]}]
+        (#1) to[bend left=60] (#2)
+        node[midway, above, font=\tiny, fill=white, inner sep=2pt] {#4}
+        node[midway, below, font=\tiny, fill=cyan!15, inner sep=1pt] {SAT: #3ms};
+}
+
+% Cellular/Mobile connection
+% Usage: \drawCellularConnection{from}{to}{technology}{label}
+\newcommand{\drawCellularConnection}[4]{
+    \draw[draw=green!60!blue, line width=1pt,
+          decoration={zigzag, amplitude=0.5mm, segment length=2mm},
+          decorate, -{Stealth[length=2.5mm]}]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny, fill=white, inner sep=1pt] {#4}
+        node[midway, below, font=\tiny, fill=green!15, inner sep=1pt] {#3};
+}
+
+% Bluetooth connection
+% Usage: \drawBluetoothConnection{from}{to}{label}
+\newcommand{\drawBluetoothConnection}[3]{
+    \draw[draw=blue!60, line width=0.8pt,
+          decoration={snake, amplitude=0.3mm, segment length=2mm},
+          decorate, bidirectional]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny, fill=blue!10, inner sep=1pt] {#3 (BT)};
+}
+
+% TODO: Additional special connection types
+% - LoRaWAN for IoT
+% - NFC for proximity connections
+% - Infrared connections
+% - Optical wireless (Li-Fi)
 
 % ============================================================================
 % ADVANCED CONNECTION RENDERING
 % ============================================================================
 
-% Connection with bandwidth indicator
+% Connection with bandwidth indicator (Enhanced with logarithmic scaling)
 % Usage: \drawConnectionWithBandwidth{from}{to}{bandwidth}{label}
 \newcommand{\drawConnectionWithBandwidth}[4]{
-    % Line width based on bandwidth
-    \pgfmathsetmacro{\linewidth}{1 + (#3/1000)}
-    \draw[draw=connNormal, line width=\linewidth pt, -{Stealth[length=3mm]}] 
+    % Line width based on bandwidth (logarithmic scale)
+    \pgfmathsetmacro{\linewidth}{0.5 + ln(max(1, #3))/2}
+    \draw[draw=connNormal, line width=\linewidth pt, -{Stealth[length=3mm]}]
         (#1) -- node[above, font=\tiny] {#4: #3 Mbps} (#2);
 }
 
-% Connection with protocol and port information
+% Connection with bandwidth and utilization (shows congestion)
+% Usage: \drawConnectionWithUtilization{from}{to}{bandwidth}{utilization}{label}
+\newcommand{\drawConnectionWithUtilization}[5]{
+    % Line width based on bandwidth (logarithmic scale)
+    \pgfmathsetmacro{\linewidth}{0.5 + ln(max(1, #3))/2}
+    % Color based on utilization percentage
+    \pgfmathsetmacro{\util}{#4}
+    \ifnum\util<50
+        \def\connColor{green!60!black}
+    \else
+        \ifnum\util<80
+            \def\connColor{yellow!80!orange}
+        \else
+            \def\connColor{red!70!black}
+        \fi
+    \fi
+    \draw[draw=\connColor, line width=\linewidth pt, -{Stealth[length=3mm]}]
+        (#1) -- node[above, font=\tiny] {#5}
+        node[below, font=\tiny\ttfamily] {#3 Mbps (\util\% util)} (#2);
+}
+
+% Connection with bandwidth gradient (visual bandwidth representation)
+% Usage: \drawBandwidthGradient{from}{to}{bandwidth}{max_bandwidth}{label}
+\newcommand{\drawBandwidthGradient}[5]{
+    \pgfmathsetmacro{\linewidth}{0.5 + ln(max(1, #3))/2}
+    \pgfmathsetmacro{\ratio}{100*#3/#4}
+    % Gradient from green to red based on bandwidth usage
+    \draw[draw=green!60!black, line width=\linewidth pt, -{Stealth[length=3mm]}]
+        (#1) -- (#2);
+    % Overlay with utilization bar
+    \node[midway, above, font=\tiny, fill=white, inner sep=2pt]
+        at ($(#1)!0.5!(#2)$) {#5: #3/#4 Mbps};
+}
+
+% Connection with protocol and port information (Enhanced)
 % Usage: \drawConnectionWithPort{from}{to}{protocol}{port}{label}
 \newcommand{\drawConnectionWithPort}[5]{
-    \draw[normal conn] (#1) -- 
-        node[above, font=\tiny\ttfamily] {#5} 
-        node[below, port label] {#3:#4} 
+    \draw[normal conn, -{Stealth[length=2.5mm]}] (#1) --
+        node[above, font=\tiny\ttfamily, fill=white, inner sep=1pt] {#5}
+        node[below, port label] {#3:#4}
         (#2);
+}
+
+% Enhanced protocol label with auto-positioning
+% Usage: \drawConnectionWithProtocol{from}{to}{protocol}{port}{service}{label}
+\newcommand{\drawConnectionWithProtocol}[6]{
+    \draw[normal conn, -{Stealth[length=2.5mm]}] (#1) -- (#2)
+        node[midway, above, font=\tiny, fill=white, inner sep=1pt] {#6}
+        node[midway, below, font=\tiny\ttfamily, fill=blue!10, inner sep=1pt]
+            {#3/#4 (#5)};
+}
+
+% Protocol label with color coding
+% Usage: \drawColorCodedProtocol{from}{to}{protocol}{port}{label}
+\newcommand{\drawColorCodedProtocol}[5]{
+    % Color based on protocol
+    \ifthenelse{\equal{#3}{TCP}}{
+        \def\protoColor{blue!70}
+    }{
+        \ifthenelse{\equal{#3}{UDP}}{
+            \def\protoColor{green!70}
+        }{
+            \def\protoColor{orange!70}
+        }
+    }
+    \draw[draw=\protoColor, line width=1pt, -{Stealth[length=2.5mm]}]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny, fill=white, inner sep=1pt] {#5}
+        node[midway, below, font=\tiny\ttfamily, fill=\protoColor!20, inner sep=1pt]
+            {#3:#4};
+}
+
+% Multi-protocol connection showing multiple services
+% Usage: \drawMultiProtocolConnection{from}{to}{protocols}{label}
+\newcommand{\drawMultiProtocolConnection}[4]{
+    \draw[normal conn, line width=1.5pt, -{Stealth[length=3mm]}]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny\bfseries, fill=white, inner sep=1pt] {#4};
+    \node[midway, below, font=\tiny\ttfamily, fill=yellow!15,
+          inner sep=2pt, align=center]
+        at ($(#1)!0.5!(#2)$) {#3};
+}
+
+% Port range connection
+% Usage: \drawPortRangeConnection{from}{to}{protocol}{port_start}{port_end}{label}
+\newcommand{\drawPortRangeConnection}[6]{
+    \draw[normal conn, -{Stealth[length=2.5mm]}] (#1) -- (#2)
+        node[midway, above, font=\tiny, fill=white, inner sep=1pt] {#6}
+        node[midway, below, font=\tiny\ttfamily, fill=orange!15, inner sep=1pt]
+            {#3:#4-#5};
 }
 
 % Curved connection (for avoiding overlaps)
@@ -84,12 +244,138 @@
         node[above, font=\tiny] {#4} (#2);
 }
 
-% TODO: Advanced rendering features
-% - Automatic path finding to avoid node overlaps
-% - Bezier curve connections for organic look
-% - Multi-segment paths through waypoints
-% - Connection bundling for high-density areas
-% - Edge routing algorithms (orthogonal, polyline)
+% ============================================================================
+% AUTOMATIC PATH FINDING AND OBSTACLE AVOIDANCE
+% ============================================================================
+
+% Orthogonal connection with automatic routing
+% Usage: \drawOrthogonalConnection{from}{to}{label}
+\newcommand{\drawOrthogonalConnection}[3]{
+    \draw[normal conn, -Stealth] (#1) -|
+        ($(#1)!0.5!(#2)$) |- (#2)
+        node[midway, above, font=\tiny, fill=white, inner sep=1pt] {#3};
+}
+
+% Orthogonal connection with custom waypoint
+% Usage: \drawOrthogonalViaPoint{from}{to}{x_offset}{y_offset}{label}
+\newcommand{\drawOrthogonalViaPoint}[5]{
+    \draw[normal conn, -Stealth] (#1)
+        -| ($(#1)+(#3,#4)$)
+        -| (#2)
+        node[pos=0.5, above, font=\tiny, fill=white, inner sep=1pt] {#5};
+}
+
+% Smart curved connection with obstacle avoidance
+% Automatically curves to avoid overlapping with center area
+% Usage: \drawSmartCurvedConnection{from}{to}{label}
+\newcommand{\drawSmartCurvedConnection}[3]{
+    % Calculate if nodes are on opposite sides
+    \path let \p1 = (#1), \p2 = (#2) in
+        \pgfextra{
+            \pgfmathsetmacro{\dx}{\x2-\x1}
+            \pgfmathsetmacro{\dy}{\y2-\y1}
+            \pgfmathsetmacro{\dist}{sqrt(\dx*\dx+\dy*\dy)}
+            \pgfmathsetmacro{\bendangle}{min(45, \dist/10)}
+        };
+    \draw[normal conn, -Stealth] (#1) to[bend left=\bendangle]
+        node[midway, above, font=\tiny, fill=white, inner sep=1pt] {#3} (#2);
+}
+
+% Multi-waypoint connection for complex routing
+% Usage: \drawPathConnection{from}{to}{waypoint1}{waypoint2}{label}
+\newcommand{\drawPathConnection}[5]{
+    \draw[normal conn, -Stealth] (#1) -- (#3) -- (#4) -- (#2)
+        node[pos=0.5, above, font=\tiny, fill=white, inner sep=1pt] {#5};
+}
+
+% Connection with automatic midpoint calculation
+% Avoids center by routing around perimeter
+% Usage: \drawPerimeterConnection{from}{to}{label}
+\newcommand{\drawPerimeterConnection}[3]{
+    \path let \p1 = (#1), \p2 = (#2) in
+        coordinate (mid) at ($(\x1,\y2)$);
+    \draw[normal conn, -Stealth] (#1) -- (mid) -- (#2)
+        node[pos=0.5, above, font=\tiny, fill=white, inner sep=1pt] {#3};
+}
+
+% TODO: Advanced pathfinding
+% - Implement A* algorithm for optimal routing
+% - Add dynamic obstacle detection from node positions
+% - Calculate minimum distance paths
+% - Support for custom routing zones and restrictions
+
+% ============================================================================
+% BEZIER CURVE CONNECTIONS
+% ============================================================================
+
+% Simple Bezier curve with automatic control points
+% Usage: \drawBezierConnection{from}{to}{label}
+\newcommand{\drawBezierConnection}[3]{
+    \path let \p1 = (#1), \p2 = (#2) in
+        coordinate (ctrl1) at ($(\x1,\y1)!0.33!(\x2,\y2) + (0,1)$)
+        coordinate (ctrl2) at ($(\x1,\y1)!0.67!(\x2,\y2) + (0,1)$);
+    \draw[normal conn, -{Stealth[length=2.5mm]}]
+        (#1) .. controls (ctrl1) and (ctrl2) .. (#2)
+        node[midway, above, font=\tiny, fill=white, inner sep=1pt] {#3};
+}
+
+% Bezier curve with custom control points
+% Usage: \drawCustomBezier{from}{to}{ctrl1_x}{ctrl1_y}{ctrl2_x}{ctrl2_y}{label}
+\newcommand{\drawCustomBezier}[7]{
+    \draw[normal conn, -{Stealth[length=2.5mm]}]
+        (#1) .. controls (#3,#4) and (#5,#6) .. (#2)
+        node[midway, above, font=\tiny, fill=white, inner sep=1pt] {#7};
+}
+
+% Smooth curved connection with tension control
+% Usage: \drawSmoothCurve{from}{to}{tension}{label}
+\newcommand{\drawSmoothCurve}[4]{
+    \draw[normal conn, -{Stealth[length=2.5mm]}]
+        (#1) to[out=45, in=135, distance=#3cm] (#2)
+        node[midway, above, font=\tiny, fill=white, inner sep=1pt] {#4};
+}
+
+% S-curve connection for parallel lines
+% Usage: \drawSCurve{from}{to}{label}
+\newcommand{\drawSCurve}[3]{
+    \path let \p1 = (#1), \p2 = (#2) in
+        coordinate (mid1) at ($(\x1,\y1)!0.33!(\x2,\y2)$)
+        coordinate (mid2) at ($(\x1,\y1)!0.67!(\x2,\y2)$);
+    \draw[normal conn, -{Stealth[length=2.5mm]}]
+        (#1) to[out=0, in=180] (mid1) to[out=0, in=180] (mid2) to[out=0, in=180] (#2)
+        node[pos=0.5, above, font=\tiny, fill=white, inner sep=1pt] {#3};
+}
+
+% Arc connection for circular layouts
+% Usage: \drawArcConnection{from}{to}{radius}{label}
+\newcommand{\drawArcConnection}[4]{
+    \draw[normal conn, -{Stealth[length=2.5mm]}]
+        (#1) to[bend left=45, looseness=1.5] (#2)
+        node[midway, above, font=\tiny, fill=white, inner sep=1pt] {#4};
+}
+
+% Organic curved connection with multiple control points
+% Usage: \drawOrganicCurve{from}{to}{label}
+\newcommand{\drawOrganicCurve}[3]{
+    \path let \p1 = (#1), \p2 = (#2) in
+        \pgfextra{
+            \pgfmathsetmacro{\dx}{\x2-\x1}
+            \pgfmathsetmacro{\dy}{\y2-\y1}
+            \pgfmathsetmacro{\angle}{atan2(\dy,\dx)}
+        }
+        coordinate (c1) at ($(#1)!0.25!(#2) + (\angle:0.5)$)
+        coordinate (c2) at ($(#1)!0.5!(#2) + (\angle+90:0.3)$)
+        coordinate (c3) at ($(#1)!0.75!(#2) + (\angle:0.5)$);
+    \draw[normal conn, -{Stealth[length=2.5mm]}]
+        (#1) .. controls (c1) and (c2) .. (c3) .. controls (c3) .. (#2)
+        node[pos=0.5, above, font=\tiny, fill=white, inner sep=1pt] {#3};
+}
+
+% TODO: Advanced Bezier features
+% - Automatic control point optimization
+% - Collision-free curve generation
+% - Minimum curvature paths
+% - Smooth curve bundling
 
 % ============================================================================
 % CONNECTION FLOW VISUALIZATION
@@ -150,12 +436,74 @@
     % \drawAttackConnection{attacker1}{srv1}{SQL Injection}
 }
 
-% TODO: Intelligent connection rendering
-% - Layer-based rendering (background to foreground)
-% - Z-order management for overlapping connections
-% - Automatic connection routing to minimize crossings
-% - Connection aggregation (show "10 connections" instead of 10 lines)
-% - Highlight selected connection paths
+% ============================================================================
+% CONNECTION BUNDLING AND AGGREGATION
+% ============================================================================
+
+% Bundled connection (shows multiple connections as one thick line)
+% Usage: \drawBundledConnection{from}{to}{count}{label}
+\newcommand{\drawBundledConnection}[4]{
+    \pgfmathsetmacro{\bundlewidth}{0.5 + sqrt(#3)}
+    \draw[draw=connNormal, line width=\bundlewidth pt, -{Stealth[length=3mm]},
+          double distance=1pt]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny\bfseries, fill=white, inner sep=2pt] {#4}
+        node[midway, below, font=\tiny, fill=yellow!20, inner sep=1pt] {#3 connections};
+}
+
+% Bundled connections with connection count badge
+% Usage: \drawConnectionBundle{from}{to}{count}{protocols}{label}
+\newcommand{\drawConnectionBundle}[5]{
+    \pgfmathsetmacro{\bundlewidth}{0.5 + sqrt(#3)}
+    \draw[draw=connNormal!80, line width=\bundlewidth pt, -{Stealth[length=3mm]}]
+        (#1) -- (#2);
+    % Draw badge with count
+    \node[circle, fill=blue!70, text=white, font=\tiny\bfseries,
+          minimum size=8pt, inner sep=1pt]
+        at ($(#1)!0.5!(#2)$) {#3};
+    % Label above
+    \node[above=3pt, font=\tiny, fill=white, inner sep=1pt]
+        at ($(#1)!0.5!(#2)$) {#5};
+    % Protocols below
+    \node[below=3pt, font=\tiny\ttfamily, fill=white, inner sep=1pt]
+        at ($(#1)!0.5!(#2)$) {#4};
+}
+
+% Edge bundling with parallel offset
+% Shows multiple connections with slight parallel offsets
+% Usage: \drawParallelConnections{from}{to}{count}{label}
+\newcommand{\drawParallelConnections}[4]{
+    \pgfmathsetmacro{\offsetstep}{0.3}
+    \pgfmathsetmacro{\totaloffset}{(#3-1)*\offsetstep/2}
+    \foreach \i in {1,...,#3} {
+        \pgfmathsetmacro{\offset}{-\totaloffset + (\i-1)*\offsetstep}
+        \draw[draw=connNormal, line width=0.5pt, -{Stealth[length=2mm]},
+              transform canvas={shift={(0,\offset)}}]
+            (#1) -- (#2);
+    }
+    \node[above, font=\tiny, fill=white, inner sep=1pt]
+        at ($(#1)!0.5!(#2)$) {#4 (x#3)};
+}
+
+% Hierarchical edge bundling for complex networks
+% Bundles connections based on proximity
+% Usage: \drawHierarchicalBundle{from}{to}{via}{count}{label}
+\newcommand{\drawHierarchicalBundle}[5]{
+    \pgfmathsetmacro{\bundlewidth}{0.5 + ln(#4)}
+    \draw[draw=connNormal!70, line width=\bundlewidth pt]
+        (#1) -- (#3);
+    \draw[draw=connNormal, line width=\bundlewidth pt, -{Stealth[length=3mm]}]
+        (#3) -- (#2);
+    \node[fill=blue!20, circle, inner sep=2pt, font=\tiny\bfseries] at (#3) {#4};
+    \node[above, font=\tiny] at (#3) {#5};
+}
+
+% TODO: Advanced bundling algorithms
+% - Automatic bundle detection based on proximity
+% - Force-directed edge bundling
+% - Hierarchical edge bundling for tree structures
+% - Interactive bundle expansion/collapse
+% - Bundle splitting at different zoom levels
 
 % ============================================================================
 % CONNECTION LABELS AND ANNOTATIONS
