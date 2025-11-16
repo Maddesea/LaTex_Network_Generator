@@ -152,9 +152,27 @@ In `network_diagram_generator.tex`:
 
 The system supports importing network topology data from various formats, ideal for automation and integration with existing tools.
 
-### CSV Import
+### 🆕 Auto-Positioning (No Coordinates!)
 
-Import network data from spreadsheet-compatible CSV files:
+The easiest way to start! Import nodes without manual positioning:
+
+```csv
+id,type,ip,label
+srv1,server,192.168.1.10,Web Server
+fw1,firewall,192.168.1.1,Firewall
+db1,server,192.168.20.10,Database
+```
+
+```latex
+\input{data_import.tex}
+\importNodesAutoPositioned{nodes-simple.csv}
+```
+
+Nodes automatically arranged in a grid layout. Perfect for rapid prototyping!
+
+### CSV Import (Traditional)
+
+Import network data with manual positioning from spreadsheet-compatible CSV files:
 
 ```latex
 \input{data_import.tex}
@@ -202,6 +220,22 @@ Automatically extracts:
 - Operating system detection
 - Service version information
 
+### 🆕 Nessus Vulnerability Scan Import
+
+Import vulnerability assessment data directly from Nessus scans (requires LuaLaTeX):
+
+```latex
+\input{data_import.tex}
+\importNessusXML{nessus-scan.nessus}
+```
+
+Features:
+- Automatic vulnerability severity detection (Critical/High/Medium/Low)
+- CVE and CVSS score extraction and display
+- Threat badge auto-assignment based on risk
+- Vulnerability count per host (C/H/M format)
+- Perfect for security audit and compliance reports
+
 ### JSON/YAML Import
 
 Import from structured data files (requires LuaLaTeX):
@@ -213,6 +247,16 @@ Import from structured data files (requires LuaLaTeX):
 % YAML format (human-readable)
 \importNetworkFromYAML{network.yaml}
 ```
+
+### 🆕 Auto-Subnet Zone Generation
+
+Automatically group nodes by IP subnet (requires LuaLaTeX):
+
+```latex
+\autoGenerateSubnetZones
+```
+
+Analyzes all IP addresses and creates color-coded security zones automatically!
 
 See `examples/data_import/` for complete examples and file format specifications.
 
@@ -293,18 +337,23 @@ This system is designed for **multiple agents/developers** to work simultaneousl
 - [ ] Security compliance dashboard (NIST, CIS, PCI-DSS)
 
 ### Agent 6: Data Import/Export (`data_import.tex`)
-**Completed Features:**
+**Completed Features (v1.1):**
 - [x] JSON/YAML parser for network data input
 - [x] CSV import for bulk node creation
 - [x] Nmap XML output parser
-- [x] Export to GraphML/DOT format (basic implementation)
+- [x] Nessus vulnerability scan integration ⭐ NEW
+- [x] Auto-positioning algorithm (grid layout) ⭐ NEW
+- [x] IP subnet detection and auto-grouping ⭐ NEW
+- [x] IPv4 validation and parsing ⭐ NEW
+- [x] Connection inference from port data ⭐ NEW
+- [x] Export to GraphML/DOT format
 
 **Priority TODOs:**
-- [ ] Nessus scan result integration
 - [ ] Database connectivity for live network data
 - [ ] REST API for dynamic diagram generation
-- [ ] Auto-position calculation for imported nodes
 - [ ] Enhanced JSON/YAML parsing with proper libraries
+- [ ] Force-directed auto-layout algorithm
+- [ ] SIEM integration (Splunk, ELK)
 
 ## Performance Optimization
 
