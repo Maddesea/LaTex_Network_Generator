@@ -129,23 +129,167 @@
 % - Supply chain attack visualization
 
 % ============================================================================
-% THREAT TIMELINE AND PROGRESSION
+% ATTACK KILL CHAIN PROGRESSION (LOCKHEED MARTIN)
 % ============================================================================
 
-% Show attack kill chain progression
-% Usage: \drawKillChain{stages}{current_stage}
-\newcommand{\drawKillChain}[2]{
-    % Reconnaissance, Weaponization, Delivery, Exploitation, 
-    % Installation, Command & Control, Actions on Objectives
-    % Draw progression with current stage highlighted
+% Show attack kill chain progression with 7 stages
+% Usage: \drawKillChain{x}{y}{current_stage}{defenses}
+% Stages: 1=Reconnaissance, 2=Weaponization, 3=Delivery, 4=Exploitation,
+%         5=Installation, 6=Command & Control, 7=Actions on Objectives
+% Defenses: comma-separated list of stage numbers with defensive controls
+\newcommand{\drawKillChain}[4]{
+    \pgfmathsetmacro{\boxwidth}{3.5}
+    \pgfmathsetmacro{\boxheight}{0.6}
+    \pgfmathsetmacro{\xpos}{#1}
+    \pgfmathsetmacro{\ypos}{#2}
+
+    \node[anchor=north west, font=\small\bfseries] at (\xpos, \ypos) {Cyber Kill Chain};
+    \pgfmathsetmacro{\ypos}{\ypos - 0.5}
+
+    % Stage 1: Reconnaissance
+    \pgfmathsetmacro{\currentstage}{#3}
+    \ifthenelse{\lengthtest{\currentstage pt > 0.9 pt}}{
+        \def\stagecolor{threatCritical}
+        \def\stagelabel{ACTIVE}
+    }{\def\stagecolor{gray!30}\def\stagelabel{}}
+
+    \node[draw=\stagecolor, fill=\stagecolor!20, minimum width=\boxwidth cm,
+          minimum height=\boxheight cm, anchor=north west] at (\xpos, \ypos) {
+        \small\textbf{1. Reconnaissance} \tiny\stagelabel
+    };
+    \pgfmathsetmacro{\ypos}{\ypos - \boxheight - 0.05}
+
+    % Stage 2: Weaponization
+    \ifthenelse{\lengthtest{\currentstage pt > 1.9 pt}}{
+        \def\stagecolor{threatCritical}
+        \def\stagelabel{ACTIVE}
+    }{\def\stagecolor{gray!30}\def\stagelabel{}}
+
+    \node[draw=\stagecolor, fill=\stagecolor!20, minimum width=\boxwidth cm,
+          minimum height=\boxheight cm, anchor=north west] at (\xpos, \ypos) {
+        \small\textbf{2. Weaponization} \tiny\stagelabel
+    };
+    \pgfmathsetmacro{\ypos}{\ypos - \boxheight - 0.05}
+
+    % Stage 3: Delivery
+    \ifthenelse{\lengthtest{\currentstage pt > 2.9 pt}}{
+        \def\stagecolor{threatCritical}
+        \def\stagelabel{ACTIVE}
+    }{\def\stagecolor{gray!30}\def\stagelabel{}}
+
+    \node[draw=\stagecolor, fill=\stagecolor!20, minimum width=\boxwidth cm,
+          minimum height=\boxheight cm, anchor=north west] at (\xpos, \ypos) {
+        \small\textbf{3. Delivery} \tiny\stagelabel
+    };
+    \pgfmathsetmacro{\ypos}{\ypos - \boxheight - 0.05}
+
+    % Stage 4: Exploitation
+    \ifthenelse{\lengthtest{\currentstage pt > 3.9 pt}}{
+        \def\stagecolor{threatCritical}
+        \def\stagelabel{ACTIVE}
+    }{\def\stagecolor{gray!30}\def\stagelabel{}}
+
+    \node[draw=\stagecolor, fill=\stagecolor!20, minimum width=\boxwidth cm,
+          minimum height=\boxheight cm, anchor=north west] at (\xpos, \ypos) {
+        \small\textbf{4. Exploitation} \tiny\stagelabel
+    };
+    \pgfmathsetmacro{\ypos}{\ypos - \boxheight - 0.05}
+
+    % Stage 5: Installation
+    \ifthenelse{\lengthtest{\currentstage pt > 4.9 pt}}{
+        \def\stagecolor{threatCritical}
+        \def\stagelabel{ACTIVE}
+    }{\def\stagecolor{gray!30}\def\stagelabel{}}
+
+    \node[draw=\stagecolor, fill=\stagecolor!20, minimum width=\boxwidth cm,
+          minimum height=\boxheight cm, anchor=north west] at (\xpos, \ypos) {
+        \small\textbf{5. Installation} \tiny\stagelabel
+    };
+    \pgfmathsetmacro{\ypos}{\ypos - \boxheight - 0.05}
+
+    % Stage 6: Command & Control
+    \ifthenelse{\lengthtest{\currentstage pt > 5.9 pt}}{
+        \def\stagecolor{threatCritical}
+        \def\stagelabel{ACTIVE}
+    }{\def\stagecolor{gray!30}\def\stagelabel{}}
+
+    \node[draw=\stagecolor, fill=\stagecolor!20, minimum width=\boxwidth cm,
+          minimum height=\boxheight cm, anchor=north west] at (\xpos, \ypos) {
+        \small\textbf{6. Command \& Control} \tiny\stagelabel
+    };
+    \pgfmathsetmacro{\ypos}{\ypos - \boxheight - 0.05}
+
+    % Stage 7: Actions on Objectives
+    \ifthenelse{\lengthtest{\currentstage pt > 6.9 pt}}{
+        \def\stagecolor{threatCritical}
+        \def\stagelabel{ACTIVE}
+    }{\def\stagecolor{gray!30}\def\stagelabel{}}
+
+    \node[draw=\stagecolor, fill=\stagecolor!20, minimum width=\boxwidth cm,
+          minimum height=\boxheight cm, anchor=north west] at (\xpos, \ypos) {
+        \small\textbf{7. Actions on Objectives} \tiny\stagelabel
+    };
 }
 
-% TODO: Attack progression visualization
-% - MITRE ATT&CK framework mapping
-% - Kill chain stage indicators
-% - Time-based attack timeline
-% - Infection spread animation
-% - Attack vector tree visualization
+% Show defensive gaps in kill chain
+% Usage: \drawDefensiveGaps{x}{y}{protected_stages}{vulnerable_stages}
+\newcommand{\drawDefensiveGaps}[4]{
+    \node[legend box, anchor=north west, minimum width=4cm,
+          draw=threatMedium, line width=1.5pt] at (#1,#2) {
+        \begin{tabular}{p{3.5cm}}
+            \multicolumn{1}{c}{\textbf{Defensive Posture}} \\
+            \hline
+            \textcolor{green!60!black}{\textbf{Protected Stages:}} \\
+            #3 \\
+            \hline
+            \textcolor{threatHigh}{\textbf{Vulnerable Stages:}} \\
+            #4 \\
+        \end{tabular}
+    };
+}
+
+% NIST Cybersecurity Framework mapping
+% Usage: \drawNISTMapping{x}{y}{identify}{protect}{detect}{respond}{recover}
+\newcommand{\drawNISTMapping}[7]{
+    \node[legend box, anchor=north west, minimum width=5cm,
+          draw=blue!70, line width=2pt] at (#1,#2) {
+        \begin{tabular}{lc}
+            \multicolumn{2}{c}{\textbf{NIST CSF Coverage}} \\
+            \hline
+            \textbf{Identify} & #3\% \\
+            \textbf{Protect} & #4\% \\
+            \textbf{Detect} & #5\% \\
+            \textbf{Respond} & #6\% \\
+            \textbf{Recover} & #7\% \\
+        \end{tabular}
+    };
+}
+
+% Attack timeline visualization
+% Usage: \drawAttackTimeline{x}{y}{start_time}{current_time}{events}
+\newcommand{\drawAttackTimeline}[5]{
+    \node[legend box, anchor=north west, minimum width=6cm,
+          draw=threatHigh, line width=1.5pt] at (#1,#2) {
+        \begin{tabular}{ll}
+            \multicolumn{2}{c}{\textbf{Attack Timeline}} \\
+            \hline
+            \textbf{Attack Started:} & #3 \\
+            \textbf{Current Time:} & #4 \\
+            \hline
+            \multicolumn{2}{l}{\textbf{Key Events:}} \\
+            \multicolumn{2}{p{5.5cm}}{#5} \\
+        \end{tabular}
+    };
+}
+
+% Attack path visualization
+% Usage: \drawAttackPath{source}{intermediate}{target}{stage}
+\newcommand{\drawAttackPath}[4]{
+    \draw[attack conn, line width=3pt, -{Stealth[length=5mm]}]
+        (#1) -- (#2) node[midway, above, font=\tiny, fill=white, inner sep=1pt] {Stage #4};
+    \draw[attack conn, line width=3pt, -{Stealth[length=5mm]}]
+        (#2) -- (#3) node[midway, above, font=\tiny, fill=white, inner sep=1pt] {Stage #4};
+}
 
 % ============================================================================
 % SECURITY ZONES AND BOUNDARIES
@@ -209,13 +353,252 @@
         at (#1.north east) {#2:#3};
 }
 
-% TODO: Vulnerability management
-% - CVE database integration
-% - CVSS scoring visualization
-% - Exploit availability indicators
-% - Patch availability status
-% - Vulnerability age indicators
-% - Risk prioritization markers
+% ============================================================================
+% ENHANCED CVSS SCORE VISUALIZATION
+% ============================================================================
+
+% Parse CVSS vector and display comprehensive score breakdown
+% Usage: \drawCVSSScore{x}{y}{cve}{base_score}{temporal_score}{environmental_score}{vector}
+\newcommand{\drawCVSSScore}[7]{
+    % Determine severity level based on base score
+    \pgfmathsetmacro{\basescore}{#4}
+    \ifthenelse{\lengthtest{\basescore pt > 9.0 pt}}{
+        \def\cvsscolor{threatCritical}
+        \def\severitylabel{CRITICAL}
+    }{
+    \ifthenelse{\lengthtest{\basescore pt > 7.0 pt}}{
+        \def\cvsscolor{threatHigh}
+        \def\severitylabel{HIGH}
+    }{
+    \ifthenelse{\lengthtest{\basescore pt > 4.0 pt}}{
+        \def\cvsscolor{threatMedium}
+        \def\severitylabel{MEDIUM}
+    }{
+    \ifthenelse{\lengthtest{\basescore pt > 0.1 pt}}{
+        \def\cvsscolor{threatLow}
+        \def\severitylabel{LOW}
+    }{
+        \def\cvsscolor{threatInfo}
+        \def\severitylabel{INFO}
+    }}}}
+
+    % Draw CVSS score box
+    \node[legend box, anchor=north west, minimum width=3.5cm,
+          draw=\cvsscolor, line width=2pt] at (#1,#2) {
+        \begin{tabular}{ll}
+            \multicolumn{2}{c}{\textbf{\textcolor{\cvsscolor}{#3}}} \\
+            \hline
+            \textbf{Severity:} & \textcolor{\cvsscolor}{\severitylabel} \\
+            \textbf{Base:} & #4 \\
+            \textbf{Temporal:} & #5 \\
+            \textbf{Environmental:} & #6 \\
+            \hline
+            \multicolumn{2}{l}{\tiny\ttfamily #7} \\
+        \end{tabular}
+    };
+}
+
+% Compact CVSS badge for node overlay
+% Usage: \cvssbadge{node}{cve}{score}
+\newcommand{\cvssbadge}[3]{
+    \pgfmathsetmacro{\score}{#3}
+    \ifthenelse{\lengthtest{\score pt > 9.0 pt}}{
+        \def\badgecolor{threatCritical}
+    }{
+    \ifthenelse{\lengthtest{\score pt > 7.0 pt}}{
+        \def\badgecolor{threatHigh}
+    }{
+    \ifthenelse{\lengthtest{\score pt > 4.0 pt}}{
+        \def\badgecolor{threatMedium}
+    }{
+        \def\badgecolor{threatLow}
+    }}}
+
+    \node[draw=\badgecolor, fill=\badgecolor, text=white,
+          font=\tiny\bfseries, rounded corners=2pt, inner sep=2pt,
+          anchor=north west] at (#1.north west) {#3};
+    \node[draw=\badgecolor, fill=white, text=\badgecolor,
+          font=\tiny\ttfamily, rounded corners=2pt, inner sep=2pt,
+          anchor=south west] at (#1.south west) {#2};
+}
+
+% CVSS metrics breakdown visualization
+% Usage: \drawCVSSMetrics{x}{y}{AV}{AC}{PR}{UI}{S}{C}{I}{A}
+% AV=Attack Vector, AC=Attack Complexity, PR=Privileges Required,
+% UI=User Interaction, S=Scope, C=Confidentiality, I=Integrity, A=Availability
+\newcommand{\drawCVSSMetrics}[11]{
+    \node[legend box, anchor=north west, minimum width=4cm] at (#1,#2) {
+        \begin{tabular}{ll}
+            \multicolumn{2}{c}{\textbf{CVSS v3.1 Metrics}} \\
+            \hline
+            \textbf{Attack Vector:} & #3 \\
+            \textbf{Attack Complexity:} & #4 \\
+            \textbf{Privileges Required:} & #5 \\
+            \textbf{User Interaction:} & #6 \\
+            \textbf{Scope:} & #7 \\
+            \hline
+            \textbf{Confidentiality:} & \textcolor{threatHigh}{#8} \\
+            \textbf{Integrity:} & \textcolor{threatMedium}{#9} \\
+            \textbf{Availability:} & \textcolor{threatMedium}{#{10}} \\
+        \end{tabular}
+    };
+}
+
+% ============================================================================
+% MITRE ATT&CK FRAMEWORK MAPPING
+% ============================================================================
+
+% Display MITRE ATT&CK technique
+% Usage: \drawMITREAttack{x}{y}{technique_id}{technique_name}{tactic}
+\newcommand{\drawMITREAttack}[5]{
+    \node[legend box, anchor=north west, minimum width=4.5cm,
+          draw=threatHigh, line width=1.5pt] at (#1,#2) {
+        \begin{tabular}{ll}
+            \multicolumn{2}{c}{\textbf{\textcolor{threatHigh}{MITRE ATT\&CK}}} \\
+            \hline
+            \textbf{Technique:} & \texttt{#3} \\
+            \textbf{Name:} & #4 \\
+            \textbf{Tactic:} & \textcolor{threatMedium}{#5} \\
+            \hline
+            \multicolumn{2}{l}{\tiny attack.mitre.org/techniques/#3} \\
+        \end{tabular}
+    };
+}
+
+% MITRE ATT&CK badge for nodes
+% Usage: \mitrebadge{node}{technique_id}
+\newcommand{\mitrebadge}[2]{
+    \node[draw=threatHigh, fill=threatHigh, text=white,
+          font=\tiny\bfseries\ttfamily, rounded corners=1pt, inner sep=1pt,
+          anchor=north east] at (#1.north east) [xshift=-0.1cm, yshift=-0.1cm] {#2};
+}
+
+% Draw MITRE ATT&CK kill chain progression
+% Usage: \drawMITREKillChain{x}{y}{current_stage}
+% Stages: Reconnaissance, Resource Development, Initial Access, Execution,
+%         Persistence, Privilege Escalation, Defense Evasion, Credential Access,
+%         Discovery, Lateral Movement, Collection, Command & Control, Exfiltration,
+%         Impact
+\newcommand{\drawMITREKillChain}[3]{
+    \pgfmathsetmacro{\boxwidth}{1.8}
+    \pgfmathsetmacro{\boxheight}{0.6}
+    \pgfmathsetmacro{\ypos}{#2}
+
+    \node[anchor=north west, font=\small\bfseries] at (#1, \ypos) {MITRE ATT\&CK Kill Chain};
+    \pgfmathsetmacro{\ypos}{\ypos - 0.4}
+
+    % Stage 1: Reconnaissance
+    \ifthenelse{\equal{#3}{1} \OR \equal{#3}{Reconnaissance}}{
+        \def\stagecolor{threatCritical}
+    }{\def\stagecolor{gray!30}}
+    \node[draw=\stagecolor, fill=\stagecolor!20, minimum width=\boxwidth cm,
+          minimum height=\boxheight cm, font=\tiny, anchor=north west]
+          at (#1, \ypos) {Reconnaissance};
+
+    \pgfmathsetmacro{\ypos}{\ypos - \boxheight - 0.1}
+
+    % Stage 2: Initial Access
+    \ifthenelse{\equal{#3}{2} \OR \equal{#3}{Initial Access}}{
+        \def\stagecolor{threatCritical}
+    }{\def\stagecolor{gray!30}}
+    \node[draw=\stagecolor, fill=\stagecolor!20, minimum width=\boxwidth cm,
+          minimum height=\boxheight cm, font=\tiny, anchor=north west]
+          at (#1, \ypos) {Initial Access};
+
+    \pgfmathsetmacro{\ypos}{\ypos - \boxheight - 0.1}
+
+    % Stage 3: Execution
+    \ifthenelse{\equal{#3}{3} \OR \equal{#3}{Execution}}{
+        \def\stagecolor{threatCritical}
+    }{\def\stagecolor{gray!30}}
+    \node[draw=\stagecolor, fill=\stagecolor!20, minimum width=\boxwidth cm,
+          minimum height=\boxheight cm, font=\tiny, anchor=north west]
+          at (#1, \ypos) {Execution};
+
+    \pgfmathsetmacro{\ypos}{\ypos - \boxheight - 0.1}
+
+    % Stage 4: Persistence
+    \ifthenelse{\equal{#3}{4} \OR \equal{#3}{Persistence}}{
+        \def\stagecolor{threatCritical}
+    }{\def\stagecolor{gray!30}}
+    \node[draw=\stagecolor, fill=\stagecolor!20, minimum width=\boxwidth cm,
+          minimum height=\boxheight cm, font=\tiny, anchor=north west]
+          at (#1, \ypos) {Persistence};
+
+    \pgfmathsetmacro{\ypos}{\ypos - \boxheight - 0.1}
+
+    % Stage 5: Privilege Escalation
+    \ifthenelse{\equal{#3}{5} \OR \equal{#3}{Privilege Escalation}}{
+        \def\stagecolor{threatCritical}
+    }{\def\stagecolor{gray!30}}
+    \node[draw=\stagecolor, fill=\stagecolor!20, minimum width=\boxwidth cm,
+          minimum height=\boxheight cm, font=\tiny, anchor=north west]
+          at (#1, \ypos) {Privilege Esc.};
+
+    \pgfmathsetmacro{\ypos}{\ypos - \boxheight - 0.1}
+
+    % Stage 6: Defense Evasion
+    \ifthenelse{\equal{#3}{6} \OR \equal{#3}{Defense Evasion}}{
+        \def\stagecolor{threatCritical}
+    }{\def\stagecolor{gray!30}}
+    \node[draw=\stagecolor, fill=\stagecolor!20, minimum width=\boxwidth cm,
+          minimum height=\boxheight cm, font=\tiny, anchor=north west]
+          at (#1, \ypos) {Defense Evasion};
+
+    \pgfmathsetmacro{\ypos}{\ypos - \boxheight - 0.1}
+
+    % Stage 7: Lateral Movement
+    \ifthenelse{\equal{#3}{7} \OR \equal{#3}{Lateral Movement}}{
+        \def\stagecolor{threatCritical}
+    }{\def\stagecolor{gray!30}}
+    \node[draw=\stagecolor, fill=\stagecolor!20, minimum width=\boxwidth cm,
+          minimum height=\boxheight cm, font=\tiny, anchor=north west]
+          at (#1, \ypos) {Lateral Movement};
+
+    \pgfmathsetmacro{\ypos}{\ypos - \boxheight - 0.1}
+
+    % Stage 8: Collection & Exfiltration
+    \ifthenelse{\equal{#3}{8} \OR \equal{#3}{Exfiltration}}{
+        \def\stagecolor{threatCritical}
+    }{\def\stagecolor{gray!30}}
+    \node[draw=\stagecolor, fill=\stagecolor!20, minimum width=\boxwidth cm,
+          minimum height=\boxheight cm, font=\tiny, anchor=north west]
+          at (#1, \ypos) {Exfiltration};
+
+    \pgfmathsetmacro{\ypos}{\ypos - \boxheight - 0.1}
+
+    % Stage 9: Impact
+    \ifthenelse{\equal{#3}{9} \OR \equal{#3}{Impact}}{
+        \def\stagecolor{threatCritical}
+    }{\def\stagecolor{gray!30}}
+    \node[draw=\stagecolor, fill=\stagecolor!20, minimum width=\boxwidth cm,
+          minimum height=\boxheight cm, font=\tiny, anchor=north west]
+          at (#1, \ypos) {Impact};
+}
+
+% Map technique to tactic with visual connection
+% Usage: \mapTechniqueToTactic{node}{technique_id}{tactic_name}
+\newcommand{\mapTechniqueToTactic}[3]{
+    \node[above, font=\tiny\bfseries\ttfamily, text=threatHigh,
+          fill=white, draw=threatHigh, rounded corners=1pt,
+          inner sep=1pt] at (#1.north) [yshift=0.3cm] {
+        #2: #3
+    };
+}
+
+% Show multiple MITRE techniques for complex attack
+% Usage: \drawMITRETTP{x}{y}{title}{techniques_list}
+\newcommand{\drawMITRETTP}[4]{
+    \node[legend box, anchor=north west, minimum width=5cm,
+          draw=threatHigh, line width=1.5pt, fill=white] at (#1,#2) {
+        \begin{tabular}{p{4.5cm}}
+            \multicolumn{1}{c}{\textbf{\textcolor{threatHigh}{#3}}} \\
+            \hline
+            \textbf{Techniques Used:} \\
+            #4 \\
+        \end{tabular}
+    };
+}
 
 % ============================================================================
 % THREAT ACTOR VISUALIZATION
@@ -231,23 +614,145 @@
     };
 }
 
-% Show threat intelligence indicators
-% Usage: \markIOC{node}{ioc_type}{value}
-\newcommand{\markIOC}[3]{
+% ============================================================================
+% ENHANCED IOC (INDICATORS OF COMPROMISE) VISUALIZATION
+% ============================================================================
+
+% Show threat intelligence indicators with type-specific formatting
+% Usage: \markIOC{node}{ioc_type}{value}{reputation_score}
+\newcommand{\markIOC}[4]{
     % IOC = Indicator of Compromise
-    \node[font=\tiny\ttfamily, fill=yellow!30, 
-          draw=orange, inner sep=2pt, anchor=south] 
+    % Determine color based on reputation score (0-100, higher is worse)
+    \pgfmathsetmacro{\repscore}{#4}
+    \ifthenelse{\lengthtest{\repscore pt > 80 pt}}{
+        \def\ioccolor{threatCritical}
+    }{
+    \ifthenelse{\lengthtest{\repscore pt > 60 pt}}{
+        \def\ioccolor{threatHigh}
+    }{
+    \ifthenelse{\lengthtest{\repscore pt > 40 pt}}{
+        \def\ioccolor{threatMedium}
+    }{
+        \def\ioccolor{threatLow}
+    }}}
+
+    \node[font=\tiny\ttfamily, fill=\ioccolor!20,
+          draw=\ioccolor, inner sep=2pt, anchor=south,
+          line width=1pt]
         at (#1.south) [yshift=-0.3cm] {
-        #2: #3
+        #2: #3 (Rep: #4)
     };
 }
 
-% TODO: Threat intelligence integration
-% - IOC (Indicators of Compromise) visualization
-% - TTP (Tactics, Techniques, Procedures) mapping
-% - Threat actor attribution with confidence levels
-% - Threat feed integration
-% - Reputation scoring for IPs/domains
+% Display malicious IP address indicator
+% Usage: \markMaliciousIP{node}{ip_address}{reputation}{threat_feed}
+\newcommand{\markMaliciousIP}[4]{
+    \pgfmathsetmacro{\repscore}{#3}
+    \ifthenelse{\lengthtest{\repscore pt > 80 pt}}{
+        \def\ipcolor{threatCritical}
+    }{\def\ipcolor{threatHigh}}
+
+    \node[font=\tiny\ttfamily, fill=\ipcolor!30,
+          draw=\ipcolor, line width=2pt, inner sep=2pt,
+          anchor=south west, rounded corners=1pt]
+        at (#1.south west) [yshift=-0.4cm] {
+        \textbf{Malicious IP:} #2
+    };
+    \node[font=\tiny, fill=white, draw=\ipcolor,
+          inner sep=1pt, anchor=north west]
+        at (#1.south west) [yshift=-0.7cm] {
+        Source: #4 | Rep: #3/100
+    };
+}
+
+% Display malicious domain indicator
+% Usage: \markMaliciousDomain{node}{domain}{reputation}{category}
+\newcommand{\markMaliciousDomain}[4]{
+    \node[font=\tiny\ttfamily, fill=threatHigh!30,
+          draw=threatHigh, line width=1.5pt, inner sep=2pt,
+          anchor=north, rounded corners=1pt]
+        at (#1.north) [yshift=0.4cm] {
+        \textbf{Malicious Domain:} #2
+    };
+    \node[font=\tiny, fill=white, draw=threatHigh,
+          inner sep=1pt, anchor=north]
+        at (#1.north) [yshift=0.1cm] {
+        Category: #4 | Rep: #3/100
+    };
+}
+
+% Display malware file hash indicator
+% Usage: \markMalwareHash{node}{hash_type}{hash_value}{detection_rate}
+\newcommand{\markMalwareHash}[4]{
+    \node[legend box, anchor=north west, minimum width=5cm,
+          draw=threatCritical, line width=2pt] at (#1) {
+        \begin{tabular}{ll}
+            \multicolumn{2}{c}{\textbf{\textcolor{threatCritical}{Malware Detected}}} \\
+            \hline
+            \textbf{Hash Type:} & #2 \\
+            \textbf{Hash:} & \texttt{\tiny #3} \\
+            \textbf{Detection:} & #4 AV engines \\
+        \end{tabular}
+    };
+}
+
+% IOC age/freshness indicator
+% Usage: \markIOCFreshness{node}{age_days}{status}
+\newcommand{\markIOCFreshness}[3]{
+    \pgfmathsetmacro{\agedays}{#2}
+    \ifthenelse{\lengthtest{\agedays pt < 7 pt}}{
+        \def\freshnesscolor{threatCritical}
+        \def\freshnesslabel{FRESH}
+    }{
+    \ifthenelse{\lengthtest{\agedays pt < 30 pt}}{
+        \def\freshnesscolor{threatHigh}
+        \def\freshnesslabel{RECENT}
+    }{
+    \ifthenelse{\lengthtest{\agedays pt < 90 pt}}{
+        \def\freshnesscolor{threatMedium}
+        \def\freshnesslabel{OLD}
+    }{
+        \def\freshnesscolor{threatLow}
+        \def\freshnesslabel{STALE}
+    }}}
+
+    \node[fill=\freshnesscolor, text=white, font=\tiny\bfseries,
+          inner sep=1pt, rounded corners=1pt, anchor=south east]
+        at (#1.south east) {
+        \freshnesslabel\ (#2d)
+    };
+}
+
+% Comprehensive IOC dashboard
+% Usage: \drawIOCDashboard{x}{y}{malicious_ips}{malicious_domains}{malware_hashes}{total_iocs}
+\newcommand{\drawIOCDashboard}[6]{
+    \node[legend box, anchor=north west, minimum width=4.5cm,
+          draw=threatHigh, line width=2pt] at (#1,#2) {
+        \begin{tabular}{lr}
+            \multicolumn{2}{c}{\textbf{\textcolor{threatHigh}{IOC Summary}}} \\
+            \hline
+            Malicious IPs & #3 \\
+            Malicious Domains & #4 \\
+            Malware Hashes & #5 \\
+            \hline
+            \textbf{Total IOCs} & \textbf{#6} \\
+        \end{tabular}
+    };
+}
+
+% Threat feed integration indicator
+% Usage: \markThreatFeed{x}{y}{feed_name}{last_update}{active_threats}
+\newcommand{\markThreatFeed}[5]{
+    \node[legend box, anchor=north west, minimum width=4cm,
+          draw=threatMedium, line width=1.5pt] at (#1,#2) {
+        \begin{tabular}{ll}
+            \multicolumn{2}{c}{\textbf{Threat Feed: #3}} \\
+            \hline
+            \textbf{Last Update:} & #4 \\
+            \textbf{Active Threats:} & \textcolor{threatHigh}{#5} \\
+        \end{tabular}
+    };
+}
 
 % ============================================================================
 % SECURITY POSTURE OVERVIEW
