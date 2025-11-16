@@ -295,6 +295,55 @@ In `network_diagram_generator.tex`:
 \drawIncidentStatus{10}{5}{INC-2025-001}{investigating}{Critical}
 ```
 
+#### Defensive Security Controls (Blue Team)
+```latex
+% Mark security control on node
+\markSecurityControl{srv1}{Firewall}{active}
+
+% IDS/IPS monitoring
+\markIDS{srv1}{Snort}{5}
+
+% WAF protection
+\markWAF{web1}{ModSecurity}{142}
+
+% EDR/Endpoint protection
+\markEDR{pc1}{CrowdStrike}{protected}
+
+% Network segmentation
+\drawSegmentBoundary{-2}{-2}{4}{4}{DMZ}
+
+% SIEM integration
+\markSIEM{10}{8}{Splunk}{5000}
+
+% Defense-in-depth layers
+\drawDefenseLayers{12}{8}
+
+% Honeypot marker
+\markHoneypot{fake_srv}{SSH Honeypot}
+
+% Monitoring coverage
+\drawMonitoringCoverage{0}{-6}{92}
+
+% Patch management
+\markPatchStatus{srv1}{3}{2025-01-10}
+
+% Backup status
+\markBackupStatus{database1}{2025-01-15}{current}
+
+% Zero Trust indicator
+\markZeroTrust{srv1}{yes}
+```
+
+#### Risk Analysis & Calculation
+```latex
+% Risk matrix
+\drawRiskMatrix{10}{8}
+
+% Calculate risk score (returns numeric value)
+% Parameters: threat_level, vuln_score, asset_value, control_effectiveness
+Risk: \calculateRiskScore{80}{90}{95}{75}
+```
+
 ## Security Zones
 
 ```latex

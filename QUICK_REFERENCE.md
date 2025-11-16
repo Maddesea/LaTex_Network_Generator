@@ -193,6 +193,54 @@
 \drawSecurityDashboard{10}{8}
 ```
 
+### Defensive Security Controls
+```latex
+% Security control marker
+\markSecurityControl{srv1}{Firewall}{active}
+
+% IDS/IPS
+\markIDS{srv1}{Snort}{5}
+
+% WAF
+\markWAF{web1}{ModSecurity}{142}
+
+% EDR protection
+\markEDR{pc1}{CrowdStrike}{protected}
+
+% Network segmentation
+\drawSegmentBoundary{-2}{-2}{4}{4}{DMZ}
+
+% SIEM
+\markSIEM{10}{8}{Splunk}{5000}
+
+% Defense layers
+\drawDefenseLayers{12}{8}
+
+% Honeypot
+\markHoneypot{fake_srv}{SSH Honeypot}
+
+% Monitoring coverage
+\drawMonitoringCoverage{0}{-6}{92}
+
+% Patch status
+\markPatchStatus{srv1}{3}{2025-01-10}
+
+% Backup status
+\markBackupStatus{database1}{2025-01-15}{current}
+
+% Zero Trust
+\markZeroTrust{srv1}{yes}
+```
+
+### Risk Analysis
+```latex
+% Risk matrix
+\drawRiskMatrix{10}{8}
+
+% Calculate risk
+\calculateRiskScore{80}{90}{95}{75}
+```
+
 ### Security Zones
 ```latex
 % Basic subnet

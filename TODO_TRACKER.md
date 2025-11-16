@@ -306,6 +306,27 @@
   - ✅ Incident response status tracking
   - Commands: `\correlateVulnExploit`, `\scenarioRansomware`, `\scenarioAPT`, `\scenarioDDoS`, `\drawAttackChain`, `\drawRiskPriority`, `\drawThreatSummary`, `\drawSecurityStatus`, `\drawIncidentStatus`
 
+- [x] **Defensive security controls (Blue Team) - COMPLETED**
+  - ✅ Security control markers (Firewall, IDS/IPS, WAF, EDR)
+  - ✅ IDS/IPS monitoring with alert counting
+  - ✅ WAF protection indicators
+  - ✅ EDR/Endpoint protection status
+  - ✅ Network segmentation boundaries
+  - ✅ SIEM integration display
+  - ✅ Defense-in-depth layer visualization
+  - ✅ Honeypot/deception technology markers
+  - ✅ Security monitoring coverage meters
+  - ✅ Patch management status
+  - ✅ Backup and recovery status
+  - ✅ Zero Trust architecture indicators
+  - Commands: `\markSecurityControl`, `\markIDS`, `\markWAF`, `\markEDR`, `\drawSegmentBoundary`, `\markSIEM`, `\drawDefenseLayers`, `\markHoneypot`, `\drawMonitoringCoverage`, `\markPatchStatus`, `\markBackupStatus`, `\markZeroTrust`
+
+- [x] **Risk calculation and analysis - COMPLETED**
+  - ✅ Automated risk score calculation (0-100 scale)
+  - ✅ Risk matrix visualization (Likelihood vs Impact)
+  - ✅ Weighted risk formula (threat, vulnerability, asset, controls)
+  - Commands: `\calculateRiskScore`, `\drawRiskMatrix`
+
 - [ ] Real-time threat feed integration
   - Pull from: MISP, OpenCTI, STIX/TAXII
   - Auto-update diagram with new IOCs

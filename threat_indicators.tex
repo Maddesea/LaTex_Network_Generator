@@ -1487,6 +1487,286 @@
 % - Real-time threat feed correlation
 
 % ============================================================================
+% DEFENSIVE SECURITY CONTROLS VISUALIZATION
+% ============================================================================
+
+% Mark active security control/defense
+% Usage: \markSecurityControl{node}{control_type}{status}
+\newcommand{\markSecurityControl}[3]{
+    \ifthenelse{\equal{#3}{active}}{
+        \def\controlColor{green!70!black}
+        \def\controlStatus{ACTIVE}
+    }{
+    \ifthenelse{\equal{#3}{warning}}{
+        \def\controlColor{orange}
+        \def\controlStatus{WARNING}
+    }{
+        \def\controlColor{red}
+        \def\controlStatus{OFFLINE}
+    }}
+
+    \node[draw=\controlColor, fill=\controlColor!15, line width=2pt,
+          rounded corners=2pt, inner sep=2pt, font=\tiny\bfseries,
+          anchor=south west] at (#1.south west) [xshift=-0.3cm, yshift=0.3cm] {
+        \textcolor{\controlColor}{🛡 #2}\\
+        \tiny\controlStatus
+    };
+}
+
+% IDS/IPS monitoring indicator
+% Usage: \markIDS{node}{ids_name}{alerts_count}
+\newcommand{\markIDS}[3]{
+    \pgfmathparse{#3 > 10 ? 1 : 0}
+    \ifnum\pgfmathresult=1
+        \def\idsColor{red}
+    \else
+        \pgfmathparse{#3 > 0 ? 1 : 0}
+        \ifnum\pgfmathresult=1
+            \def\idsColor{orange}
+        \else
+            \def\idsColor{green}
+        \fi
+    \fi
+
+    \node[draw=\idsColor, fill=\idsColor!20, line width=1.5pt,
+          rounded corners=2pt, inner sep=2pt, font=\tiny\bfseries,
+          anchor=north east] at (#1.north east) [xshift=0.5cm] {
+        \textcolor{\idsColor}{IDS: #2}\\
+        \tiny Alerts: #3
+    };
+}
+
+% WAF (Web Application Firewall) protection
+% Usage: \markWAF{node}{waf_name}{blocked_attacks}
+\newcommand{\markWAF}[3]{
+    \node[draw=blue!70, fill=blue!15, line width=2pt,
+          rounded corners=2pt, inner sep=3pt, font=\tiny\bfseries,
+          anchor=north] at (#1.north) [yshift=0.6cm] {
+        \textcolor{blue!70}{WAF: #2}\\
+        \tiny Blocked: #3
+    };
+}
+
+% EDR/Endpoint protection
+% Usage: \markEDR{node}{edr_product}{status}
+\newcommand{\markEDR}[3]{
+    \ifthenelse{\equal{#3}{protected}}{
+        \def\edrColor{green!70!black}
+        \def\edrIcon{✓}
+    }{
+        \def\edrColor{red}
+        \def\edrIcon{✗}
+    }
+
+    \node[circle, fill=\edrColor, text=white, font=\tiny\bfseries,
+          minimum size=0.35cm, anchor=south east] at (#1.south east) {\edrIcon};
+    \node[below, font=\tiny, text=\edrColor] at (#1.south east) [yshift=-0.2cm] {#2};
+}
+
+% Network segmentation boundary
+% Usage: \drawSegmentBoundary{x1}{y1}{x2}{y2}{segment_name}
+\newcommand{\drawSegmentBoundary}[5]{
+    \draw[draw=blue!50, line width=2pt, dashed,
+          decoration={markings, mark=at position 0.5 with {\arrow{>}}},
+          postaction={decorate}] (#1,#2) rectangle (#3,#4);
+    \node[fill=blue!20, draw=blue!50, rounded corners=2pt,
+          inner sep=2pt, font=\tiny\bfseries] at (#1+0.5,#4-0.3) {#5};
+}
+
+% SIEM integration indicator
+% Usage: \markSIEM{x}{y}{siem_name}{events_per_sec}
+\newcommand{\markSIEM}[4]{
+    \node[legend box, anchor=north west, minimum width=4cm] at (#1,#2) {
+        \begin{tabular}{ll}
+            \multicolumn{2}{c}{\textbf{SIEM: #3}} \\
+            \hline
+            \textbf{Events/sec:} & #4 \\
+            \textbf{Status:} & \textcolor{green}{Monitoring} \\
+            \textbf{Storage:} & 90 days \\
+            \hline
+            \multicolumn{2}{l}{\tiny Real-time correlation} \\
+        \end{tabular}
+    };
+}
+
+% Defense-in-depth layers visualization
+% Usage: \drawDefenseLayers{x}{y}
+\newcommand{\drawDefenseLayers}[2]{
+    \node[legend box, anchor=north west, minimum width=5cm] at (#1,#2) {
+        \begin{tabular}{lc}
+            \multicolumn{2}{c}{\textbf{Defense Layers}} \\
+            \hline
+            \textcolor{green!70!black}{●} Network Firewall & Active \\
+            \textcolor{green!70!black}{●} IDS/IPS & Active \\
+            \textcolor{green!70!black}{●} WAF & Active \\
+            \textcolor{green!70!black}{●} EDR/EPP & Active \\
+            \textcolor{green!70!black}{●} Email Gateway & Active \\
+            \textcolor{orange}{●} DLP & Audit Mode \\
+            \textcolor{red}{●} CASB & Offline \\
+            \hline
+            \textbf{Coverage:} & \textbf{85\%} \\
+        \end{tabular}
+    };
+}
+
+% Honeypot/Deception technology
+% Usage: \markHoneypot{node}{honeypot_type}
+\newcommand{\markHoneypot}[2]{
+    \node[star, star points=6, fill=yellow!80, draw=orange,
+          minimum size=0.4cm, line width=1pt,
+          anchor=north west] at (#1.north west) {};
+    \node[above, font=\tiny\bfseries, text=orange] at (#1.north west) [yshift=0.4cm] {
+        HONEYPOT\\#2
+    };
+}
+
+% Security monitoring coverage
+% Usage: \drawMonitoringCoverage{x}{y}{coverage_percent}
+\newcommand{\drawMonitoringCoverage}[3]{
+    \pgfmathsetmacro{\coverWidth}{3}
+    \pgfmathsetmacro{\coverHeight}{0.35}
+    \pgfmathsetmacro{\fillWidth}{(#3/100)*\coverWidth}
+
+    \pgfmathparse{#3 >= 90 ? 1 : 0}
+    \ifnum\pgfmathresult=1
+        \def\coverColor{green!70}
+    \else
+        \pgfmathparse{#3 >= 70 ? 1 : 0}
+        \ifnum\pgfmathresult=1
+            \def\coverColor{orange!70}
+        \else
+            \def\coverColor{red!70}
+        \fi
+    \fi
+
+    \draw[fill=gray!20, draw=gray!50] (#1,#2) rectangle +(\coverWidth,\coverHeight);
+    \fill[\coverColor] (#1,#2) rectangle +(\fillWidth,\coverHeight);
+    \draw[line width=1pt, draw=gray!70] (#1,#2) rectangle +(\coverWidth,\coverHeight);
+    \draw[line width=2pt, draw=black] (#1+\fillWidth,#2) -- +(0,\coverHeight);
+
+    \node[above, font=\tiny\bfseries] at (#1+\coverWidth/2,#2+\coverHeight) {Monitoring Coverage};
+    \node[right, font=\tiny] at (#1+\coverWidth+0.1,#2+\coverHeight/2) {#3\%};
+}
+
+% Patch management status
+% Usage: \markPatchStatus{node}{patches_pending}{last_patch_date}
+\newcommand{\markPatchStatus}[3]{
+    \pgfmathparse{#2 == 0 ? 1 : 0}
+    \ifnum\pgfmathresult=1
+        \def\patchColor{green}
+        \def\patchStatus{UP TO DATE}
+    \else
+        \pgfmathparse{#2 > 10 ? 1 : 0}
+        \ifnum\pgfmathresult=1
+            \def\patchColor{red}
+            \def\patchStatus{CRITICAL}
+        \else
+            \def\patchColor{orange}
+            \def\patchStatus{PENDING}
+        \fi
+    \fi
+
+    \node[draw=\patchColor, fill=\patchColor!15, line width=1.5pt,
+          rounded corners=2pt, inner sep=2pt, font=\tiny,
+          anchor=south] at (#1.south) [yshift=-0.5cm] {
+        \textbf{Patches: #2}\\
+        Last: #3\\
+        \textcolor{\patchColor}{\patchStatus}
+    };
+}
+
+% Backup and recovery status
+% Usage: \markBackupStatus{node}{last_backup}{status}
+\newcommand{\markBackupStatus}[3]{
+    \ifthenelse{\equal{#3}{current}}{
+        \def\backupColor{green!70!black}
+        \def\backupIcon{✓}
+    }{
+        \def\backupColor{orange}
+        \def\backupIcon{!}
+    }
+
+    \node[rectangle, fill=\backupColor!20, draw=\backupColor,
+          minimum size=0.3cm, line width=1pt, font=\tiny\bfseries,
+          anchor=south west] at (#1.south west) {\backupIcon};
+    \node[left, font=\tiny, text=\backupColor] at (#1.south west) [xshift=-0.3cm] {
+        Backup: #2
+    };
+}
+
+% Zero Trust architecture indicator
+% Usage: \markZeroTrust{node}{verified}
+\newcommand{\markZeroTrust}[2]{
+    \ifthenelse{\equal{#2}{yes}}{
+        \def\ztColor{blue!70}
+        \def\ztText{VERIFIED}
+    }{
+        \def\ztColor{gray}
+        \def\ztText{UNVERIFIED}
+    }
+
+    \node[draw=\ztColor, fill=\ztColor!15, line width=1.5pt,
+          rounded corners=1pt, inner sep=1pt, font=\tiny\bfseries,
+          anchor=north] at (#1.north) [yshift=0.4cm] {
+        ZT: \ztText
+    };
+}
+
+% TODO: Additional defensive features
+% - MFA/2FA indicators
+% - Encryption status (at rest, in transit)
+% - Access control visualization
+% - Network access control (NAC)
+% - Privileged access management (PAM)
+% - Security orchestration (SOAR) integration
+
+% ============================================================================
+% AUTOMATED RISK CALCULATION
+% ============================================================================
+
+% Calculate and display risk score
+% Usage: \calculateRiskScore{threat_level}{vulnerability_score}{asset_value}{control_effectiveness}
+% Returns a risk score from 0-100
+\newcommand{\calculateRiskScore}[4]{
+    \pgfmathsetmacro{\threatWeight}{#1 * 0.3}
+    \pgfmathsetmacro{\vulnWeight}{#2 * 0.3}
+    \pgfmathsetmacro{\assetWeight}{#3 * 0.25}
+    \pgfmathsetmacro{\controlReduction}{(100 - #4) * 0.15}
+    \pgfmathsetmacro{\riskScore}{\threatWeight + \vulnWeight + \assetWeight + \controlReduction}
+    \pgfmathprintnumber[fixed, precision=1]{\riskScore}
+}
+
+% Risk matrix visualization
+% Usage: \drawRiskMatrix{x}{y}
+\newcommand{\drawRiskMatrix}[2]{
+    \node[legend box, anchor=north west, minimum width=5.5cm] at (#1,#2) {
+        \begin{tabular}{|c|c|c|c|c|}
+            \hline
+            \multicolumn{5}{|c|}{\textbf{Risk Matrix}} \\
+            \hline
+            \textbf{Impact} & \textbf{Low} & \textbf{Med} & \textbf{High} & \textbf{Crit} \\
+            \hline
+            \textbf{Critical} & \cellcolor{orange!30}M & \cellcolor{red!30}H & \cellcolor{red!50}C & \cellcolor{red!70}C \\
+            \hline
+            \textbf{High} & \cellcolor{yellow!30}L & \cellcolor{orange!30}M & \cellcolor{red!30}H & \cellcolor{red!50}C \\
+            \hline
+            \textbf{Medium} & \cellcolor{green!30}L & \cellcolor{yellow!30}L & \cellcolor{orange!30}M & \cellcolor{red!30}H \\
+            \hline
+            \textbf{Low} & \cellcolor{green!30}L & \cellcolor{green!30}L & \cellcolor{yellow!30}L & \cellcolor{orange!30}M \\
+            \hline
+            \multicolumn{5}{c}{\tiny Likelihood →} \\
+        \end{tabular}
+    };
+}
+
+% TODO: Advanced risk features
+% - Dynamic risk calculation from live data
+% - Risk trend analysis over time
+% - Residual risk after controls
+% - Risk acceptance tracking
+% - Risk treatment planning
+
+% ============================================================================
 % MAIN THREAT RENDERING ENGINE
 % ============================================================================
 
