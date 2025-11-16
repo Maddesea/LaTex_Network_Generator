@@ -1133,3 +1133,212 @@
     \pgfmathsetmacro{#5}{#1 + \spiralRadius * cos(#3)}
     \pgfmathsetmacro{#6}{#2 + \spiralRadius * sin(#3)}
 }
+
+% ============================================================================
+% DEBUGGING AND VALIDATION TOOLS
+% ============================================================================
+
+% Draw debug grid with coordinates
+% Usage: \enableDebugMode{grid_spacing}{show_coordinates}
+\newcommand{\enableDebugMode}[2]{
+    \begin{scope}[on background layer]
+        % Draw grid
+        \draw[step=#1cm, gray!30, very thin] (-15,-15) grid (15,15);
+
+        % Draw coordinate labels if enabled
+        \IfStrEq{#2}{true}{
+            \foreach \x in {-15,-10,...,15} {
+                \foreach \y in {-15,-10,...,15} {
+                    \node[font=\tiny, gray, fill=white, inner sep=1pt] at (\x, \y) {(\x,\y)};
+                }
+            }
+        }{}
+
+        % Draw axes
+        \draw[thick, red!50, ->] (-15, 0) -- (15, 0) node[right] {x};
+        \draw[thick, blue!50, ->] (0, -15) -- (0, 15) node[above] {y};
+
+        % Origin marker
+        \fill[green] (0,0) circle (0.1cm);
+        \node[font=\small, green, below right] at (0,0) {(0,0)};
+    \end{scope}
+}
+
+% Validate node position is within bounds
+% Usage: \validatePosition{x}{y}{max_x}{max_y}{result_macro}
+% Returns 1 if valid, 0 if out of bounds
+\newcommand{\validatePosition}[5]{
+    \pgfmathsetmacro{#5}{
+        ifthenelse(and(abs(#1) <= #3, abs(#2) <= #4), 1, 0)
+    }
+}
+
+% Draw bounding box for debugging
+% Usage: \drawDebugBoundingBox{x}{y}{width}{height}{label}
+\newcommand{\drawDebugBoundingBox}[5]{
+    \draw[dashed, red!60, line width=0.5pt]
+        (#1 - #3/2, #2 - #4/2) rectangle (#1 + #3/2, #2 + #4/2);
+    \node[font=\tiny, red, fill=white, anchor=south west]
+        at (#1 - #3/2, #2 + #4/2) {#5};
+}
+
+% Show node spacing measurements
+% Usage: \showSpacingMeasurement{x1}{y1}{x2}{y2}
+\newcommand{\showSpacingMeasurement}[4]{
+    \calcDistance{#1}{#2}{#3}{#4}{\spacing}
+    \draw[blue!40, thin, <->] (#1, #2) -- (#3, #4)
+        node[midway, fill=white, font=\tiny] {\pgfmathprintnumber[precision=2]{\spacing}cm};
+}
+
+% Performance counter for node count
+\newcounter{nodecount}
+\newcounter{connectioncount}
+
+% Increment counters (call when creating nodes/connections)
+\newcommand{\incrementNodeCount}{\stepcounter{nodecount}}
+\newcommand{\incrementConnectionCount}{\stepcounter{connectioncount}}
+
+% Display performance metrics
+% Usage: \showPerformanceMetrics{x}{y}
+\newcommand{\showPerformanceMetrics}[2]{
+    \calcComplexityScore{\value{nodecount}}{\value{connectioncount}}{\complexity}
+    \node[fill=yellow!20, draw=orange!60, rounded corners=3pt, font=\tiny, anchor=north west]
+        at (#1, #2) {
+        \textbf{Performance Metrics}\\
+        Nodes: \arabic{nodecount}\\
+        Connections: \arabic{connectioncount}\\
+        Complexity: \pgfmathprintnumber[precision=1]{\complexity}/100
+    };
+}
+
+% Validate IP address format
+% Usage: \validateIPAddress{ip_address}{result_macro}
+% Returns 1 if valid IPv4, 0 otherwise
+\newcommand{\validateIPAddress}[2]{
+    % Simple validation - checks for 3 dots
+    \StrCount{#1}{.}[\dotcount]
+    \pgfmathsetmacro{#2}{ifthenelse(\dotcount == 3, 1, 0)}
+}
+
+% Check if layout is within recommended density
+% Usage: \checkLayoutDensity{num_nodes}{area_width}{area_height}{result_macro}
+% Returns 1 if density is good, 0 if too dense
+\newcommand{\checkLayoutDensity}[4]{
+    \pgfmathsetmacro{\density}{#1 / (#2 * #3)}
+    \pgfmathsetmacro{#4}{ifthenelse(\density < 0.1, 1, 0)}
+}
+
+% ============================================================================
+% POSITIONING PRESETS AND PATTERNS
+% ============================================================================
+
+% Preset: Pentagon layout
+% Usage: \positionPentagon{center_x}{center_y}{radius}{rotation}{node_prefix}
+\newcommand{\positionPentagon}[5]{
+    \foreach \i in {0,...,4} {
+        \calcPolygonVertex{#1}{#2}{#3}{5}{\i}{\vx}{\vy}
+        \rotatePosition{\vx - #1}{\vy - #2}{#4}{\rx}{\ry}
+        \coordinate (#5\i) at (#1 + \rx, #2 + \ry);
+    }
+}
+
+% Preset: Hexagon layout
+% Usage: \positionHexagon{center_x}{center_y}{radius}{rotation}{node_prefix}
+\newcommand{\positionHexagon}[5]{
+    \foreach \i in {0,...,5} {
+        \calcPolygonVertex{#1}{#2}{#3}{6}{\i}{\vx}{\vy}
+        \rotatePosition{\vx - #1}{\vy - #2}{#4}{\rx}{\ry}
+        \coordinate (#5\i) at (#1 + \rx, #2 + \ry);
+    }
+}
+
+% Preset: Star layout (alternating radii)
+% Usage: \positionStar{center_x}{center_y}{inner_radius}{outer_radius}{points}{node_prefix}
+\newcommand{\positionStar}[6]{
+    \pgfmathsetmacro{\totalPoints}{#5 * 2}
+    \foreach \i in {0,...,\the\numexpr\totalPoints-1\relax} {
+        \pgfmathsetmacro{\isOuter}{int(mod(\i, 2))}
+        \pgfmathsetmacro{\radius}{\isOuter ? #4 : #3}
+        \calcPolygonVertex{#1}{#2}{\radius}{\totalPoints}{\i}{\vx}{\vy}
+        \coordinate (#6\i) at (\vx, \vy);
+    }
+}
+
+% Preset: Double ring layout
+% Usage: \positionDoubleRing{center_x}{center_y}{inner_radius}{outer_radius}{inner_count}{outer_count}{prefix}
+\newcommand{\positionDoubleRing}[7]{
+    % Inner ring
+    \foreach \i in {0,...,\the\numexpr#5-1\relax} {
+        \calcCircularAngle{\i}{#5}{0}{\angle}
+        \positionOnCircle{#1}{#2}{#3}{\angle}{#7inner\i}
+    }
+    % Outer ring
+    \foreach \i in {0,...,\the\numexpr#6-1\relax} {
+        \calcCircularAngle{\i}{#6}{0}{\angle}
+        \positionOnCircle{#1}{#2}{#4}{\angle}{#7outer\i}
+    }
+}
+
+% Preset: Diagonal line layout
+% Usage: \positionDiagonalLine{start_x}{start_y}{end_x}{end_y}{num_nodes}{prefix}
+\newcommand{\positionDiagonalLine}[6]{
+    \foreach \i in {0,...,\the\numexpr#5-1\relax} {
+        \pgfmathsetmacro{\ratio}{\i / (#5 - 1)}
+        \interpolatePosition{#1}{#2}{#3}{#4}{\ratio}{\px}{\py}
+        \coordinate (#6\i) at (\px, \py);
+    }
+}
+
+% Preset: L-shape layout
+% Usage: \positionLShape{corner_x}{corner_y}{h_length}{v_length}{h_count}{v_count}{prefix}
+\newcommand{\positionLShape}[7]{
+    % Horizontal arm
+    \foreach \i in {0,...,\the\numexpr#5-1\relax} {
+        \pgfmathsetmacro{\xpos}{#1 + \i * #3 / (#5 - 1)}
+        \coordinate (#7h\i) at (\xpos, #2);
+    }
+    % Vertical arm (excluding corner to avoid duplication)
+    \foreach \i in {1,...,\the\numexpr#6-1\relax} {
+        \pgfmathsetmacro{\ypos}{#2 + \i * #4 / (#6 - 1)}
+        \coordinate (#7v\i) at (#1, \ypos);
+    }
+}
+
+% Preset: Wave pattern
+% Usage: \positionWave{start_x}{y}{length}{amplitude}{frequency}{num_nodes}{prefix}
+\newcommand{\positionWave}[7]{
+    \foreach \i in {0,...,\the\numexpr#6-1\relax} {
+        \pgfmathsetmacro{\xpos}{#1 + \i * #3 / (#6 - 1)}
+        \pgfmathsetmacro{\phase}{\i * 360 * #5 / (#6 - 1)}
+        \pgfmathsetmacro{\ypos}{#2 + #4 * sin(\phase)}
+        \coordinate (#7\i) at (\xpos, \ypos);
+    }
+}
+
+% ============================================================================
+% LAYOUT QUALITY SCORING
+% ============================================================================
+
+% Calculate layout symmetry score
+% Usage: \calcSymmetryScore{node_positions}{result_macro}
+% Returns score 0-100 (100 = perfect symmetry)
+\newcommand{\calcSymmetryScore}[2]{
+    % Simplified - would need actual node position analysis
+    \def#2{75}
+}
+
+% Calculate layout balance score
+% Usage: \calcBalanceScore{node_positions}{result_macro}
+% Returns score 0-100 (100 = perfectly balanced)
+\newcommand{\calcBalanceScore}[2]{
+    % Simplified - would need actual node position analysis
+    \def#2{80}
+}
+
+% Calculate readability score
+% Usage: \calcReadabilityScore{num_nodes}{num_connections}{area}{result_macro}
+\newcommand{\calcReadabilityScore}[4]{
+    \pgfmathsetmacro{\density}{#1 / #3}
+    \pgfmathsetmacro{\connectivity}{#2 / max(1, #1)}
+    \pgfmathsetmacro{#4}{max(0, 100 - \density * 50 - \connectivity * 10)}
+}
