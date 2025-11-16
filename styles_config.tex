@@ -17,6 +17,14 @@
 \definecolor{vmIndigo}{RGB}{103, 58, 183}
 \definecolor{containerBlue}{RGB}{33, 150, 243}
 \definecolor{clusterGold}{RGB}{255, 152, 0}
+\definecolor{mobileOrange}{RGB}{255, 87, 34}
+\definecolor{iotGreen}{RGB}{76, 175, 80}
+\definecolor{cloudAWS}{RGB}{255, 153, 0}
+\definecolor{cloudAzure}{RGB}{0, 120, 215}
+\definecolor{cloudGCP}{RGB}{66, 133, 244}
+\definecolor{appliancePurple}{RGB}{156, 39, 176}
+\definecolor{storageYellow}{RGB}{255, 193, 7}
+\definecolor{wirelessTeal}{RGB}{0, 150, 136}
 
 % Threat indicator colors
 \definecolor{threatCritical}{RGB}{192, 57, 43}
@@ -278,6 +286,161 @@
         line width=1.5pt,
         rounded corners=3pt,
         align=center
+    },
+
+    % Mobile device styles
+    mobile phone/.style={
+        base node,
+        rectangle,
+        rounded corners=4pt,
+        fill=mobileOrange!20,
+        draw=mobileOrange!80,
+        line width=1pt,
+        minimum width=1.5cm,
+        minimum height=2.5cm,
+        inner sep=4pt
+    },
+
+    tablet/.style={
+        base node,
+        rectangle,
+        rounded corners=3pt,
+        fill=mobileOrange!15,
+        draw=mobileOrange!70,
+        line width=1pt,
+        minimum width=2.5cm,
+        minimum height=2cm
+    },
+
+    % IoT device styles
+    iot device/.style={
+        base node,
+        diamond,
+        aspect=2,
+        fill=iotGreen!15,
+        draw=iotGreen!80,
+        line width=1pt,
+        minimum width=2cm,
+        minimum height=1.5cm
+    },
+
+    sensor/.style={
+        base node,
+        circle,
+        fill=iotGreen!20,
+        draw=iotGreen!85,
+        line width=1pt,
+        minimum size=1.5cm
+    },
+
+    % Cloud provider styles
+    aws node/.style={
+        base node,
+        cloud,
+        cloud puffs=12,
+        cloud puff arc=120,
+        aspect=2.5,
+        fill=cloudAWS!20,
+        draw=cloudAWS!80,
+        line width=1.5pt
+    },
+
+    azure node/.style={
+        base node,
+        cloud,
+        cloud puffs=12,
+        cloud puff arc=120,
+        aspect=2.5,
+        fill=cloudAzure!20,
+        draw=cloudAzure!80,
+        line width=1.5pt
+    },
+
+    gcp node/.style={
+        base node,
+        cloud,
+        cloud puffs=12,
+        cloud puff arc=120,
+        aspect=2.5,
+        fill=cloudGCP!20,
+        draw=cloudGCP!80,
+        line width=1.5pt
+    },
+
+    % Network appliance styles
+    ips/.style={
+        base node,
+        rectangle,
+        fill=appliancePurple!15,
+        draw=appliancePurple!80,
+        line width=2pt,
+        pattern=crosshatch,
+        pattern color=appliancePurple!20
+    },
+
+    proxy/.style={
+        base node,
+        trapezium,
+        trapezium left angle=75,
+        trapezium right angle=105,
+        fill=appliancePurple!20,
+        draw=appliancePurple!85,
+        line width=1.5pt
+    },
+
+    waf/.style={
+        base node,
+        rectangle,
+        fill=appliancePurple!20,
+        draw=appliancePurple!90,
+        line width=2.5pt,
+        double,
+        double distance=1.5pt
+    },
+
+    % Storage node styles
+    storage/.style={
+        base node,
+        tape,
+        tape bend top=none,
+        fill=storageYellow!20,
+        draw=storageYellow!80,
+        line width=1.5pt,
+        minimum width=2.5cm,
+        minimum height=2cm
+    },
+
+    nas/.style={
+        base node,
+        rectangle,
+        rounded corners=2pt,
+        fill=storageYellow!20,
+        draw=storageYellow!85,
+        line width=1.5pt,
+        minimum width=2.8cm,
+        minimum height=1.8cm
+    },
+
+    % Wireless access point
+    wireless ap/.style={
+        base node,
+        circle,
+        fill=wirelessTeal!15,
+        draw=wirelessTeal!80,
+        line width=1.5pt,
+        minimum size=2cm
+    },
+
+    % Subnet boundary style
+    subnet box/.style={
+        rectangle,
+        rounded corners=8pt,
+        draw=black!50,
+        fill=black!3,
+        line width=2pt,
+        dashed,
+        dash pattern=on 8pt off 4pt,
+        inner sep=15pt
     }
 }
 

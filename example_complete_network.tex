@@ -1,0 +1,216 @@
+% example_complete_network.tex
+% Comprehensive example showcasing ALL node types and features
+% Usage: \generateNetworkDiagram{example_complete_network}
+
+\begin{scope}[on background layer]
+    % Background grid (optional)
+    \draw[step=1cm, gray!15, very thin] (-10,-10) grid (10,10);
+\end{scope}
+
+% ============================================================================
+% CLOUD LAYER (Top)
+% ============================================================================
+
+\createAWSNode{aws1}{-6}{8}{AWS Cloud}{EC2, S3, RDS}
+\createAzureNode{azure1}{0}{8}{Azure Cloud}{VMs, Blob Storage}
+\createGCPNode{gcp1}{6}{8}{GCP Cloud}{Compute Engine}
+
+% ============================================================================
+% DMZ LAYER
+% ============================================================================
+
+\createWAF{waf1}{203.0.113.10}{-4}{5}{WAF-01}{OWASP Core}
+\createLoadBalancerActive{lb1}{203.0.113.20}{0}{5}{PublicLB}{round-robin}
+\createIPS{ips1}{203.0.113.30}{4}{5}{IPS-01}{IPS Mode}
+
+% Create DMZ boundary
+\begin{scope}[on background layer]
+    \createDMZ{dmz}{DMZ Zone}{(waf1)(lb1)(ips1)}
+\end{scope}
+
+% ============================================================================
+% WEB TIER (with clustering)
+% ============================================================================
+
+\createNodeWithMetrics{web1}{192.168.10.10}{-5}{2}{Web-01}{45}{62}{38}
+\createNodeWithMetrics{web2}{192.168.10.11}{-3}{2}{Web-02}{52}{68}{42}
+\createNodeWithMetrics{web3}{192.168.10.12}{-1}{2}{Web-03}{38}{55}{35}
+
+% Add OS badges
+\addOSBadge{web1}{ubuntu}
+\addOSBadge{web2}{ubuntu}
+\addOSBadge{web3}{redhat}
+
+% Add status indicators
+\addStatusIndicator{web1}{online}
+\addStatusIndicator{web2}{online}
+\addStatusIndicator{web3}{degraded}
+
+% Create web tier cluster
+\begin{scope}[on background layer]
+    \createSubnet{websubnet}{Web Tier}{192.168.10.0/24}{(web1)(web2)(web3)}{high}
+\end{scope}
+
+% ============================================================================
+% APPLICATION TIER (with VMs and containers)
+% ============================================================================
+
+% Hypervisor with VMs
+\createHypervisor{esxi1}{192.168.20.10}{2}{2}{ESXi-Host-01}{4}
+\createVM{vm1}{192.168.20.101}{1}{0}{App-VM-01}{ESXi-Host-01}
+\createVMWithResources{vm2}{192.168.20.102}{3}{0}{App-VM-02}{8vCPU}{16GB}{100GB}
+
+% Container host with containers
+\createContainer{cont1}{192.168.20.201}{5}{2}{api-server}{node:18-alpine}
+\createPod{pod1}{192.168.20.202}{7}{2}{web-pod}{production}
+
+% ============================================================================
+% DATABASE TIER (with HA setup)
+% ============================================================================
+
+\createDatabasePrimary{db1}{192.168.30.10}{-5}{-2}{PostgreSQL-Primary}
+\createDatabaseReplica{db2}{192.168.30.11}{-3}{-2}{PostgreSQL-Replica-1}
+\createDatabaseReplica{db3}{192.168.30.12}{-1}{-2}{PostgreSQL-Replica-2}
+\createDatabaseCluster{mongo1}{192.168.30.20}{1}{-2}{MongoDB-Cluster}
+
+% Create HA pair for primary databases
+\begin{scope}[on background layer]
+    \createHAPair{dbha}{Database HA}{(db1)}{(db2)}
+\end{scope}
+
+% ============================================================================
+% STORAGE TIER
+% ============================================================================
+
+\createNAS{nas1}{192.168.40.10}{-6}{-5}{NAS-01}{50TB}{NFS/SMB}
+\createSAN{san1}{192.168.40.20}{-3}{-5}{SAN-01}{100TB}{iSCSI}
+\createStorage{backup1}{192.168.40.30}{0}{-5}{Backup-Storage}{500TB}
+
+% ============================================================================
+% NETWORK INFRASTRUCTURE
+% ============================================================================
+
+\createRouter{router1}{192.168.1.1}{-8}{0}{Core Router}
+\createFirewall{fw1}{192.168.1.254}{-8}{-3}{Internal FW}
+\createSwitch{sw1}{192.168.10.1}{-8}{-6}{Access Switch}
+\createProxy{proxy1}{192.168.50.10}{4}{-5}{Squid Proxy}{HTTP/HTTPS}
+\createWirelessAP{wap1}{192.168.60.1}{7}{-5}{WAP-01}{CorpWiFi}
+
+% ============================================================================
+% MOBILE AND IOT DEVICES
+% ============================================================================
+
+\createLaptop{laptop1}{192.168.60.100}{9}{2}{Sales-Laptop}{john.doe}
+\createMobilePhone{phone1}{192.168.60.101}{9}{0}{CEO-iPhone}{iOS 17}
+\createTablet{tablet1}{192.168.60.102}{9}{-2}{iPad-Conf-Room}{iPadOS}
+
+% IoT devices
+\createIoTDevice{iot1}{192.168.70.10}{3}{-8}{Smart-Thermostat}{HVAC}
+\createSensor{sensor1}{192.168.70.11}{5}{-8}{Temp-01}{Temperature}
+\createSmartDevice{camera1}{192.168.70.12}{7}{-8}{Security-Cam}{IP Camera}{Recording}
+
+% Add OS badges to mobile devices
+\addOSBadge{laptop1}{windows}
+\addOSBadge{phone1}{ios}
+\addOSBadge{tablet1}{ios}
+
+% ============================================================================
+% SECURITY MONITORING
+% ============================================================================
+
+% Security-focused nodes showing different threat levels
+\createSecurityNode{srv1}{192.168.80.10}{-8}{5}{Secure-Server}{0}{0.0}{secure}
+\createSecurityNode{srv2}{192.168.80.11}{-8}{7}{Warning-Server}{3}{6.5}{warning}
+\createSecurityNode{srv3}{192.168.80.12}{-8}{9}{Critical-Server}{8}{9.8}{critical}
+
+% Add threat badges
+\addThreatBadge{srv3}{critical}
+\addThreatBadge{srv2}{medium}
+
+% ============================================================================
+% CONNECTIONS
+% ============================================================================
+
+% Cloud to DMZ
+\draw[encrypted conn] (aws1) -- (lb1);
+\draw[encrypted conn] (azure1) -- (lb1);
+
+% DMZ to Web tier
+\draw[normal conn] (lb1) -- (web1);
+\draw[normal conn] (lb1) -- (web2);
+\draw[normal conn] (lb1) -- (web3);
+\draw[normal conn] (waf1) -- (lb1);
+\draw[normal conn] (ips1) -- (lb1);
+
+% Web to App tier
+\draw[encrypted conn] (web1) -- (vm1);
+\draw[encrypted conn] (web2) -- (vm2);
+\draw[encrypted conn] (web3) -- (cont1);
+
+% App to Database tier
+\draw[encrypted conn] (vm1) -- (db1);
+\draw[encrypted conn] (vm2) -- (db1);
+\draw[encrypted conn] (cont1) -- (mongo1);
+
+% Database replication
+\draw[normal conn, bend left=15] (db1) -- (db2);
+\draw[normal conn, bend left=15] (db1) -- (db3);
+
+% Storage connections
+\draw[normal conn] (db1) -- (nas1);
+\draw[normal conn] (san1) -- (vm1);
+\draw[normal conn, dashed] (backup1) -- (db1);
+
+% Network infrastructure
+\draw[normal conn] (router1) -- (fw1);
+\draw[normal conn] (fw1) -- (sw1);
+\draw[normal conn] (proxy1) -- (router1);
+
+% Wireless connections
+\draw[normal conn, dashed, draw=wirelessTeal!60] (wap1) -- (laptop1);
+\draw[normal conn, dashed, draw=wirelessTeal!60] (wap1) -- (phone1);
+\draw[normal conn, dashed, draw=wirelessTeal!60] (wap1) -- (tablet1);
+
+% IoT connections
+\draw[normal conn, draw=iotGreen!60] (iot1) -- (router1);
+\draw[normal conn, draw=iotGreen!60] (sensor1) -- (router1);
+\draw[normal conn, draw=iotGreen!60] (camera1) -- (router1);
+
+% ============================================================================
+% ANNOTATIONS
+% ============================================================================
+
+\annotateNode{aws1}{Multi-Region Deployment}{south}
+\annotateNode{lb1}{SSL Termination}{south}
+\annotateNode{esxi1}{vSphere 8.0}{south}
+\annotateNode{db1}{Streaming Replication}{south}
+\annotateNode{san1}{Fibre Channel}{south}
+
+% ============================================================================
+% LEGEND
+% ============================================================================
+
+\node[legend box, anchor=north west] at (-9.5,-7) {
+    \begin{minipage}{8cm}
+        \textbf{Network Diagram Legend} \\[4pt]
+        \textbf{Node Types:} \\
+        \tikz\node[server, minimum size=0.4cm, scale=0.5] {}; Server \quad
+        \tikz\node[database, minimum size=0.4cm, scale=0.5] {}; Database \quad
+        \tikz\node[loadbalancer, minimum size=0.4cm, scale=0.5] {}; Load Balancer \\
+        \tikz\node[vm, minimum size=0.4cm, scale=0.5] {}; VM \quad
+        \tikz\node[container, minimum size=0.4cm, scale=0.5] {}; Container \quad
+        \tikz\node[mobile phone, minimum size=0.3cm, scale=0.4] {}; Mobile \\[2pt]
+        \textbf{Connections:} \\
+        \tikz\draw[encrypted conn] (0,0) -- (0.8,0); Encrypted \quad
+        \tikz\draw[normal conn] (0,0) -- (0.8,0); Normal \\[2pt]
+        \textbf{Status:} \\
+        \tikz\node[circle, fill=green!70, inner sep=2pt] {}; Online \quad
+        \tikz\node[circle, fill=yellow!70, inner sep=2pt] {}; Degraded \quad
+        \tikz\node[circle, fill=red!70, inner sep=2pt] {}; Offline
+    \end{minipage}
+};
+
+% Metadata
+\node[font=\tiny, anchor=south east] at (9.5,-9.5) {
+    Generated: \today \ | Version: 1.1 | Nodes: 45+ | LaTeX Network Diagram Generator
+};

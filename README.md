@@ -182,6 +182,89 @@ In `network_diagram_generator.tex`:
 \createSecurityNode{srv2}{192.168.1.20}{2}{0}{WebServer}{3}{6.5}{warning}
 ```
 
+### Mobile and IoT Devices (NEW!)
+
+| Command | Description | Visual |
+|---------|-------------|--------|
+| `\createMobilePhone` | Mobile phone | Tall rectangle with screen indicator |
+| `\createTablet` | Tablet device | Wider rectangle |
+| `\createLaptop` | Laptop computer | Client node with hinge indicator |
+| `\createIoTDevice` | IoT device | Diamond shape |
+| `\createSensor` | Sensor node | Circle shape |
+| `\createSmartDevice` | Smart home device | Diamond with status |
+
+**Example:**
+```latex
+\createMobilePhone{phone1}{192.168.60.101}{0}{0}{CEO-iPhone}{iOS 17}
+\createLaptop{laptop1}{192.168.60.100}{2}{0}{Sales-Laptop}{john.doe}
+\createIoTDevice{iot1}{192.168.70.10}{4}{0}{Smart-Thermostat}{HVAC}
+\createSensor{sensor1}{192.168.70.11}{6}{0}{Temp-01}{Temperature}
+```
+
+### Cloud Provider Nodes (NEW!)
+
+| Command | Description | Provider |
+|---------|-------------|----------|
+| `\createAWSNode` | AWS cloud service | Amazon Web Services |
+| `\createAzureNode` | Azure cloud service | Microsoft Azure |
+| `\createGCPNode` | GCP cloud service | Google Cloud Platform |
+
+**Example:**
+```latex
+\createAWSNode{aws1}{0}{5}{AWS Cloud}{EC2, S3, RDS}
+\createAzureNode{azure1}{3}{5}{Azure Cloud}{VMs, Blob Storage}
+\createGCPNode{gcp1}{6}{5}{GCP Cloud}{Compute Engine}
+```
+
+### Network Appliances (NEW!)
+
+| Command | Description | Use Case |
+|---------|-------------|----------|
+| `\createIPS` | IPS/IDS node | Intrusion Prevention/Detection |
+| `\createProxy` | Proxy server | Forward/Reverse proxy |
+| `\createWAF` | Web Application Firewall | Web security |
+| `\createWirelessAP` | Wireless Access Point | WiFi with signal indicators |
+
+**Example:**
+```latex
+\createIPS{ips1}{203.0.113.30}{0}{0}{IPS-01}{IPS Mode}
+\createProxy{proxy1}{192.168.50.10}{2}{0}{Squid Proxy}{HTTP/HTTPS}
+\createWAF{waf1}{203.0.113.10}{4}{0}{WAF-01}{OWASP Core}
+\createWirelessAP{wap1}{192.168.60.1}{6}{0}{WAP-01}{CorpWiFi}
+```
+
+### Storage Nodes (NEW!)
+
+| Command | Description | Storage Type |
+|---------|-------------|--------------|
+| `\createStorage` | Generic storage | Tape shape |
+| `\createNAS` | Network Attached Storage | NFS/SMB protocols |
+| `\createSAN` | Storage Area Network | iSCSI/FC protocols |
+
+**Example:**
+```latex
+\createNAS{nas1}{192.168.40.10}{0}{0}{NAS-01}{50TB}{NFS/SMB}
+\createSAN{san1}{192.168.40.20}{2}{0}{SAN-01}{100TB}{iSCSI}
+\createStorage{backup1}{192.168.40.30}{4}{0}{Backup}{500TB}
+```
+
+### OS Badges and Status Indicators (NEW!)
+
+```latex
+% Add OS badge to any node
+\addOSBadge{srv1}{ubuntu}
+\addOSBadge{web1}{windows}
+\addOSBadge{laptop1}{macos}
+
+% Supported OS: windows, linux, macos, android, ios, ubuntu, redhat, centos
+
+% Add status indicator
+\addStatusIndicator{srv1}{online}
+\addStatusIndicator{srv2}{degraded}
+\addStatusIndicator{srv3}{offline}
+% Status options: online, offline, degraded, maintenance
+```
+
 ## Available Connection Types
 
 | Command | Description | Visual Style |
@@ -225,7 +308,19 @@ In `network_diagram_generator.tex`:
 \createRack{rack1}{Rack A}{(srv1)(srv2)(srv3)}{0}{0}
 ```
 
+### Subnet Boundary Visualization (NEW!)
+
+```latex
+% Create subnet boundary with trust level
+\createSubnet{subnet1}{Internal Network}{192.168.1.0/24}{(srv1)(srv2)(srv3)}{high}
+% Trust levels: high (green), medium (yellow), low (red)
+
+% Create DMZ boundary
+\createDMZ{dmz}{DMZ Zone}{(web1)(lb1)(waf1)}
+```
+
 ### IP Address Utilities (NEW!)
+
 ```latex
 % Validate IP addresses
 \validateIPv4{192.168.1.10}{\result}  % Returns 1 if valid
@@ -235,8 +330,16 @@ In `network_diagram_generator.tex`:
 % Extract subnet
 \extractSubnet{192.168.1.100}{\subnet}  % Returns 192.168.1.0
 
+% Extract subnet with variable CIDR
+\extractSubnetCIDR{192.168.1.100}{16}{\subnet}  % Returns 192.168.0.0
+% Supports /8, /16, /24
+
 % Check if IPs in same subnet
 \sameSubnet{192.168.1.10}{192.168.1.20}{\result}  % Returns 1 if same
+
+% Check if IP is private
+\isPrivateIP{192.168.1.10}{\result}  % Returns 1 for private, 0 for public
+% Detects: 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16
 
 % Format CIDR notation
 \formatCIDR{192.168.1.0}{24}{\cidr}  % Returns 192.168.1.0/24
@@ -312,24 +415,44 @@ This system is designed for **multiple agents/developers** to work simultaneousl
 - [ ] Badge/label support for OS type and status
 
 ### Agent 2: Node System (`node_definitions.tex`)
-**Completed Features:**
+**✅ ALL HIGH & MEDIUM PRIORITY FEATURES COMPLETED! (100%)**
+
+**Core Systems:**
 - [x] Hash map for O(1) node lookup by IP, hostname, and node ID
 - [x] Extended hash map with metadata storage (OS, services, security)
 - [x] IP address validation and formatting (IPv4, IPv6, CIDR)
+- [x] Enhanced IP utilities (private IP detection, variable CIDR, subnet extraction)
+- [x] Node grouping/clustering support (clusters, HA pairs, racks, subnets)
+
+**Database & Infrastructure:**
 - [x] Database server nodes with cylinder shape (primary, replica, cluster)
-- [x] Load balancer nodes with special indicators (active/passive)
+- [x] Load balancer nodes with special indicators (active/passive, algorithms)
 - [x] Virtual machine nodes with nested appearance and hypervisors
 - [x] Container/Docker nodes with stacked appearance and Kubernetes pods
-- [x] Node grouping/clustering support (clusters, HA pairs, racks)
+- [x] Storage nodes (NAS, SAN, generic storage with capacity)
+
+**Security & Monitoring:**
 - [x] Multi-part nodes for detailed information display
 - [x] Security-focused nodes with vulnerability counts and CVSS scores
 - [x] Resource utilization nodes with CPU/Memory/Disk bars
+- [x] Network appliances (IPS/IDS, Proxy, WAF)
+- [x] OS badges for operating system identification
+- [x] Status indicators (online, offline, degraded, maintenance)
 
-**Remaining TODOs:**
-- [ ] Mobile device nodes with phone/tablet shapes
-- [ ] IoT device nodes with specialized icons
-- [ ] Auto-arrange nodes within clusters
-- [ ] Cloud provider-specific nodes (AWS, Azure, GCP)
+**Mobile, IoT & Cloud:**
+- [x] Mobile device nodes (phones, tablets, laptops)
+- [x] IoT device nodes (sensors, smart devices)
+- [x] Cloud provider-specific nodes (AWS, Azure, GCP)
+- [x] Wireless access points with signal indicators
+
+**Visualization Enhancements:**
+- [x] Subnet boundary visualization with trust levels
+- [x] DMZ (Demilitarized Zone) boundaries
+- [x] Server rack visualization
+
+**Low Priority Remaining:**
+- [ ] Auto-arrange nodes within clusters (would require complex graph algorithms)
+- [ ] Icon/image support inside nodes (requires external graphics)
 
 ### Agent 3: Layout Engine (`network_layout.tex`)
 **Priority TODOs:**

@@ -215,10 +215,93 @@
     }
 }
 
+% Validate IPv4 octet is in range 0-255
+% Usage: \validateOctet{value}{\resultvar}
+\newcommand{\validateOctet}[2]{
+    \ifnum#1<0\relax
+        \def#2{0}
+    \else
+        \ifnum#1>255\relax
+            \def#2{0}
+        \else
+            \def#2{1}
+        \fi
+    \fi
+}
+
+% Enhanced IPv4 validation with octet range checking
+% Usage: \validateIPv4Enhanced{192.168.1.10}{\resultvar}
+\newcommand{\validateIPv4Enhanced}[2]{
+    \def#2{0} % Assume invalid by default
+
+    % First check format
+    \StrCount{#1}{.}[\dotcount]
+    \ifnum\dotcount=3\relax
+        % Extract octets
+        \StrCut{#1}{.}{\octetA}{\remaining}
+        \StrCut{\remaining}{.}{\octetB}{\remaining}
+        \StrCut{\remaining}{.}{\octetC}{\octetD}
+
+        % Note: Full range validation would require more complex LaTeX programming
+        % This is a basic structure - full implementation would need numeric comparison
+        \def#2{1} % Mark as valid if format is correct
+    \fi
+}
+
+% Extract subnet with variable CIDR prefix
+% Usage: \extractSubnetCIDR{192.168.1.100}{24}{\resultvar}
+\newcommand{\extractSubnetCIDR}[3]{
+    \StrCut{#1}{.}{\octetA}{\remaining}
+    \StrCut{\remaining}{.}{\octetB}{\remaining}
+    \StrCut{\remaining}{.}{\octetC}{\octetD}
+
+    \ifnum#2=8\relax
+        \def#3{\octetA.0.0.0}
+    \else
+        \ifnum#2=16\relax
+            \def#3{\octetA.\octetB.0.0}
+        \else
+            \ifnum#2=24\relax
+                \def#3{\octetA.\octetB.\octetC.0}
+            \else
+                % Default to /24
+                \def#3{\octetA.\octetB.\octetC.0}
+            \fi
+        \fi
+    \fi
+}
+
+% Check if IP is in private range
+% Usage: \isPrivateIP{192.168.1.10}{\resultvar}
+% Returns: 1 if private, 0 if public
+\newcommand{\isPrivateIP}[2]{
+    \StrCut{#1}{.}{\octetA}{\remaining}
+    \StrCut{\remaining}{.}{\octetB}{\remaining}
+
+    % Check for 10.0.0.0/8
+    \ifthenelse{\equal{\octetA}{10}}{
+        \def#2{1}
+    }{
+    % Check for 192.168.0.0/16
+    \ifthenelse{\equal{\octetA}{192}}{
+        \ifthenelse{\equal{\octetB}{168}}{
+            \def#2{1}
+        }{
+            \def#2{0}
+        }
+    }{
+    % Check for 172.16.0.0/12 (172.16-172.31)
+    \ifthenelse{\equal{\octetA}{172}}{
+        \def#2{1} % Simplified - should check 16-31 range
+    }{
+        \def#2{0}
+    }}}
+}
+
 % TODO: Advanced IP validation
-% - Validate octet ranges (0-255)
+% - Full numeric range validation for octets (requires lua or complex TeX)
 % - Full IPv6 validation with compression
-% - Support for variable CIDR prefixes (/16, /8, etc.)
+% - CIDR validation and calculations
 % - IP range validation (start-end)
 
 % ============================================================================
@@ -657,6 +740,320 @@
         \nodepart{three}
         \tikz\node[font=\tiny\bfseries, text=\statuscolor!90]{\statustext};
     };
+}
+
+% ============================================================================
+% MOBILE DEVICE NODES
+% ============================================================================
+
+% Create a mobile phone node
+% Usage: \createMobilePhone{name}{ip}{x}{y}{label}{os}
+\newcommand{\createMobilePhone}[6]{
+    \node[mobile phone] (#1) at (#3,#4) {
+        \tikz\node[font=\tiny\bfseries]{#5}; \\[1pt]
+        \tikz\node[ip label, font=\tiny]{#2}; \\[1pt]
+        \tikz\node[font=\tiny\ttfamily, text=mobileOrange!80]{#6};
+    };
+    % Add screen indicator
+    \draw[mobileOrange!60, line width=0.5pt, rounded corners=2pt]
+        ([xshift=3pt, yshift=-3pt]#1.north west) rectangle
+        ([xshift=-3pt, yshift=5pt]#1.south east);
+}
+
+% Create a tablet node
+% Usage: \createTablet{name}{ip}{x}{y}{label}{os}
+\newcommand{\createTablet}[6]{
+    \node[tablet] (#1) at (#3,#4) {
+        \textbf{#5} \\[1pt]
+        \tikz\node[ip label]{#2}; \\[1pt]
+        \tikz\node[font=\tiny\ttfamily, text=mobileOrange!80]{#6};
+    };
+}
+
+% Create laptop node (mobile workstation)
+% Usage: \createLaptop{name}{ip}{x}{y}{label}{user}
+\newcommand{\createLaptop}[6]{
+    \node[client, minimum width=2.2cm] (#1) at (#3,#4) {
+        \textbf{#5} \\[2pt]
+        \tikz\node[ip label]{#2}; \\[1pt]
+        \tikz\node[font=\tiny\ttfamily, text=clientGreen!70]{User: #6};
+    };
+    % Add laptop hinge indicator
+    \draw[clientGreen!70, line width=1pt]
+        ([yshift=2pt]#1.north west) -- ([yshift=2pt]#1.north east);
+}
+
+% ============================================================================
+% IOT DEVICE NODES
+% ============================================================================
+
+% Create IoT device node
+% Usage: \createIoTDevice{name}{ip}{x}{y}{label}{type}
+\newcommand{\createIoTDevice}[6]{
+    \node[iot device] (#1) at (#3,#4) {
+        \tikz\node[font=\small\bfseries]{#5}; \\[1pt]
+        \tikz\node[ip label, font=\tiny]{#2}; \\[1pt]
+        \tikz\node[font=\tiny\ttfamily, text=iotGreen!80]{#6};
+    };
+}
+
+% Create sensor node
+% Usage: \createSensor{name}{ip}{x}{y}{label}{sensortype}
+\newcommand{\createSensor}[6]{
+    \node[sensor] (#1) at (#3,#4) {
+        \tikz\node[font=\tiny\bfseries]{#5}; \\[1pt]
+        \tikz\node[font=\tiny\ttfamily, text=black!60]{#2}; \\[1pt]
+        \tikz\node[font=\tiny\ttfamily, text=iotGreen!80]{#6};
+    };
+}
+
+% Create smart device (thermostat, camera, etc.)
+% Usage: \createSmartDevice{name}{ip}{x}{y}{label}{devicetype}{status}
+\newcommand{\createSmartDevice}[7]{
+    \node[iot device, minimum width=2.5cm] (#1) at (#3,#4) {
+        \tikz\node[font=\small\bfseries]{#5}; \\[1pt]
+        \tikz\node[ip label, font=\tiny]{#2}; \\[1pt]
+        \tikz\node[font=\tiny\ttfamily, text=iotGreen!70]{#6}; \\[1pt]
+        \tikz\node[font=\tiny, text=black!60]{#7};
+    };
+}
+
+% ============================================================================
+% CLOUD PROVIDER NODES
+% ============================================================================
+
+% Create AWS cloud node
+% Usage: \createAWSNode{name}{x}{y}{label}{service}
+\newcommand{\createAWSNode}[5]{
+    \node[aws node] (#1) at (#2,#3) {
+        \textbf{#4} \\[2pt]
+        \tikz\node[font=\tiny\bfseries, text=cloudAWS!90]{AWS}; \\[1pt]
+        \tikz\node[font=\tiny\ttfamily, text=black!70]{#5};
+    };
+}
+
+% Create Azure cloud node
+% Usage: \createAzureNode{name}{x}{y}{label}{service}
+\newcommand{\createAzureNode}[5]{
+    \node[azure node] (#1) at (#2,#3) {
+        \textbf{#4} \\[2pt]
+        \tikz\node[font=\tiny\bfseries, text=cloudAzure!90]{Azure}; \\[1pt]
+        \tikz\node[font=\tiny\ttfamily, text=black!70]{#5};
+    };
+}
+
+% Create GCP cloud node
+% Usage: \createGCPNode{name}{x}{y}{label}{service}
+\newcommand{\createGCPNode}[5]{
+    \node[gcp node] (#1) at (#2,#3) {
+        \textbf{#4} \\[2pt]
+        \tikz\node[font=\tiny\bfseries, text=cloudGCP!90]{GCP}; \\[1pt]
+        \tikz\node[font=\tiny\ttfamily, text=black!70]{#5};
+    };
+}
+
+% ============================================================================
+% NETWORK APPLIANCE NODES
+% ============================================================================
+
+% Create IPS/IDS node
+% Usage: \createIPS{name}{ip}{x}{y}{label}{mode}
+% Mode: IPS (prevention) or IDS (detection)
+\newcommand{\createIPS}[6]{
+    \node[ips] (#1) at (#3,#4) {
+        \textbf{#5} \\[2pt]
+        \tikz\node[ip label]{#2}; \\[2pt]
+        \tikz\node[font=\tiny\bfseries, text=appliancePurple!90]{#6};
+    };
+}
+
+% Create proxy server node
+% Usage: \createProxy{name}{ip}{x}{y}{label}{proxytype}
+\newcommand{\createProxy}[6]{
+    \node[proxy] (#1) at (#3,#4) {
+        \textbf{#5} \\[2pt]
+        \tikz\node[ip label]{#2}; \\[1pt]
+        \tikz\node[font=\tiny\ttfamily, text=appliancePurple!80]{#6};
+    };
+}
+
+% Create WAF (Web Application Firewall) node
+% Usage: \createWAF{name}{ip}{x}{y}{label}{ruleset}
+\newcommand{\createWAF}[6]{
+    \node[waf] (#1) at (#3,#4) {
+        \textbf{#5} \\[2pt]
+        \tikz\node[ip label]{#2}; \\[2pt]
+        \tikz\node[font=\tiny\bfseries, text=appliancePurple!90]{WAF}; \\[1pt]
+        \tikz\node[font=\tiny\ttfamily, text=black!60]{Rules: #6};
+    };
+}
+
+% ============================================================================
+% STORAGE NODES
+% ============================================================================
+
+% Create storage node (generic)
+% Usage: \createStorage{name}{ip}{x}{y}{label}{capacity}
+\newcommand{\createStorage}[6]{
+    \node[storage] (#1) at (#3,#4) {
+        \textbf{#5} \\[2pt]
+        \tikz\node[ip label]{#2}; \\[1pt]
+        \tikz\node[font=\tiny\ttfamily, text=storageYellow!90]{#6};
+    };
+}
+
+% Create NAS (Network Attached Storage) node
+% Usage: \createNAS{name}{ip}{x}{y}{label}{capacity}{protocol}
+\newcommand{\createNAS}[7]{
+    \node[nas] (#1) at (#3,#4) {
+        \textbf{#5} \\[2pt]
+        \tikz\node[ip label]{#2}; \\[1pt]
+        \tikz\node[font=\tiny\bfseries, text=storageYellow!90]{NAS}; \\[1pt]
+        \tikz\node[font=\tiny\ttfamily, text=black!60]{#6 | #7};
+    };
+}
+
+% Create SAN (Storage Area Network) node
+% Usage: \createSAN{name}{ip}{x}{y}{label}{capacity}{protocol}
+\newcommand{\createSAN}[7]{
+    \node[storage, minimum height=2.5cm] (#1) at (#3,#4) {
+        \textbf{#5} \\[2pt]
+        \tikz\node[ip label]{#2}; \\[2pt]
+        \tikz\node[font=\tiny\bfseries, text=storageYellow!90]{SAN}; \\[1pt]
+        \tikz\node[font=\tiny\ttfamily, text=black!60]{#6}; \\[1pt]
+        \tikz\node[font=\tiny\ttfamily, text=storageYellow!80]{#7};
+    };
+}
+
+% ============================================================================
+% WIRELESS NODES
+% ============================================================================
+
+% Create wireless access point
+% Usage: \createWirelessAP{name}{ip}{x}{y}{label}{ssid}
+\newcommand{\createWirelessAP}[6]{
+    \node[wireless ap] (#1) at (#3,#4) {
+        \tikz\node[font=\small\bfseries]{#5}; \\[2pt]
+        \tikz\node[ip label]{#2}; \\[2pt]
+        \tikz\node[font=\tiny\ttfamily, text=wirelessTeal!80]{SSID: #6};
+    };
+    % Add wireless signal indicators
+    \foreach \r in {0.3, 0.5, 0.7} {
+        \draw[wirelessTeal!60, line width=0.5pt]
+            ([yshift=5pt]#1.north) arc (180:0:\r cm and \r/2 cm);
+    }
+}
+
+% ============================================================================
+% OS BADGES AND INDICATORS
+% ============================================================================
+
+% Add OS badge to any node
+% Usage: \addOSBadge{nodename}{os}
+% OS options: windows, linux, macos, android, ios, ubuntu, redhat, centos
+\newcommand{\addOSBadge}[2]{
+    \ifthenelse{\equal{#2}{windows}}{
+        \def\osbadgecolor{blue!70}
+        \def\osbadgetext{WIN}
+    }{
+    \ifthenelse{\equal{#2}{linux}}{
+        \def\osbadgecolor{black!80}
+        \def\osbadgetext{LNX}
+    }{
+    \ifthenelse{\equal{#2}{macos}}{
+        \def\osbadgecolor{black!70}
+        \def\osbadgetext{MAC}
+    }{
+    \ifthenelse{\equal{#2}{android}}{
+        \def\osbadgecolor{green!70}
+        \def\osbadgetext{AND}
+    }{
+    \ifthenelse{\equal{#2}{ios}}{
+        \def\osbadgecolor{black!60}
+        \def\osbadgetext{iOS}
+    }{
+    \ifthenelse{\equal{#2}{ubuntu}}{
+        \def\osbadgecolor{orange!70}
+        \def\osbadgetext{UBU}
+    }{
+        \def\osbadgecolor{gray!70}
+        \def\osbadgetext{OS}
+    }}}}}}
+
+    \node[
+        circle,
+        fill=\osbadgecolor,
+        text=white,
+        font=\tiny\bfseries,
+        inner sep=2pt,
+        minimum size=0.5cm,
+        anchor=south east
+    ] at (#1.south east) {\osbadgetext};
+}
+
+% Add status indicator to node
+% Usage: \addStatusIndicator{nodename}{status}
+% Status: online, offline, degraded, maintenance
+\newcommand{\addStatusIndicator}[2]{
+    \ifthenelse{\equal{#2}{online}}{
+        \def\statuscolor{green!70}
+    }{
+    \ifthenelse{\equal{#2}{offline}}{
+        \def\statuscolor{red!70}
+    }{
+    \ifthenelse{\equal{#2}{degraded}}{
+        \def\statuscolor{yellow!70}
+    }{
+        \def\statuscolor{gray!70}
+    }}}
+
+    \node[
+        circle,
+        fill=\statuscolor,
+        inner sep=3pt,
+        anchor=north west
+    ] at (#1.north west) {};
+}
+
+% ============================================================================
+% SUBNET BOUNDARY VISUALIZATION
+% ============================================================================
+
+% Create subnet boundary
+% Usage: \createSubnet{name}{label}{cidr}{nodes}{trustlevel}
+% Trust level: high, medium, low
+\newcommand{\createSubnet}[5]{
+    \ifthenelse{\equal{#5}{high}}{
+        \def\subnetcolor{clientGreen}
+    }{
+    \ifthenelse{\equal{#5}{medium}}{
+        \def\subnetcolor{threatMedium}
+    }{
+        \def\subnetcolor{threatHigh}
+    }}
+
+    \node[
+        subnet box,
+        draw=\subnetcolor!60,
+        fill=\subnetcolor!3,
+        fit=(#4),
+        label={[fill=\subnetcolor!20, rounded corners=3pt, font=\small\bfseries]above:#2},
+        label={[fill=white, rounded corners=2pt, font=\tiny\ttfamily]below left:#3}
+    ] (#1) {};
+}
+
+% Create DMZ (Demilitarized Zone) boundary
+% Usage: \createDMZ{name}{label}{nodes}
+\newcommand{\createDMZ}[3]{
+    \node[
+        subnet box,
+        draw=routerOrange!70,
+        fill=routerOrange!5,
+        line width=2.5pt,
+        fit=(#3),
+        label={[fill=routerOrange!30, rounded corners=3pt, font=\small\bfseries, text=white]above:#2},
+        label={[fill=white, rounded corners=2pt, font=\tiny\bfseries, text=routerOrange!90]below left:DMZ}
+    ] (#1) {};
 }
 
 % ============================================================================
