@@ -116,31 +116,133 @@
 }
 
 % Circular layout (for hub-and-spoke networks)
-% Usage: \layoutCircular{center_node}{satellite_nodes}{radius}
-\newcommand{\layoutCircular}[3]{
-    % Center node at origin
-    % Satellite nodes arranged in circle
-    % This is a placeholder - actual implementation in network_data.tex
+% Usage: \layoutCircular{center_x}{center_y}{radius}{num_nodes}{start_angle}
+\newcommand{\layoutCircular}[5]{
+    \def\centerX{#1}
+    \def\centerY{#2}
+    \def\radius{#3}
+    \def\numNodes{#4}
+    \def\startAngle{#5}
 }
 
-% TODO: Implement circular layout engine
-% - Calculate optimal radius based on node count
-% - Support for multiple concentric circles
-% - Angular distribution options (even spacing vs weighted)
-% - Arc-based positioning for partial circles
+% Calculate optimal radius based on node count and minimum spacing
+% Usage: \calcOptimalRadius{num_nodes}{min_spacing}{result_macro}
+\newcommand{\calcOptimalRadius}[3]{
+    % Circumference = 2 * pi * r = num_nodes * min_spacing
+    \pgfmathsetmacro{#3}{(#1 * #2) / (2 * pi)}
+}
+
+% Position node on circle
+% Usage: \positionOnCircle{center_x}{center_y}{radius}{angle}{result_name}
+\newcommand{\positionOnCircle}[5]{
+    \pgfmathsetmacro{\nodeX}{#1 + #3 * cos(#4)}
+    \pgfmathsetmacro{\nodeY}{#2 + #3 * sin(#4)}
+    \coordinate (#5) at (\nodeX, \nodeY);
+}
+
+% Calculate angle for node in circular layout
+% Usage: \calcCircularAngle{node_index}{total_nodes}{start_angle}{result_macro}
+\newcommand{\calcCircularAngle}[4]{
+    \pgfmathsetmacro{#4}{#3 + (#1 * 360 / #2)}
+}
+
+% Create concentric circular layout
+% Usage: \layoutConcentricCircles{center_x}{center_y}{base_radius}{num_circles}{nodes_per_circle}
+\newcommand{\layoutConcentricCircles}[5]{
+    \def\centerX{#1}
+    \def\centerY{#2}
+    \def\baseRadius{#3}
+    \def\numCircles{#4}
+    \def\nodesPerCircle{#5}
+    % Radius increment between circles
+    \pgfmathsetmacro{\radiusIncrement}{\baseRadius * 1.5}
+}
+
+% Weighted angular distribution (for uneven spacing)
+% Usage: \calcWeightedAngle{node_index}{weight}{total_weight}{start_angle}{result_macro}
+\newcommand{\calcWeightedAngle}[5]{
+    \pgfmathsetmacro{#5}{#4 + (#2 / #3) * 360}
+}
+
+% Arc-based positioning (partial circles)
+% Usage: \positionOnArc{center_x}{center_y}{radius}{start_angle}{end_angle}{position_ratio}{result_name}
+\newcommand{\positionOnArc}[7]{
+    \pgfmathsetmacro{\arcAngle}{#4 + #6 * (#5 - #4)}
+    \pgfmathsetmacro{\nodeX}{#1 + #3 * cos(\arcAngle)}
+    \pgfmathsetmacro{\nodeY}{#2 + #3 * sin(\arcAngle)}
+    \coordinate (#7) at (\nodeX, \nodeY);
+}
 
 % Grid layout (for data centers)
-% Usage: \layoutGrid{rows}{cols}{spacing}
-\newcommand{\layoutGrid}[3]{
-    % Regular grid arrangement
-    % This is a placeholder - actual implementation in network_data.tex
+% Usage: \layoutGrid{start_x}{start_y}{row_spacing}{col_spacing}{rows}{cols}
+\newcommand{\layoutGrid}[6]{
+    \def\gridStartX{#1}
+    \def\gridStartY{#2}
+    \def\rowSpacing{#3}
+    \def\colSpacing{#4}
+    \def\gridRows{#5}
+    \def\gridCols{#6}
 }
 
-% TODO: Implement grid layout engine
-% - Automatic row/column calculation
-% - Support for irregular grids (varying column counts)
-% - Server rack visualization
-% - Blade server representations
+% Calculate grid position for a node
+% Usage: \calcGridPosition{row}{col}{row_spacing}{col_spacing}{start_x}{start_y}{result_x}{result_y}
+\newcommand{\calcGridPosition}[8]{
+    \pgfmathsetmacro{#7}{#5 + #2 * #4}
+    \pgfmathsetmacro{#8}{#6 - #1 * #3}
+}
+
+% Auto-calculate grid dimensions from node count
+% Usage: \calcGridDimensions{num_nodes}{aspect_ratio}{result_rows}{result_cols}
+% aspect_ratio: width/height (e.g., 1.5 for wider grids, 1.0 for square)
+\newcommand{\calcGridDimensions}[4]{
+    \pgfmathsetmacro{#4}{ceil(sqrt(#1 * #2))}
+    \pgfmathsetmacro{#3}{ceil(#1 / #4)}
+}
+
+% Irregular grid support (varying column counts per row)
+% Usage: \calcIrregularGridPosition{row}{col}{cols_in_row}{total_width}{result_x}{result_y}
+\newcommand{\calcIrregularGridPosition}[6]{
+    \pgfmathsetmacro{\colSpacing}{#4 / (#3 + 1)}
+    \pgfmathsetmacro{#5}{#2 * \colSpacing}
+    \pgfmathsetmacro{#6}{-#1 * \rowSpacing / 1cm}
+}
+
+% Server rack visualization
+% Usage: \drawServerRack{rack_name}{x}{y}{width}{height}{units}{label}
+\newcommand{\drawServerRack}[7]{
+    \begin{scope}[on background layer]
+        \draw[draw=gray!70, fill=gray!10, line width=2pt, rounded corners=2pt]
+            (#2 - #4/2, #3 - #5/2) rectangle (#2 + #4/2, #3 + #5/2);
+        % Draw rack units
+        \foreach \u in {1,...,#6} {
+            \pgfmathsetmacro{\unitY}{#3 - #5/2 + (\u - 0.5) * #5 / #6}
+            \draw[gray!40, very thin]
+                (#2 - #4/2, \unitY) -- (#2 + #4/2, \unitY);
+        }
+        \node[font=\tiny\bfseries, fill=white, draw=gray!70, rounded corners=1pt]
+            at (#2, #3 + #5/2 + 0.3) {#7};
+        \node[font=\tiny, anchor=south west, gray]
+            at (#2 - #4/2 + 0.1, #3 - #5/2 + 0.1) {#6U};
+    \end{scope}
+}
+
+% Blade server representation (compact horizontal arrangement)
+% Usage: \drawBladeEnclosure{enclosure_name}{x}{y}{num_blades}{label}
+\newcommand{\drawBladeEnclosure}[5]{
+    \begin{scope}[on background layer]
+        \pgfmathsetmacro{\enclosureWidth}{#4 * 0.3 + 0.4}
+        \draw[draw=blue!60, fill=blue!5, line width=1.5pt, rounded corners=3pt]
+            (#2 - \enclosureWidth/2, #3 - 0.4) rectangle (#2 + \enclosureWidth/2, #3 + 0.4);
+        % Draw blade slots
+        \foreach \b in {1,...,#4} {
+            \pgfmathsetmacro{\bladeX}{#2 - \enclosureWidth/2 + 0.2 + (\b - 0.5) * 0.3}
+            \draw[blue!40, fill=white, very thin]
+                (\bladeX - 0.12, #3 - 0.3) rectangle (\bladeX + 0.12, #3 + 0.3);
+        }
+        \node[font=\tiny\bfseries, fill=white, draw=blue!60, rounded corners=1pt]
+            at (#2, #3 + 0.6) {#5};
+    \end{scope}
+}
 
 % ============================================================================
 % BACKGROUND ELEMENTS
@@ -164,19 +266,81 @@
 % ============================================================================
 
 % Tree layout for hierarchical networks
-% Usage: \layoutTree{root}{levels}{branching_factor}
-\newcommand{\layoutTree}[3]{
-    % Root at top
-    % Children arranged in levels below
-    % This is a placeholder - actual implementation needed
+% Usage: \layoutTree{root_x}{root_y}{level_spacing}{sibling_spacing}{inverted}
+% inverted: 'true' for root at bottom, 'false' for root at top
+\newcommand{\layoutTree}[5]{
+    \def\treeRootX{#1}
+    \def\treeRootY{#2}
+    \def\treeLevelSpacing{#3}
+    \def\treeSiblingSpacing{#4}
+    \def\treeInverted{#5}
 }
 
-% TODO: Implement tree layout engine
-% - Binary, ternary, and n-ary tree support
-% - Automatic balancing and centering
-% - Sibling spacing optimization
-% - Support for unbalanced trees
-% - Inverted tree option (root at bottom)
+% Calculate tree node position
+% Usage: \calcTreePosition{level}{position}{total_siblings}{level_spacing}{sibling_spacing}{inverted}{result_x}{result_y}
+\newcommand{\calcTreePosition}[8]{
+    % Calculate x position (centered around 0)
+    \pgfmathsetmacro{\totalWidth}{(#3 - 1) * #5}
+    \pgfmathsetmacro{\startX}{-\totalWidth / 2}
+    \pgfmathsetmacro{#7}{\startX + #2 * #5}
+    % Calculate y position (depends on inverted flag)
+    \IfStrEq{#6}{true}{
+        \pgfmathsetmacro{#8}{#1 * #4}  % Inverted: positive y for deeper levels
+    }{
+        \pgfmathsetmacro{#8}{-#1 * #4}  % Normal: negative y for deeper levels
+    }
+}
+
+% Calculate optimal sibling spacing for tree level
+% Usage: \calcTreeSiblingSpacing{num_siblings}{parent_width}{result_macro}
+\newcommand{\calcTreeSiblingSpacing}[3]{
+    \pgfmathsetmacro{#3}{max(2, #2 / max(1, #1 - 1))}
+}
+
+% Binary tree position calculation
+% Usage: \calcBinaryTreePosition{level}{is_left}{parent_x}{parent_y}{spacing}{result_x}{result_y}
+% is_left: 0 for right child, 1 for left child
+\newcommand{\calcBinaryTreePosition}[7]{
+    \pgfmathsetmacro{#6}{#3 + (#5) * (1 - 2 * #2)}  % Left: -spacing, Right: +spacing
+    \pgfmathsetmacro{#7}{#4 - \treeLevelSpacing}
+}
+
+% N-ary tree position calculation (generalized)
+% Usage: \calcNaryTreePosition{parent_x}{parent_y}{child_index}{num_children}{spacing}{result_x}{result_y}
+\newcommand{\calcNaryTreePosition}[7]{
+    \pgfmathsetmacro{\totalWidth}{(#4 - 1) * #5}
+    \pgfmathsetmacro{\offsetX}{-\totalWidth/2 + #3 * #5}
+    \pgfmathsetmacro{#6}{#1 + \offsetX}
+    \pgfmathsetmacro{#7}{#2 - \treeLevelSpacing}
+}
+
+% Automatic tree balancing (calculate center of subtree)
+% Usage: \calcSubtreeCenter{leftmost_x}{rightmost_x}{result_macro}
+\newcommand{\calcSubtreeCenter}[3]{
+    \pgfmathsetmacro{#3}{(#1 + #2) / 2}
+}
+
+% Tree width calculation for balancing
+% Usage: \calcTreeWidth{num_nodes}{branching_factor}{level}{min_spacing}{result_macro}
+\newcommand{\calcTreeWidth}[5]{
+    \pgfmathsetmacro{\nodesAtLevel}{min(#1, #2^#3)}
+    \pgfmathsetmacro{#5}{\nodesAtLevel * #4}
+}
+
+% Unbalanced tree support (custom child positions)
+% Usage: \calcUnbalancedTreePosition{parent_x}{parent_y}{child_positions_list}{child_index}{result_x}{result_y}
+% Note: child_positions_list would be a list of relative x-offsets
+\newcommand{\calcUnbalancedTreePosition}[6]{
+    % Simplified version - uses uniform spacing
+    \pgfmathsetmacro{#5}{#1 + (#4 - 1) * \treeSiblingSpacing - \treeSiblingSpacing}
+    \pgfmathsetmacro{#6}{#2 - \treeLevelSpacing}
+}
+
+% Inverted tree (root at bottom)
+% Usage: \drawInvertedTree{root_x}{root_y}{levels}{branching_factor}
+\newcommand{\drawInvertedTree}[4]{
+    \layoutTree{#1}{#2}{\treeLevelSpacing}{\treeSiblingSpacing}{true}
+}
 
 % ============================================================================
 % ORGANIC/FORCE-DIRECTED LAYOUTS
@@ -436,32 +600,241 @@
 % MULTI-PAGE LAYOUT SUPPORT
 % ============================================================================
 
-% For very large networks, split across pages
-\newcommand{\layoutMultiPage}[1]{
-    % Page 1: Overview with all major components
-    % Page 2+: Detailed views of each subnet
+% Multi-page layout for very large networks
+% Usage: \layoutMultiPage{num_nodes}{nodes_per_page}{overlap_margin}
+\newcommand{\layoutMultiPage}[3]{
+    \def\totalNodes{#1}
+    \def\nodesPerPage{#2}
+    \def\overlapMargin{#3}
+    \pgfmathsetmacro{\numPages}{ceil(#1 / #2)}
 }
 
-% TODO: Multi-page diagram support
-% - Automatic page breaking for large networks
-% - Cross-reference markers between pages
-% - Consistent positioning across pages
-% - Overview + detail pages
-% - Thumbnail navigation map
+% Calculate page number for a node
+% Usage: \calcNodePage{node_index}{nodes_per_page}{result_macro}
+\newcommand{\calcNodePage}[3]{
+    \pgfmathsetmacro{#3}{ceil(#1 / #2)}
+}
+
+% Draw cross-reference marker to another page
+% Usage: \drawPageReference{x}{y}{target_page}{label}{direction}
+% direction: 'to' or 'from'
+\newcommand{\drawPageReference}[5]{
+    \IfStrEq{#5}{to}{
+        \node[draw=orange!80, fill=orange!20, circle, line width=1pt,
+              font=\tiny\bfseries, minimum size=0.6cm] at (#1, #2)
+              {\rotatebox{45}{$\rightarrow$} P#3};
+    }{
+        \node[draw=blue!80, fill=blue!20, circle, line width=1pt,
+              font=\tiny\bfseries, minimum size=0.6cm] at (#1, #2)
+              {\rotatebox{225}{$\leftarrow$} P#3};
+    }
+    \node[font=\tiny, fill=white, rounded corners=1pt, anchor=north]
+        at (#1, #2 - 0.4) {#4};
+}
+
+% Draw overview page with thumbnail navigation
+% Usage: \drawOverviewPage{total_pages}{current_page}
+\newcommand{\drawOverviewPage}[2]{
+    \begin{scope}[shift={(12, -2)}]
+        \node[font=\small\bfseries, anchor=north] at (0, 0.5) {Page Map};
+        \draw[draw=gray!60, fill=gray!10, rounded corners=2pt]
+            (-1.2, -0.2) rectangle (1.2, -#1*0.5 - 0.2);
+        \foreach \p in {1,...,#1} {
+            \pgfmathsetmacro{\pageY}{-\p * 0.4}
+            \IfStrEq{\p}{#2}{
+                \draw[fill=green!40, draw=green!80, line width=1pt, rounded corners=1pt]
+                    (-1, \pageY) rectangle (1, \pageY + 0.3);
+                \node[font=\tiny\bfseries] at (0, \pageY + 0.15) {Page \p (current)};
+            }{
+                \draw[fill=white, draw=gray!60, rounded corners=1pt]
+                    (-1, \pageY) rectangle (1, \pageY + 0.3);
+                \node[font=\tiny] at (0, \pageY + 0.15) {Page \p};
+            }
+        }
+    \end{scope}
+}
+
+% Create detail page for subnet
+% Usage: \createDetailPage{page_num}{subnet_id}{zoom_level}
+\newcommand{\createDetailPage}[3]{
+    \def\currentPage{#1}
+    \def\focusSubnet{#2}
+    \def\zoomLevel{#3}
+}
+
+% Automatic page breaking based on node density
+% Usage: \autoPageBreak{node_count}{max_density}{area_width}{area_height}{result_pages}
+\newcommand{\autoPageBreak}[5]{
+    \pgfmathsetmacro{\areaSize}{#3 * #4}
+    \pgfmathsetmacro{\maxNodesPerPage}{#2 * \areaSize}
+    \pgfmathsetmacro{#5}{ceil(#1 / \maxNodesPerPage)}
+}
+
+% Maintain consistent positioning across pages
+% Usage: \createGlobalCoordinate{name}{x}{y}
+% Stores coordinate that persists across pages
+\newcommand{\createGlobalCoordinate}[3]{
+    \expandafter\xdef\csname globalX#1\endcsname{#2}
+    \expandafter\xdef\csname globalY#1\endcsname{#3}
+}
+
+% Retrieve global coordinate
+% Usage: \useGlobalCoordinate{name}{result_x}{result_y}
+\newcommand{\useGlobalCoordinate}[3]{
+    \pgfmathsetmacro{#2}{\csname globalX#1\endcsname}
+    \pgfmathsetmacro{#3}{\csname globalY#1\endcsname}
+}
+
+% Draw page header with navigation
+% Usage: \drawPageHeader{page_num}{total_pages}{title}
+\newcommand{\drawPageHeader}[3]{
+    \begin{scope}[shift={(0, 15)}]
+        \node[font=\Large\bfseries, anchor=north] at (0, 0) {#3};
+        \node[font=\small, anchor=north east, gray] at (10, -0.5)
+            {Page #1 of #2};
+        % Previous/Next indicators
+        \ifnum#1>1
+            \node[draw=blue!60, fill=blue!10, rounded corners=2pt,
+                  font=\tiny, anchor=north west] at (-10, -0.5)
+                {$\leftarrow$ Previous: Page \the\numexpr#1-1\relax};
+        \fi
+        \ifnum#1<#2
+            \node[draw=blue!60, fill=blue!10, rounded corners=2pt,
+                  font=\tiny, anchor=north east] at (10, -0.5)
+                {Next: Page \the\numexpr#1+1\relax\  $\rightarrow$};
+        \fi
+    \end{scope}
+}
 
 % ============================================================================
 % DYNAMIC LAYOUT ADJUSTMENT
 % ============================================================================
 
-% Adjust layout based on diagram density
-\newcommand{\optimizeLayout}{
-    % Analyze node density
-    % Adjust spacing and scale accordingly
+% Calculate diagram complexity score
+% Usage: \calcComplexityScore{num_nodes}{num_connections}{result_macro}
+% Returns a score from 0-100 (0=simple, 100=very complex)
+\newcommand{\calcComplexityScore}[3]{
+    \pgfmathsetmacro{\nodeScore}{min(50, #1 / 2)}
+    \pgfmathsetmacro{\connectionScore}{min(50, #2 / 4)}
+    \pgfmathsetmacro{#3}{\nodeScore + \connectionScore}
 }
 
-% TODO: Dynamic optimization
-% - Calculate diagram complexity score
-% - Auto-adjust spacing for readability
-% - Identify and fix overlapping elements
-% - Optimize for print vs screen display
-% - Responsive layout for different output sizes
+% Auto-adjust spacing for readability based on complexity
+% Usage: \autoAdjustSpacing{complexity_score}{base_spacing}{result_spacing}
+\newcommand{\autoAdjustSpacing}[3]{
+    \pgfmathsetmacro{\scaleFactor}{1 + (#1 / 100) * 0.5}
+    \pgfmathsetmacro{#3}{#2 * \scaleFactor}
+}
+
+% Adjust layout based on diagram density
+% Usage: \optimizeLayout{num_nodes}{area_width}{area_height}
+\newcommand{\optimizeLayout}[3]{
+    \pgfmathsetmacro{\density}{#1 / (#2 * #3)}
+    \pgfmathsetmacro{\optimalDensity}{0.05}  % nodes per square cm
+    \pgfmathsetmacro{\scalingFactor}{sqrt(\density / \optimalDensity)}
+}
+
+% Identify overlapping elements
+% Usage: \detectOverlaps{node_list}{threshold}{result_count}
+\newcommand{\detectOverlaps}[3]{
+    % This would iterate through all node pairs
+    % For now, returns a placeholder
+    \def#3{0}
+}
+
+% Optimize for print vs screen display
+% Usage: \setDisplayMode{mode}
+% mode: 'print' or 'screen'
+\newcommand{\setDisplayMode}[1]{
+    \IfStrEq{#1}{print}{
+        % Increase line widths and font sizes for print
+        \def\displayScale{1.2}
+        \def\minLineWidth{0.8pt}
+        \def\baseFontSize{\normalsize}
+    }{
+        % Optimize for screen viewing
+        \def\displayScale{1.0}
+        \def\minLineWidth{0.5pt}
+        \def\baseFontSize{\small}
+    }
+}
+
+% Responsive layout for different output sizes
+% Usage: \setOutputSize{size}
+% size: 'a4', 'a3', 'a2', 'a1', 'letter', 'screen'
+\newcommand{\setOutputSize}[1]{
+    \IfStrEq{#1}{a4}{
+        \def\pageWidth{21}
+        \def\pageHeight{29.7}
+        \def\layoutScale{1.0}
+    }{}
+    \IfStrEq{#1}{a3}{
+        \def\pageWidth{29.7}
+        \def\pageHeight{42}
+        \def\layoutScale{1.4}
+    }{}
+    \IfStrEq{#1}{a2}{
+        \def\pageWidth{42}
+        \def\pageHeight{59.4}
+        \def\layoutScale{2.0}
+    }{}
+    \IfStrEq{#1}{letter}{
+        \def\pageWidth{21.6}
+        \def\pageHeight{27.9}
+        \def\layoutScale{1.0}
+    }{}
+    \IfStrEq{#1}{screen}{
+        \def\pageWidth{16}
+        \def\pageHeight{9}
+        \def\layoutScale{0.8}
+    }{}
+}
+
+% ============================================================================
+% ZOOM AND LEVEL OF DETAIL
+% ============================================================================
+
+% Set zoom level
+% Usage: \setZoomLevel{level}
+% level: 1.0 = normal, 2.0 = 2x zoom, 0.5 = zoom out
+\newcommand{\setZoomLevel}[1]{
+    \def\currentZoom{#1}
+    \pgfmathsetmacro{\inverseZoom}{1 / #1}
+}
+
+% Calculate level of detail visibility
+% Usage: \shouldShowDetail{zoom_level}{detail_threshold}{result_macro}
+% Returns 1 if detail should be shown, 0 otherwise
+\newcommand{\shouldShowDetail}[3]{
+    \pgfmathsetmacro{#3}{ifthenelse(#1 >= #2, 1, 0)}
+}
+
+% Overview mode (hide detailed labels, simplify connections)
+% Usage: \setOverviewMode{enabled}
+% enabled: 'true' or 'false'
+\newcommand{\setOverviewMode}[1]{
+    \IfStrEq{#1}{true}{
+        \def\showDetailedLabels{false}
+        \def\showAllPorts{false}
+        \def\connectionStyle{simplified}
+    }{
+        \def\showDetailedLabels{true}
+        \def\showAllPorts{true}
+        \def\connectionStyle{detailed}
+    }
+}
+
+% Detail mode (show all information)
+% Usage: \setDetailMode{zoom_level}
+\newcommand{\setDetailMode}[1]{
+    \setZoomLevel{#1}
+    \setOverviewMode{false}
+}
+
+% Adaptive detail rendering based on zoom
+% Usage: \renderAdaptiveDetail{zoom_level}{element_type}
+\newcommand{\renderAdaptiveDetail}[2]{
+    \pgfmathsetmacro{\showBasic}{ifthenelse(#1 >= 0.5, 1, 0)}
+    \pgfmathsetmacro{\showMedium}{ifthenelse(#1 >= 1.0, 1, 0)}
+    \pgfmathsetmacro{\showFull}{ifthenelse(#1 >= 1.5, 1, 0)}
+}

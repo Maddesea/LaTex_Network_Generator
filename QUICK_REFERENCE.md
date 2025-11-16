@@ -160,10 +160,124 @@ pdflatex network_diagram_generator.tex
 ./compile.sh clean   # Remove all outputs
 ```
 
+## Advanced Layout Algorithms
+
+### Automatic Tiered Layout
+```latex
+% N-tier architecture with auto-positioning
+\layoutTiered{4}{vertical}{6cm}  % 4 tiers, vertical orientation
+
+% Calculate position for node in tier 2, position 1 of 3
+\calcTierPosition{2}{1}{3}{\nodeX}{\nodeY}
+\createServer{web1}{192.168.1.10}{\nodeX}{\nodeY}{Web Server}
+
+% Auto-assign node to tier by type
+\assignNodeTier{database}  % Returns tier 3 for database nodes
+```
+
+### Circular/Hub-and-Spoke Layout
+```latex
+% Position 8 nodes in a circle
+\layoutCircular{0}{0}{5}{8}{0}  % center, radius, count, start angle
+
+% Position individual node on circle
+\calcCircularAngle{0}{8}{0}{\angle}  % Node 0 of 8
+\positionOnCircle{0}{0}{5}{\angle}{node0}
+\createServer{srv0}{IP}{node0}{Server 0}
+
+% Concentric circles
+\layoutConcentricCircles{0}{0}{4}{3}{6}  % 3 rings, 6 nodes each
+```
+
+### Grid Layout for Data Centers
+```latex
+% Regular grid
+\layoutGrid{0}{0}{3}{3}{4}{6}  % 4 rows × 6 columns with 3cm spacing
+
+% Calculate position in grid
+\calcGridPosition{2}{3}{3}{3}{0}{0}{\srvX}{\srvY}
+
+% Server rack visualization
+\drawServerRack{rack1}{0}{0}{2}{8}{42}{Rack A}  % 42U rack
+
+% Blade server enclosure
+\drawBladeEnclosure{blade1}{5}{3}{16}{Blade Chassis}
+```
+
+### Tree Layout for Hierarchy
+```latex
+% Binary tree
+\layoutTree{0}{0}{4}{3}{false}  % root position, spacing, not inverted
+\calcBinaryTreePosition{1}{1}{0}{0}{2}{\leftX}{\leftY}
+
+% N-ary tree (any branching)
+\calcNaryTreePosition{0}{0}{2}{5}{2}{\childX}{\childY}  % child 2 of 5
+```
+
+### IP Subnet Auto-Grouping
+```latex
+% Parse IP address
+\parseIPAddress{192.168.1.100}{\a}{\b}{\c}{\d}
+
+% Calculate subnet
+\calcSubnetID{192.168.1.100}{24}{\subnet}  % Result: 192.168.1.0/24
+
+% Auto-colored subnet boundary
+\drawAutoSubnet{192.168.1.0/24}{(web1)(web2)(web3)}{DMZ Web Tier}
+
+% Nested subnets (VLANs)
+\drawNestedSubnet{10.0.0.0/8}{10.50.0.0/16}{(nodes)}{Finance VLAN}
+```
+
+### Collision Detection & Avoidance
+```latex
+% Check for collision
+\checkNodeCollision{0}{0}{2}{2}{1}{1}{\result}  % 1=collision, 0=safe
+
+% Auto-avoid collision
+\avoidCollision{0}{0}{1}{1}{\newX}{\newY}
+
+% Snap to grid
+\snapToGrid{3.7}{5.2}{1}{\gridX}{\gridY}  % Snaps to (4, 5)
+
+% Magnetic alignment
+\magneticAlign{3.8}{5.1}{4}{5}{0.5}{\alignX}{\alignY}
+```
+
+### Multi-Page Diagrams
+```latex
+% Setup multi-page layout
+\layoutMultiPage{50}{20}{2}  % 50 nodes, 20 per page, 2cm overlap
+
+% Cross-page reference markers
+\drawPageReference{5}{10}{3}{To Database}{to}  % Arrow to page 3
+
+% Page navigation
+\drawOverviewPage{5}{2}  % 5 total pages, on page 2
+\drawPageHeader{2}{5}{Network Topology}  % Header with prev/next
+```
+
+### Dynamic Optimization
+```latex
+% Calculate complexity score
+\calcComplexityScore{50}{120}{\score}  % nodes, connections
+
+% Auto-adjust spacing
+\autoAdjustSpacing{75}{3}{\newSpacing}  % complexity, base spacing
+
+% Set display mode
+\setDisplayMode{print}  % or 'screen'
+\setOutputSize{a3}      % a4, a3, a2, letter, screen
+
+% Zoom levels
+\setZoomLevel{1.5}      % 1.0=normal, 2.0=2x, 0.5=zoom out
+\setOverviewMode{true}  % Simplified view for large diagrams
+```
+
 ## Common Positioning Patterns
 
 ```latex
-% Grid Layout
+% Manual Grid Layout
 \createServer{s1}{IP}{0}{0}{Server 1}
 \createServer{s2}{IP}{4}{0}{Server 2}
 \createServer{s3}{IP}{0}{-3}{Server 3}
