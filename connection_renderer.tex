@@ -1100,14 +1100,14 @@
 \newcommand{\drawConnectionWithJitter}[4]{
     \pgfmathsetmacro{\jitter}{#3}
     \ifnum\jitter>50
-        \def\jitterAmp}{0.8mm}
+        \def\jitterAmp{0.8mm}
         \def\jitterColor{red!70}
     \else
         \ifnum\jitter>20
-            \def\jitterAmp}{0.4mm}
+            \def\jitterAmp{0.4mm}
             \def\jitterColor{yellow!80!orange}
         \else
-            \def\jitterAmp}{0.2mm}
+            \def\jitterAmp{0.2mm}
             \def\jitterColor{green!60}
         \fi
     \fi
@@ -1125,14 +1125,14 @@
     \pgfmathsetmacro{\sla}{#3}
     \ifnum\sla>99
         \def\slaColor{green!70}
-        \def\slaStatus}{COMPLIANT}
+        \def\slaStatus{COMPLIANT}
     \else
         \ifnum\sla>95
             \def\slaColor{yellow!80!orange}
-            \def\slaStatus}{WARNING}
+            \def\slaStatus{WARNING}
         \else
             \def\slaColor{red!70}
-            \def\slaStatus}{VIOLATION}
+            \def\slaStatus{VIOLATION}
         \fi
     \fi
     \draw[draw=\slaColor, line width=1.5pt, -{Stealth[length=3mm]}]
@@ -1140,7 +1140,6 @@
         node[midway, above, font=\tiny, fill=white, inner sep=1pt] {#4}
         node[midway, below, font=\tiny\bfseries, fill=\slaColor!20, inner sep=2pt]
             {SLA: #3\% - \slaStatus};
-}
 }
 
 % ============================================================================
