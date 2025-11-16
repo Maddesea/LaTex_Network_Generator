@@ -8,11 +8,156 @@
 % Node counter for auto-indexing
 \newcounter{nodecount}
 
-% TODO: Data structure improvements
-% - Implement hash map for O(1) node lookup by IP
+% ============================================================================
+% HASH MAP IMPLEMENTATION FOR O(1) NODE LOOKUP
+% ============================================================================
+% This implementation uses pgfkeys to create a hash map for efficient node lookup
+% by IP address, hostname, or node ID
+
+% Initialize hash map storage
+\pgfkeys{
+    /nodemap/.cd,
+    .unknown/.code={
+        \pgfkeyssetvalue{\pgfkeyscurrentpath/\pgfkeyscurrentname}{#1}
+    }
+}
+
+% Register a node in the hash map
+% Usage: \registerNode{nodeID}{IP}{hostname}
+\newcommand{\registerNode}[3]{
+    % Store by node ID
+    \pgfkeys{/nodemap/byid/#1/.initial={#1}}
+    \pgfkeys{/nodemap/byid/#1/ip/.initial={#2}}
+    \pgfkeys{/nodemap/byid/#1/hostname/.initial={#3}}
+
+    % Store by IP address (replace . with _ for key safety)
+    \StrSubstitute{#2}{.}{_}[\safeip]
+    \pgfkeys{/nodemap/byip/\safeip/.initial={#1}}
+
+    % Store by hostname
+    \pgfkeys{/nodemap/byhost/#3/.initial={#1}}
+}
+
+% Lookup node ID by IP address
+% Usage: \getNodeByIP{192.168.1.10}{\resultvar}
+\newcommand{\getNodeByIP}[2]{
+    \StrSubstitute{#1}{.}{_}[\safeip]
+    \pgfkeysgetvalue{/nodemap/byip/\safeip}{#2}
+}
+
+% Lookup node ID by hostname
+% Usage: \getNodeByHostname{webserver}{\resultvar}
+\newcommand{\getNodeByHostname}[2]{
+    \pgfkeysgetvalue{/nodemap/byhost/#1}{#2}
+}
+
+% Get node IP by node ID
+% Usage: \getNodeIP{srv1}{\resultvar}
+\newcommand{\getNodeIP}[2]{
+    \pgfkeysgetvalue{/nodemap/byid/#1/ip}{#2}
+}
+
+% Get node hostname by node ID
+% Usage: \getNodeHostname{srv1}{\resultvar}
+\newcommand{\getNodeHostname}[2]{
+    \pgfkeysgetvalue{/nodemap/byid/#1/hostname}{#2}
+}
+
+% TODO: Additional hash map features
 % - Add node grouping/clustering support
 % - Create hierarchical node relationships (parent-child)
 % - Support for virtual/container nodes
+% - Store additional metadata (OS, services, status)
+
+% ============================================================================
+% IP ADDRESS VALIDATION AND FORMATTING
+% ============================================================================
+
+% Validate IPv4 address format
+% Usage: \validateIPv4{192.168.1.10}{\resultvar}
+% Result: 1 if valid, 0 if invalid
+\newcommand{\validateIPv4}[2]{
+    \def#2{1} % Assume valid by default
+
+    % Check if IP contains 3 dots
+    \StrCount{#1}{.}[\dotcount]
+    \ifnum\dotcount=3\relax
+        % Valid format (basic check)
+        \def#2{1}
+    \else
+        \def#2{0}
+    \fi
+}
+
+% Validate IPv6 address format (basic check)
+% Usage: \validateIPv6{2001:0db8::1}{\resultvar}
+% Result: 1 if valid, 0 if invalid
+\newcommand{\validateIPv6}[2]{
+    \def#2{1} % Assume valid by default
+
+    % Check if IP contains colons
+    \StrCount{#1}{:}[\coloncount]
+    \ifnum\coloncount>1\relax
+        % Valid format (basic check)
+        \def#2{1}
+    \else
+        \def#2{0}
+    \fi
+}
+
+% Auto-detect IP version and validate
+% Usage: \validateIP{192.168.1.10}{\resultvar}
+% Result: 4 for IPv4, 6 for IPv6, 0 for invalid
+\newcommand{\validateIP}[2]{
+    \StrCount{#1}{.}[\dotcount]
+    \StrCount{#1}{:}[\coloncount]
+
+    \ifnum\dotcount=3\relax
+        \def#2{4} % IPv4
+    \else
+        \ifnum\coloncount>1\relax
+            \def#2{6} % IPv6
+        \else
+            \def#2{0} % Invalid
+        \fi
+    \fi
+}
+
+% Format IP address with CIDR notation
+% Usage: \formatCIDR{192.168.1.0}{24}{\resultvar}
+\newcommand{\formatCIDR}[3]{
+    \def#3{#1/#2}
+}
+
+% Extract subnet from IP address
+% Usage: \extractSubnet{192.168.1.100}{\resultvar}
+% Returns: 192.168.1.0 (class C subnet)
+\newcommand{\extractSubnet}[2]{
+    \StrCut{#1}{.}{\octetA}{\remaining}
+    \StrCut{\remaining}{.}{\octetB}{\remaining}
+    \StrCut{\remaining}{.}{\octetC}{\octetD}
+    \def#2{\octetA.\octetB.\octetC.0}
+}
+
+% Determine if two IPs are in same subnet (simple /24 check)
+% Usage: \sameSubnet{192.168.1.10}{192.168.1.20}{\resultvar}
+% Result: 1 if same subnet, 0 if different
+\newcommand{\sameSubnet}[3]{
+    \extractSubnet{#1}{\subnetA}
+    \extractSubnet{#2}{\subnetB}
+
+    \ifthenelse{\equal{\subnetA}{\subnetB}}{
+        \def#3{1}
+    }{
+        \def#3{0}
+    }
+}
+
+% TODO: Advanced IP validation
+% - Validate octet ranges (0-255)
+% - Full IPv6 validation with compression
+% - Support for variable CIDR prefixes (/16, /8, etc.)
+% - IP range validation (start-end)
 
 % ============================================================================
 % BASIC NODE CREATION COMMANDS
@@ -127,9 +272,92 @@
           anchor=north east] at (#2.north east) {};
 }
 
+% ============================================================================
+% DATABASE SERVER NODES
+% ============================================================================
+
+% Create a database server node (basic)
+% Usage: \createDatabase{name}{ip}{x}{y}{label}
+\newcommand{\createDatabase}[5]{
+    \node[database] (#1) at (#3,#4) {
+        \textbf{#5} \\[2pt]
+        \tikz\node[ip label]{#2};
+    };
+}
+
+% Create a primary database server node
+% Usage: \createDatabasePrimary{name}{ip}{x}{y}{label}
+\newcommand{\createDatabasePrimary}[5]{
+    \node[database primary] (#1) at (#3,#4) {
+        \textbf{#5} \\[2pt]
+        \tikz\node[ip label]{#2}; \\[1pt]
+        \tikz\node[font=\tiny\bfseries, text=databaseTeal!90]{PRIMARY};
+    };
+}
+
+% Create a replica database server node
+% Usage: \createDatabaseReplica{name}{ip}{x}{y}{label}
+\newcommand{\createDatabaseReplica}[5]{
+    \node[database replica] (#1) at (#3,#4) {
+        \textbf{#5} \\[2pt]
+        \tikz\node[ip label]{#2}; \\[1pt]
+        \tikz\node[font=\tiny\bfseries, text=databaseTeal!70]{REPLICA};
+    };
+}
+
+% Create a cluster database server node
+% Usage: \createDatabaseCluster{name}{ip}{x}{y}{label}
+\newcommand{\createDatabaseCluster}[5]{
+    \node[database cluster] (#1) at (#3,#4) {
+        \textbf{#5} \\[2pt]
+        \tikz\node[ip label]{#2}; \\[1pt]
+        \tikz\node[font=\tiny\bfseries, text=databaseTeal!85]{CLUSTER};
+    };
+}
+
+% ============================================================================
+% LOAD BALANCER NODES
+% ============================================================================
+
+% Create a load balancer node (basic)
+% Usage: \createLoadBalancer{name}{ip}{x}{y}{label}
+\newcommand{\createLoadBalancer}[5]{
+    \node[loadbalancer] (#1) at (#3,#4) {
+        \textbf{#5} \\[2pt]
+        \tikz\node[ip label]{#2};
+    };
+}
+
+% Create an active load balancer node
+% Usage: \createLoadBalancerActive{name}{ip}{x}{y}{label}{algorithm}
+% Algorithm: round-robin, least-conn, ip-hash, weighted
+\newcommand{\createLoadBalancerActive}[6]{
+    \node[loadbalancer active] (#1) at (#3,#4) {
+        \textbf{#5} \\[2pt]
+        \tikz\node[ip label]{#2}; \\[1pt]
+        \tikz\node[font=\tiny\ttfamily, text=loadBalancerCyan!90]{#6}; \\[1pt]
+        \tikz\node[font=\tiny\bfseries, text=clientGreen!80]{ACTIVE};
+    };
+}
+
+% Create a passive load balancer node
+% Usage: \createLoadBalancerPassive{name}{ip}{x}{y}{label}
+\newcommand{\createLoadBalancerPassive}[5]{
+    \node[loadbalancer passive] (#1) at (#3,#4) {
+        \textbf{#5} \\[2pt]
+        \tikz\node[ip label]{#2}; \\[1pt]
+        \tikz\node[font=\tiny\bfseries, text=black!50]{STANDBY};
+    };
+}
+
+% Add load distribution indicator to load balancer
+% Usage: \addLoadDistribution{nodename}{backend1,backend2,backend3}
+\newcommand{\addLoadDistribution}[2]{
+    \node[font=\tiny\ttfamily, text=black!60, anchor=south]
+        at (#1.south) [below=2pt] {Backends: #2};
+}
+
 % TODO: Enhanced node variants
-% - Database server nodes with cylinder shape
-% - Load balancer nodes with special indicators
 % - Virtual machine nodes with nested appearance
 % - Container/Docker nodes with stacked appearance
 % - Mobile device nodes with phone/tablet shapes
