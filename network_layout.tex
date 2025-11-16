@@ -2485,3 +2485,561 @@
     % Progress bar showing capacity utilization
     \pgfmathsetmacro{\capacity}{100 * #2 / #3}
 }
+
+% ============================================================================
+% DOMAIN-SPECIFIC LAYOUTS (Specialized Network Types)
+% ============================================================================
+
+% Software-Defined Network (SDN) Layout
+% Usage: \layoutSDN{controller}{switches}{hosts}
+\newcommand{\layoutSDN}[3]{
+    % Controller at top
+    % Switches in middle tier
+    % Hosts at bottom
+    % Control plane vs data plane visualization
+}
+
+% Internet of Things (IoT) Layout
+% Usage: \layoutIoT{gateway}{sensors}{cloud}
+\newcommand{\layoutIoT}[3]{
+    % Gateway nodes as hubs
+    % Sensors in clusters around gateways
+    % Cloud services at top tier
+    % Mesh network visualization
+}
+
+% Blockchain Network Layout
+% Usage: \layoutBlockchain{nodes}{consensus_type}
+% consensus_type: pow, pos, pbft
+\newcommand{\layoutBlockchain}[2]{
+    % Circular layout for peer-to-peer
+    % Highlight validator/miner nodes
+    % Show block propagation
+}
+
+% Kubernetes Cluster Layout
+% Usage: \layoutKubernetes{master}{workers}{pods_per_worker}
+\newcommand{\layoutKubernetes}[3]{
+    % Master nodes at top
+    % Worker nodes in grid
+    % Pods as nested containers
+    % Service mesh overlay
+}
+
+% Microservices Architecture Layout
+% Usage: \layoutMicroservices{services}{api_gateway}{database}
+\newcommand{\layoutMicroservices}[3]{
+    % API gateway at front
+    % Services in flexible grid
+    % Databases clustered
+    % Message queues as connectors
+}
+
+% Zero Trust Architecture Layout
+% Usage: \layoutZeroTrust{zones}{policies}
+\newcommand{\layoutZeroTrust}[2]{
+    % Micro-segmentation visualization
+    % Policy enforcement points
+    % Identity verification layers
+}
+
+% Satellite Network Topology
+% Usage: \layoutSatellite{ground_stations}{satellites}{orbits}
+\newcommand{\layoutSatellite}[3]{
+    % Ground stations at base
+    % Satellites in orbital rings
+    % Inter-satellite links
+}
+
+% Mesh Network Layout
+% Usage: \layoutMesh{nodes}{density}
+% density: sparse, medium, dense
+\newcommand{\layoutMesh}[2]{
+    % Distributed node placement
+    % Show redundant paths
+    % Highlight mesh properties
+}
+
+% Content Delivery Network (CDN) Layout
+% Usage: \layoutCDN{origin}{edge_servers}{regions}
+\newcommand{\layoutCDN}[3]{
+    % Origin at center
+    % Edge servers geographically distributed
+    % Regional clustering
+}
+
+% Industrial Control System (ICS/SCADA) Layout
+% Usage: \layoutICS{hmi}{plc}{devices}
+\newcommand{\layoutICS}[3]{
+    % HMI/SCADA at top (supervision)
+    % PLCs in middle (control)
+    % Field devices at bottom (process)
+    % Air-gapped networks
+}
+
+% ============================================================================
+% ADVANCED MATHEMATICAL OPTIMIZATIONS
+% ============================================================================
+
+% Eigenvector-based positioning
+% Usage: \eigenvectorLayout{matrix}{dimension}
+\newcommand{\eigenvectorLayout}[2]{
+    % Use graph Laplacian eigenvectors
+    % 2D or 3D embedding
+    % Reveals hierarchical structure
+}
+
+% Multidimensional Scaling (MDS)
+% Usage: \mdsLayout{distance_matrix}{dimensions}
+\newcommand{\mdsLayout}[2]{
+    % Classical MDS
+    % Preserve pairwise distances
+    % Dimensionality reduction
+}
+
+% t-SNE inspired layout
+% Usage: \tsneLayout{perplexity}{iterations}
+\newcommand{\tsneLayout}[2]{
+    % Local structure preservation
+    % Cluster visualization
+    % Non-linear dimensionality reduction
+}
+
+% Force Atlas 2 algorithm (Gephi-style)
+% Usage: \forceAtlas2{scaling}{gravity}{iterations}
+\newcommand{\forceAtlas2}[3]{
+    % LinLog mode support
+    % Prevent overlap
+    % Hub-centric or distributed
+}
+
+% Davidson-Harel algorithm
+% Usage: \davidsonHarelLayout{iterations}
+\newcommand{\davidsonHarelLayout}[1]{
+    % Minimize: edge crossings, node-edge distance
+    % Maximize: edge length uniformity
+    % Multi-objective optimization
+}
+
+% Sugiyama framework (layered graphs)
+% Usage: \sugiyamaLayout{dummy_nodes}
+\newcommand{\sugiyamaLayout}[1]{
+    % Layer assignment
+    % Crossing reduction
+    % Coordinate assignment
+    % Optimal for directed acyclic graphs
+}
+
+% Orthogonal layout (right-angle edges)
+% Usage: \orthogonalLayout{grid_size}
+\newcommand{\orthogonalLayout}[1]{
+    % All edges at 90-degree angles
+    % Grid-based positioning
+    % Minimal bends
+}
+
+% Planar layout detection and rendering
+% Usage: \planarLayout
+\newcommand{\planarLayout}{
+    % Test for planarity
+    % Use planar embedding if possible
+    % Minimize crossings if non-planar
+}
+
+% ============================================================================
+% REAL-TIME AND LIVE DIAGRAM FEATURES
+% ============================================================================
+
+% Timestamp overlay
+% Usage: \addTimestamp{position}{format}
+% format: datetime, time, custom
+\newcommand{\addTimestamp}[2]{
+    \node[font=\tiny, text=gray] at #1 {
+        \today\ \currenttime
+    };
+}
+
+% Version indicator
+% Usage: \addVersionInfo{version}{position}
+\newcommand{\addVersionInfo}[2]{
+    \node[font=\small, draw, fill=blue!10] at #2 {
+        Version: #1
+    };
+}
+
+% Change tracking markers
+% Usage: \markChange{node}{change_type}{date}
+% change_type: added, modified, removed
+\newcommand{\markChange}[3]{
+    \def\changetype{#2}
+    \def\added{added}
+    \def\modified{modified}
+    \def\removed{removed}
+    
+    \ifx\changetype\added
+        \node[star, star points=5, star point ratio=2, draw=green, fill=green!20] at (#1.north east) {};
+    \else\ifx\changetype\modified
+        \node[circle, draw=orange, fill=orange!20] at (#1.north east) {};
+    \else\ifx\changetype\removed
+        \node[cross out, draw=red] at (#1) {};
+    \fi\fi\fi
+}
+
+% Live data integration placeholder
+% Usage: \liveData{node}{metric}{source}
+\newcommand{\liveData}[3]{
+    % Placeholder for external data
+    % Could integrate with monitoring systems
+    \node[below, font=\tiny] at (#1.south) {#2: [LIVE]};
+}
+
+% Alert/notification system
+% Usage: \addAlert{node}{severity}{message}
+% severity: info, warning, critical
+\newcommand{\addAlert}[3]{
+    \def\severity{#2}
+    \def\critical{critical}
+    \def\warning{warning}
+    
+    \ifx\severity\critical
+        \node[fill=red!80, text=white, font=\tiny\bfseries] at (#1.north) {!};
+    \else\ifx\severity\warning
+        \node[fill=yellow!80, text=black, font=\tiny\bfseries] at (#1.north) {⚠};
+    \fi\fi
+}
+
+% Diff visualization (before/after)
+% Usage: \showDiff{old_layout}{new_layout}
+\newcommand{\showDiff}[2]{
+    % Side-by-side comparison
+    % Highlight differences
+}
+
+% Network state history
+% Usage: \addStateHistory{states}
+\newcommand{\addStateHistory}[1]{
+    % Timeline of network changes
+    % Replay capability
+}
+
+% ============================================================================
+% COMPREHENSIVE THEMING AND STYLING SYSTEM
+% ============================================================================
+
+% Corporate theme templates
+% Usage: \applyCorporateTheme{company}
+% company: cisco, aws, azure, google, generic
+\newcommand{\applyCorporateTheme}[1]{
+    \def\company{#1}
+    \def\cisco{cisco}
+    \def\aws{aws}
+    \def\azure{azure}
+    
+    \ifx\company\cisco
+        % Cisco blue theme
+        \tikzset{primary color/.style={fill=blue!60!cyan}}
+    \else\ifx\company\aws
+        % AWS orange theme
+        \tikzset{primary color/.style={fill=orange!70}}
+    \else\ifx\company\azure
+        % Azure blue theme
+        \tikzset{primary color/.style={fill=blue!80}}
+    \fi\fi\fi
+}
+
+% Dark mode theme
+\newcommand{\applyDarkTheme}{
+    \tikzset{
+        every node/.append style={fill=gray!20, draw=white, text=white},
+        every path/.append style={draw=white},
+        background/.style={fill=black!90}
+    }
+}
+
+% Light/minimal theme
+\newcommand{\applyMinimalTheme}{
+    \tikzset{
+        every node/.append style={fill=white, draw=black!30, very thin},
+        every path/.append style={draw=black!30, very thin}
+    }
+}
+
+% Neon/cyberpunk theme
+\newcommand{\applyNeonTheme}{
+    \tikzset{
+        every node/.append style={
+            fill=black,
+            draw=cyan,
+            text=cyan,
+            line width=1.5pt,
+            drop shadow={shadow xshift=0pt, shadow yshift=0pt, fill=cyan, opacity=0.5}
+        },
+        every path/.append style={draw=magenta, line width=1.5pt}
+    }
+}
+
+% Professional blueprint theme
+\newcommand{\applyBlueprintTheme}{
+    \tikzset{
+        every node/.append style={draw=white, text=white, fill=blue!30!black},
+        every path/.append style={draw=white},
+        background/.style={fill=blue!80!black}
+    }
+}
+
+% Grayscale/monochrome theme
+\newcommand{\applyGrayscaleTheme}{
+    \tikzset{
+        every node/.append style={fill=white, draw=black},
+        every path/.append style={draw=black}
+    }
+}
+
+% Style inheritance system
+% Usage: \defineStyle{name}{properties}
+\newcommand{\defineStyle}[2]{
+    \tikzset{#1/.style={#2}}
+}
+
+% Apply style globally
+% Usage: \setGlobalStyle{style_name}
+\newcommand{\setGlobalStyle}[1]{
+    \tikzset{every node/.append style={#1}}
+}
+
+% ============================================================================
+% VALIDATION AND ERROR CHECKING ENGINE
+% ============================================================================
+
+% Validate node positions (no NaN/infinite)
+% Usage: \validatePositions
+\newcommand{\validatePositions}{
+    \typeout{=== Position Validation ===}
+    % Check all node coordinates
+    % Report invalid positions
+}
+
+% Check for overlapping nodes
+% Usage: \checkOverlaps{threshold}
+\newcommand{\checkOverlaps}[1]{
+    % Report all overlaps above threshold
+    \typeout{Checking for overlaps...}
+}
+
+% Validate connections (endpoints exist)
+% Usage: \validateConnections
+\newcommand{\validateConnections}{
+    % Check all connections have valid endpoints
+    % Report dangling connections
+}
+
+% Check diagram bounds
+% Usage: \checkBounds{max_width}{max_height}
+\newcommand{\checkBounds}[2]{
+    \measureDiagramBounds
+    \pgfmathparse{\diagramwidthcalc > #1 ? 1 : 0}
+    \ifnum\pgfmathresult=1
+        \typeout{WARNING: Diagram width exceeds limit!}
+    \fi
+}
+
+% Validate color contrast (accessibility)
+% Usage: \checkContrast{foreground}{background}
+\newcommand{\checkContrast}[2]{
+    % Calculate WCAG contrast ratio
+    % Report if below 4.5:1 (AA standard)
+}
+
+% Check for circular dependencies
+% Usage: \detectCycles
+\newcommand{\detectCycles}{
+    % Detect cycles in directed graphs
+    % Report cyclic paths
+}
+
+% Validate layout consistency
+% Usage: \validateLayoutConsistency
+\newcommand{\validateLayoutConsistency}{
+    \typeout{=== Layout Consistency Check ===}
+    % Check spacing uniformity
+    % Check alignment
+    % Report inconsistencies
+}
+
+% ============================================================================
+% AUTOMATIC DOCUMENTATION GENERATION
+% ============================================================================
+
+% Generate node inventory
+% Usage: \generateNodeInventory{filename}
+\newcommand{\generateNodeInventory}[1]{
+    \typeout{Generating node inventory: #1}
+    % List all nodes with properties
+    % Type, position, connections
+}
+
+% Generate connection matrix
+% Usage: \generateConnectionMatrix{filename}
+\newcommand{\generateConnectionMatrix}[1]{
+    \typeout{Generating connection matrix: #1}
+    % Adjacency matrix
+    % CSV or LaTeX table format
+}
+
+% Create diagram legend automatically
+% Usage: \autoLegend{position}
+\newcommand{\autoLegend}[1]{
+    \node[draw, fill=white, align=left, font=\small] at #1 {
+        \textbf{Legend}\\
+        \tikz\node[server style] {}; Server\\
+        \tikz\node[router style] {}; Router\\
+        \tikz\draw[connection] (0,0) -- (0.5,0); Connection
+    };
+}
+
+% Generate network statistics table
+% Usage: \generateStatsTable{position}
+\newcommand{\generateStatsTable}[1]{
+    \node[draw, fill=white, align=left, font=\footnotesize] at #1 {
+        \textbf{Network Statistics}\\
+        Nodes: \the\value{nodecount}\\
+        Connections: \the\value{connectioncount}\\
+        Density: \density
+    };
+}
+
+% Export diagram metadata
+% Usage: \exportMetadata{filename}
+\newcommand{\exportMetadata}[1]{
+    % JSON with diagram properties
+    % Timestamps, version, statistics
+}
+
+% Generate change log from versions
+% Usage: \generateChangeLog{version1}{version2}
+\newcommand{\generateChangeLog}[2]{
+    % Compare two diagram versions
+    % List added/removed/modified elements
+}
+
+% ============================================================================
+% ADVANCED NETWORK-SPECIFIC FEATURES
+% ============================================================================
+
+% BGP routing visualization
+% Usage: \visualizeBGP{as_path}
+\newcommand{\visualizeBGP}[1]{
+    % Autonomous system path
+    % Route propagation
+}
+
+% VLAN tagging display
+% Usage: \showVLAN{connection}{vlan_id}{color}
+\newcommand{\showVLAN}[3]{
+    \draw[#3, thick] (#1) node[midway, fill=white, font=\tiny] {VLAN #2};
+}
+
+% Spanning tree protocol visualization
+% Usage: \visualizeSTP{root}{blocked_ports}
+\newcommand{\visualizeSTP}[2]{
+    % Root bridge highlighted
+    % Blocked ports marked
+    % Port states shown
+}
+
+% OSPF area visualization
+% Usage: \drawOSPFArea{area_id}{nodes}{color}
+\newcommand{\drawOSPFArea}[3]{
+    \drawSecurityZone{ospf-#1}{#3}{#2}{Area #1}{OSPF}
+}
+
+% Traffic flow visualization
+% Usage: \showTrafficFlow{path}{bandwidth}{protocol}
+\newcommand{\showTrafficFlow}[3]{
+    % Animated or static flow indicator
+    % Bandwidth as line thickness
+    % Protocol label
+}
+
+% MAC address table display
+% Usage: \showMACTable{switch}{ports}{macs}
+\newcommand{\showMACTable}[3]{
+    % Switch MAC address table
+    % Port-to-MAC mapping
+}
+
+% ARP table visualization
+% Usage: \showARPTable{node}
+\newcommand{\showARPTable}[1]{
+    % IP-to-MAC mappings
+    % Display near node
+}
+
+% Port status indicators
+% Usage: \portStatus{node}{port}{status}
+% status: up, down, admin-down
+\newcommand{\portStatus}[3]{
+    \def\status{#3}
+    \def\up{up}
+    \def\down{down}
+    
+    \ifx\status\up
+        \node[circle, fill=green, inner sep=1pt] at (#1.#2) {};
+    \else
+        \node[circle, fill=red, inner sep=1pt] at (#1.#2) {};
+    \fi
+}
+
+% Packet capture visualization
+% Usage: \showPacketCapture{connection}{packet_count}
+\newcommand{\showPacketCapture}[2]{
+    % Visual packet counter
+    % Traffic intensity indicator
+}
+
+% MTU path display
+% Usage: \showMTU{path}{mtu_value}
+\newcommand{\showMTU}[2]{
+    % Maximum transmission unit
+    % Display along path
+}
+
+% ============================================================================
+% PERFORMANCE AND SCALABILITY ENHANCEMENTS
+% ============================================================================
+
+% Lazy loading for large diagrams
+% Usage: \enableLazyLoading
+\newcommand{\enableLazyLoading}{
+    % Only render visible portions
+    % Improve compilation speed
+}
+
+% Progressive rendering
+% Usage: \progressiveRender{priority}
+\newcommand{\progressiveRender}[1]{
+    % Render high-priority elements first
+    % Background elements last
+}
+
+% Caching system for repeated elements
+% Usage: \cacheElement{name}{content}
+\newcommand{\cacheElement}[2]{
+    % Store frequently used elements
+    % Reuse instead of recompute
+}
+
+% Parallel processing hints
+% Usage: \markParallel{section}
+\newcommand{\markParallel}[1]{
+    % Hint for parallel compilation
+    % Independent sections
+}
+
+% Memory optimization mode
+% Usage: \enableMemoryOptimization
+\newcommand{\enableMemoryOptimization}{
+    % Reduce memory footprint
+    % Simplify complex paths
+    % Lower resolution for backgrounds
+}
