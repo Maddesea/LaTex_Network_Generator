@@ -468,48 +468,100 @@
 ## AGENT 5: Threat Intelligence (threat_indicators.tex)
 
 ### High Priority
-- [ ] CVSS score integration and visualization
-  - Parse CVSS vectors
-  - Display base, temporal, environmental scores
-  - Color-code by severity (0-10 scale)
-  - Show score breakdown on hover/detail view
+- [x] **CVSS score integration and visualization - COMPLETED**
+  - ✅ Parse CVSS scores (base, temporal, environmental)
+  - ✅ Display with color-coding by severity (0-10 scale)
+  - ✅ CVSS meter visualization with gradient
+  - ✅ Score breakdown display tables
+  - ✅ Compact CVSS badge for nodes
+  - Commands: `\markVulnerabilityCVSS`, `\drawCVSSMeter`, `\drawCVSSBreakdown`, `\cvssBadge`
 
-- [ ] MITRE ATT&CK framework mapping
-  - Map attacks to tactics and techniques
-  - Show kill chain progression
-  - Display ATT&CK IDs (T1566, etc.)
-  - Link to MITRE documentation
+- [x] **MITRE ATT&CK framework mapping - COMPLETED**
+  - ✅ Map attacks to tactics and techniques with color coding
+  - ✅ Show kill chain progression (7 stages)
+  - ✅ Display ATT&CK IDs (T1566, T1110, etc.)
+  - ✅ TTP profile visualization
+  - ✅ ATT&CK Matrix legend with all 12 tactics
+  - ✅ Attack technique badges on nodes
+  - Commands: `\attackTechnique`, `\drawAttackKillChain`, `\drawAttackTechniqueList`, `\drawTTPProfile`, `\drawAttackMatrix`
 
-- [ ] IOC (Indicators of Compromise) visualization
-  - Display: malicious IPs, domains, file hashes
-  - Reputation scoring integration
-  - Threat feed integration (VirusTotal, etc.)
-  - Age/freshness indicators
+- [x] **IOC (Indicators of Compromise) visualization - COMPLETED**
+  - ✅ Display malicious IPs, domains, file hashes
+  - ✅ Reputation scoring with visual indicators
+  - ✅ Age/freshness indicators (FRESH, RECENT, OLD)
+  - ✅ C2 server marking with beacon indicators
+  - ✅ IOC dashboard and comprehensive lists
+  - ✅ Threat feed status indicators
+  - Commands: `\markIOCEnhanced`, `\markMaliciousIP`, `\markFileHashIOC`, `\markC2Server`, `\drawIOCDashboard`, `\drawIOCList`
 
-- [ ] Attack kill chain progression
-  - Visualize 7-stage kill chain
-  - Highlight current attack stage
-  - Show defensive gaps
-  - NIST Cybersecurity Framework mapping
+- [x] **Attack kill chain progression - COMPLETED**
+  - ✅ Visualize 7-stage cyber kill chain (Lockheed Martin model)
+  - ✅ Highlight current attack stage with progress tracking
+  - ✅ Compact progress bar variant
+  - ✅ Time-based attack timeline
+  - ✅ Attack path tree visualization
+  - ✅ Infection spread visualization
+  - ✅ Kill chain stage details with ATT&CK mapping
+  - Commands: `\drawKillChain`, `\drawKillChainCompact`, `\drawAttackTimeline`, `\drawAttackPath`, `\drawInfectionSpread`, `\drawKillChainDetails`
 
 ### Medium Priority
-- [ ] Threat actor attribution
-  - Display attribution with confidence level
-  - Link to threat actor profiles
-  - Show TTP overlap
-  - Campaign tracking
+- [x] **Threat actor attribution - COMPLETED**
+  - ✅ Display attribution with confidence level
+  - ✅ Detailed threat actor profiles
+  - ✅ Actor comparison/attribution analysis
+  - ✅ Campaign tracking with timelines
+  - ✅ State-sponsored indicators
+  - ✅ Multi-victim linking
+  - ✅ Threat intelligence source citations
+  - Commands: `\drawThreatActorProfile`, `\drawActorComparison`, `\drawCampaignTracker`, `\markThreatActorOrigin`, `\linkToThreatActor`, `\citeThreatIntel`
+
+- [x] **Security compliance dashboard - COMPLETED**
+  - ✅ NIST CSF assessment (5 functions scoring)
+  - ✅ CIS Controls v8 coverage (IG1/IG2/IG3)
+  - ✅ PCI-DSS v4.0 compliance status
+  - ✅ General framework scorecards (ISO 27001, SOC 2, etc.)
+  - ✅ Security metrics dashboard (MTTD, MTTR, incident tracking)
+  - ✅ Control effectiveness meters
+  - ✅ Multi-framework comparison tables
+  - ✅ Security coverage heatmaps
+  - Commands: `\drawNISTCompliance`, `\drawCISCompliance`, `\drawPCIDSSCompliance`, `\drawComplianceScorecard`, `\drawSecurityMetrics`, `\drawControlEffectiveness`, `\drawComplianceComparison`, `\drawCoverageHeatmap`
+
+- [x] **Advanced threat correlation & helpers - COMPLETED**
+  - ✅ Vulnerability-exploit correlation
+  - ✅ Quick threat scenarios (Ransomware, APT, DDoS)
+  - ✅ Multi-stage attack chain visualization
+  - ✅ Risk-based prioritization indicators
+  - ✅ Threat intelligence summary panels
+  - ✅ Comprehensive security status dashboard
+  - ✅ Incident response status tracking
+  - Commands: `\correlateVulnExploit`, `\scenarioRansomware`, `\scenarioAPT`, `\scenarioDDoS`, `\drawAttackChain`, `\drawRiskPriority`, `\drawThreatSummary`, `\drawSecurityStatus`, `\drawIncidentStatus`
+
+- [x] **Defensive security controls (Blue Team) - COMPLETED**
+  - ✅ Security control markers (Firewall, IDS/IPS, WAF, EDR)
+  - ✅ IDS/IPS monitoring with alert counting
+  - ✅ WAF protection indicators
+  - ✅ EDR/Endpoint protection status
+  - ✅ Network segmentation boundaries
+  - ✅ SIEM integration display
+  - ✅ Defense-in-depth layer visualization
+  - ✅ Honeypot/deception technology markers
+  - ✅ Security monitoring coverage meters
+  - ✅ Patch management status
+  - ✅ Backup and recovery status
+  - ✅ Zero Trust architecture indicators
+  - Commands: `\markSecurityControl`, `\markIDS`, `\markWAF`, `\markEDR`, `\drawSegmentBoundary`, `\markSIEM`, `\drawDefenseLayers`, `\markHoneypot`, `\drawMonitoringCoverage`, `\markPatchStatus`, `\markBackupStatus`, `\markZeroTrust`
+
+- [x] **Risk calculation and analysis - COMPLETED**
+  - ✅ Automated risk score calculation (0-100 scale)
+  - ✅ Risk matrix visualization (Likelihood vs Impact)
+  - ✅ Weighted risk formula (threat, vulnerability, asset, controls)
+  - Commands: `\calculateRiskScore`, `\drawRiskMatrix`
 
 - [ ] Real-time threat feed integration
   - Pull from: MISP, OpenCTI, STIX/TAXII
   - Auto-update diagram with new IOCs
   - Alert on new threats matching network
   - Historical threat timeline
-
-- [ ] Security compliance dashboard
-  - NIST CSF assessment
-  - CIS Controls coverage
-  - PCI-DSS compliance status
-  - HIPAA/SOC2 requirements
 
 - [ ] Vulnerability database integration
   - Pull from NVD, VulnDB

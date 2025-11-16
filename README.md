@@ -542,6 +542,217 @@ In `network_diagram_generator.tex`:
 \visualizeExfiltration{source_node}{attacker_node}{500MB}
 ```
 
+### NEW: Advanced Threat Intelligence Features
+
+#### CVSS Score Visualization
+```latex
+% Enhanced CVSS vulnerability marker with breakdown
+\markVulnerabilityCVSS{node}{CVE-2024-1234}{9.8}{9.5}{8.7}
+
+% CVSS score meter (visual gauge)
+\drawCVSSMeter{0}{0}{9.8}{Web Server Vulnerability}
+
+% Detailed CVSS breakdown
+\drawCVSSBreakdown{0}{0}{9.8}{8.5}{9.2}{9.5}{8.7}
+
+% Compact CVSS badge
+\cvssBadge{node}{9.8}
+```
+
+#### MITRE ATT&CK Framework Integration
+```latex
+% Display ATT&CK technique on node
+\attackTechnique{node}{credential-access}{T1110}{Brute Force}
+
+% Full kill chain visualization (7 stages)
+\drawAttackKillChain{0}{0}{4}  % Currently at stage 4 (Exploitation)
+
+% ATT&CK technique list
+\drawAttackTechniqueList{10}{5}
+
+% TTP Profile for threat actor
+\drawTTPProfile{0}{0}{APT29}
+
+% Attack with technique label
+\drawAttackWithTechnique{attacker}{victim}{T1566.001}{Spearphishing}
+
+% ATT&CK Matrix legend
+\drawAttackMatrix{12}{8}
+```
+
+#### IOC (Indicators of Compromise)
+```latex
+% Enhanced IOC marker with reputation and age
+\markIOCEnhanced{node}{malicious-ip}{192.0.2.1}{85}{3}
+
+% Malicious IP with geolocation
+\markMaliciousIP{node}{192.0.2.1}{Russia}{92}
+
+% File hash IOC
+\markFileHashIOC{node}{SHA256}{a1b2c3d4...}{WannaCry}
+
+% Mark C2 server
+\markC2Server{node}{evil.badguys.com}{APT28}
+
+% IOC Dashboard
+\drawIOCDashboard{10}{5}
+
+% Threat feed status
+\drawThreatFeedStatus{0}{0}{VirusTotal}{active}
+
+% Comprehensive IOC list
+\drawIOCList{0}{5}
+
+% Reputation score meter
+\drawReputationScore{0}{0}{75}{suspicious.domain.com}
+```
+
+#### Attack Kill Chain & Progression
+```latex
+% Full cyber kill chain with current stage
+\drawKillChain{-8}{-5}{3}  % Currently at stage 3 (Delivery)
+
+% Compact progress bar
+\drawKillChainCompact{0}{0}{5}
+
+% Time-based attack timeline
+\drawAttackTimeline{-5}{3}
+
+% Attack path tree
+\drawAttackPath{10}{5}
+
+% Infection spread visualization
+\drawInfectionSpread{patient_zero}{srv1,srv2,srv3}
+
+% Kill chain stage details
+\drawKillChainDetails{0}{5}{3}  % Details for stage 3
+```
+
+#### Enhanced Threat Actor Attribution
+```latex
+% Detailed threat actor profile
+\drawThreatActorProfile{0}{5}{APT28}{87}{Operation Ghost}{Espionage}
+
+% Actor comparison analysis
+\drawActorComparison{10}{5}
+
+% Campaign tracking
+\drawCampaignTracker{0}{0}{SolarStorm}{2025-01-01}{Fortune 500}
+
+% Threat actor with origin
+\markThreatActorOrigin{node}{APT29}{Russia}{yes}
+
+% Link multiple victims to actor
+\linkToThreatActor{attacker}{srv1,srv2,srv3}
+
+% Threat intelligence citation
+\citeThreatIntel{0}{-8}{MISP}{2025-01-16}
+```
+
+#### Security Compliance Dashboards
+```latex
+% NIST Cybersecurity Framework
+\drawNISTCompliance{0}{5}{85}{90}{78}{82}{75}
+
+% CIS Controls v8
+\drawCISCompliance{8}{5}{14}{28}{12}
+
+% PCI-DSS Compliance
+\drawPCIDSSCompliance{0}{0}{12}
+
+% General framework scorecard
+\drawComplianceScorecard{0}{3}{ISO 27001}{78}{partial}
+
+% Security metrics
+\drawSecurityMetrics{10}{8}{12}{24}{15}{8}
+
+% Control effectiveness
+\drawControlEffectiveness{0}{0}{Firewall}{92}
+
+% Multi-framework comparison
+\drawComplianceComparison{12}{8}
+
+% Security coverage heatmap
+\drawCoverageHeatmap{0}{5}
+```
+
+#### Quick Threat Scenarios & Helper Functions
+```latex
+% Ransomware attack scenario
+\scenarioRansomware{pc1}{pc2,pc3,srv1}{$50,000 BTC}
+
+% APT infiltration scenario
+\scenarioAPT{srv1}{attacker1}{database1}{APT29}{SolarStorm}
+
+% DDoS attack scenario
+\scenarioDDoS{attacker1,attacker2,attacker3}{webserver}
+
+% Multi-stage attack chain
+\drawAttackChain{stage1}{stage2}{stage3}{stage4}
+
+% Vulnerability with active exploit
+\correlateVulnExploit{srv1}{CVE-2024-1234}{9.8}{yes}{Metasploit}
+
+% Risk prioritization dashboard
+\drawRiskPriority{10}{8}{3}{12}{25}{8}
+
+% Threat intelligence summary
+\drawThreatSummary{-8}{8}
+
+% Security status dashboard
+\drawSecurityStatus{0}{8}{75}
+
+% Incident response status
+\drawIncidentStatus{10}{5}{INC-2025-001}{investigating}{Critical}
+```
+
+#### Defensive Security Controls (Blue Team)
+```latex
+% Mark security control on node
+\markSecurityControl{srv1}{Firewall}{active}
+
+% IDS/IPS monitoring
+\markIDS{srv1}{Snort}{5}
+
+% WAF protection
+\markWAF{web1}{ModSecurity}{142}
+
+% EDR/Endpoint protection
+\markEDR{pc1}{CrowdStrike}{protected}
+
+% Network segmentation
+\drawSegmentBoundary{-2}{-2}{4}{4}{DMZ}
+
+% SIEM integration
+\markSIEM{10}{8}{Splunk}{5000}
+
+% Defense-in-depth layers
+\drawDefenseLayers{12}{8}
+
+% Honeypot marker
+\markHoneypot{fake_srv}{SSH Honeypot}
+
+% Monitoring coverage
+\drawMonitoringCoverage{0}{-6}{92}
+
+% Patch management
+\markPatchStatus{srv1}{3}{2025-01-10}
+
+% Backup status
+\markBackupStatus{database1}{2025-01-15}{current}
+
+% Zero Trust indicator
+\markZeroTrust{srv1}{yes}
+```
+
+#### Risk Analysis & Calculation
+```latex
+% Risk matrix
+\drawRiskMatrix{10}{8}
+
+% Calculate risk score (returns numeric value)
+% Parameters: threat_level, vuln_score, asset_value, control_effectiveness
+Risk: \calculateRiskScore{80}{90}{95}{75}
 ## Node Grouping and Clustering (NEW!)
 
 ### Cluster Boundaries
@@ -736,14 +947,18 @@ Implemented Features:
 - [ ] Connection aggregation (show "10 connections" vs 10 lines)
 
 ### Agent 5: Threat Intelligence (`threat_indicators.tex`)
-**Priority TODOs:**
-- [ ] CVSS score integration and visualization
-- [ ] MITRE ATT&CK framework mapping
-- [ ] IOC (Indicators of Compromise) visualization
-- [ ] Attack kill chain progression display
-- [ ] Threat actor attribution with confidence levels
+**High Priority TODOs:**
+- [x] CVSS score integration and visualization - **COMPLETED**
+- [x] MITRE ATT&CK framework mapping - **COMPLETED**
+- [x] IOC (Indicators of Compromise) visualization - **COMPLETED**
+- [x] Attack kill chain progression display - **COMPLETED**
+
+**Medium Priority TODOs:**
+- [x] Threat actor attribution with confidence levels - **COMPLETED**
+- [x] Security compliance dashboard (NIST, CIS, PCI-DSS) - **COMPLETED**
+- [x] Advanced threat correlation features - **COMPLETED**
+- [x] Quick threat scenario helpers - **COMPLETED**
 - [ ] Real-time threat feed integration
-- [ ] Security compliance dashboard (NIST, CIS, PCI-DSS)
 
 ### Agent 6: Data Import/Export
 **Priority TODOs:**
