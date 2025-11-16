@@ -1,0 +1,111 @@
+% Security Incident Template
+% Template for visualizing security incidents and attacks
+%
+% Features: Attack connections, threat indicators, badges
+% Compile with: pdflatex security_incident.tex
+
+\documentclass[border=5mm]{standalone}
+\usepackage{tikz}
+\usepackage{xcolor}
+\usepackage{ifthen}
+
+\usetikzlibrary{shapes, arrows, shadows, decorations.markings, patterns}
+
+\input{../styles_config.tex}
+
+\begin{document}
+
+\useHighContrast  % High visibility for security visualization
+
+\begin{tikzpicture}[scale=1.0]
+
+    % Title
+    \node[font=\Huge\bfseries, text=red] at (4,9) {SECURITY INCIDENT};
+    \node[font=\large] at (4,8.4) {SQL Injection Attack Detected};
+    \node[font=\small, text=gray] at (4,8) {\today\ - ACTIVE THREAT};
+
+    % === EXTERNAL THREAT ===
+    \node[attacker] (threat) at (0,6) {Attacker\\203.0.113.50};
+
+    % === PERIMETER ===
+    \node[gradient firewall,
+          pin={[badge online]90:●}
+         ] (firewall) at (4,6) {Firewall\\10.0.0.1};
+
+    % === INTERNAL NETWORK ===
+    \node[gradient server,
+          pin={[badge linux]45:Linux},
+          pin={[badge online]135:●}
+         ] (web) at (2,3.5) {\serverIcon\\Web Server\\10.0.1.10};
+
+    \node[radial server,
+          pin={[badge linux]45:Linux},
+          pin={[badge critical]135:!}
+         ] (db) at (6,3.5) {\databaseIcon\\Database\\10.0.1.20\\[2pt]{\color{red}\tiny COMPROMISED}};
+
+    \node[gradient client,
+          pin={[badge windows]315:Win},
+          pin={[badge warning]225:⚠}
+         ] (admin) at (2,1) {\laptopIcon\\Admin PC\\10.0.2.50};
+
+    % === ATTACK PATHS ===
+
+    % Blocked attack at firewall
+    \draw[attack conn] (threat) -- (firewall)
+        node[midway, above, font=\tiny, fill=white] {BLOCKED};
+
+    % Normal connections
+    \draw[encrypted conn] (firewall) -- (web);
+    \draw[encrypted conn] (firewall) -- (db);
+    \draw[encrypted conn] (web) -- (admin);
+
+    % Successful attack path
+    \draw[attack conn, line width=2.5pt, bend right=20] (threat) to
+        node[midway, right, font=\small, fill=white, inner sep=3pt] {
+            \textbf{\color{red}SQL Injection}\\
+            {\tiny Port 3306}
+        } (db);
+
+    % Data exfiltration
+    \draw[attack conn, dashed, bend left=15] (db) to
+        node[midway, above, font=\tiny, fill=white] {Data Exfil} (threat);
+
+    % === INCIDENT DETAILS ===
+    \node[critical callout, anchor=north west, text width=4cm] at (7,6) {
+        \textbf{CRITICAL ALERT}\\[3pt]
+        \textbf{Attack Type:} SQL Injection\\
+        \textbf{Target:} Database Server\\
+        \textbf{CVE:} CVE-2024-1234\\
+        \textbf{CVSS:} 9.8 (Critical)\\
+        \textbf{Status:} Active\\
+        \textbf{Action:} Isolate server
+    };
+
+    % === SECURITY STATUS ===
+    \node[rectangle, draw=red, fill=red!10, thick, rounded corners,
+          inner sep=8pt, anchor=south west] at (-0.5,0) {
+        \begin{tabular}{ll}
+            \multicolumn{2}{l}{\textbf{\color{red}Security Status}} \\[3pt]
+            Threats Detected: & \textbf{\color{red}1} \\
+            Systems Compromised: & \textbf{\color{red}1} \\
+            Firewall Blocks: & \textbf{247} \\
+            \legendOnline & 3 \\
+            \legendWarning & 1 \\
+            \legendCritical & 1 \\
+        \end{tabular}
+    };
+
+    % === RESPONSE CHECKLIST ===
+    \node[info callout, anchor=south east, text width=4cm] at (8.5,0) {
+        \textbf{Response Actions:}\\[3pt]
+        ☐ Isolate affected system\\
+        ☐ Capture network traffic\\
+        ☐ Analyze attack vectors\\
+        ☐ Patch vulnerabilities\\
+        ☐ Reset credentials\\
+        ☐ Restore from backup
+    };
+
+\end{tikzpicture}
+
+\end{document}
