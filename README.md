@@ -92,6 +92,8 @@ In `network_diagram_generator.tex`:
 
 ## Available Node Types
 
+### Basic Node Types
+
 | Command | Description | Example |
 |---------|-------------|---------|
 | `\createServer` | Server/host | `\createServer{srv1}{192.168.1.10}{0}{0}{Web Server}` |
@@ -101,6 +103,84 @@ In `network_diagram_generator.tex`:
 | `\createSwitch` | Network switch | `\createSwitch{sw1}{192.168.1.2}{-3}{-3}{Access SW}` |
 | `\createCloud` | Cloud/Internet | `\createCloud{inet}{0}{8}{Internet}` |
 | `\createAttacker` | Threat actor | `\createAttacker{bad1}{1.2.3.4}{-6}{8}{Attacker}` |
+
+### Database Nodes (NEW!)
+
+| Command | Description | Visual |
+|---------|-------------|--------|
+| `\createDatabase` | Basic database server | Cylinder shape, teal color |
+| `\createDatabasePrimary` | Primary database | Bold cylinder with "PRIMARY" label |
+| `\createDatabaseReplica` | Replica database | Light cylinder with "REPLICA" label |
+| `\createDatabaseCluster` | Database cluster | Double-border cylinder with "CLUSTER" label |
+
+**Example:**
+```latex
+\createDatabasePrimary{db1}{10.0.3.10}{0}{0}{PostgreSQL-Primary}
+\createDatabaseReplica{db2}{10.0.3.11}{2}{0}{PostgreSQL-Replica}
+```
+
+### Load Balancer Nodes (NEW!)
+
+| Command | Description | Visual |
+|---------|-------------|--------|
+| `\createLoadBalancer` | Basic load balancer | Trapezium shape, cyan color |
+| `\createLoadBalancerActive` | Active LB with algorithm | Bold with algorithm display |
+| `\createLoadBalancerPassive` | Standby/passive LB | Dashed border with "STANDBY" |
+
+**Example:**
+```latex
+\createLoadBalancerActive{lb1}{10.0.4.10}{0}{0}{LB-Primary}{round-robin}
+\createLoadBalancerPassive{lb2}{10.0.4.11}{2}{0}{LB-Standby}
+\addLoadDistribution{lb1}{web1,web2,web3}
+```
+
+### Virtual Machine Nodes (NEW!)
+
+| Command | Description | Visual |
+|---------|-------------|--------|
+| `\createVM` | Virtual machine | Double-border with host info |
+| `\createHypervisor` | VM host/hypervisor | Large double-border box |
+| `\createVMWithResources` | VM with CPU/RAM/Disk | Shows resource allocation |
+
+**Example:**
+```latex
+\createHypervisor{esxi1}{10.0.0.10}{0}{5}{ESXi-01}{3}
+\createVM{vm1}{10.0.1.10}{0}{3}{Web-VM}{esxi1}
+\createVMWithResources{vm2}{10.0.1.11}{2}{3}{App-VM}{4vCPU}{8GB}{50GB}
+```
+
+### Container/Docker Nodes (NEW!)
+
+| Command | Description | Visual |
+|---------|-------------|--------|
+| `\createContainer` | Docker container | Stacked appearance with image name |
+| `\createPod` | Kubernetes pod | Dashed border with namespace |
+| `\createContainerWithPorts` | Container with ports | Shows port mappings |
+
+**Example:**
+```latex
+\createContainer{nginx1}{10.0.2.100}{0}{0}{nginx}{nginx:latest}
+\createPod{pod1}{10.0.2.200}{2}{0}{web-pod}{production}
+\createContainerWithPorts{api1}{10.0.2.101}{4}{0}{api}{3000:3000}
+```
+
+### Multi-Part Nodes (NEW!)
+
+| Command | Description | Use Case |
+|---------|-------------|----------|
+| `\createDetailedServer` | Three-section node | Hostname, services, status |
+| `\createNodeWithServices` | Service details | Shows ports and services |
+| `\createNodeWithMetrics` | Resource metrics | CPU/Memory/Disk usage bars |
+| `\createSecurityNode` | Security status | Vulnerability count, CVSS score |
+
+**Example:**
+```latex
+% Node with resource metrics (CPU: 45%, Memory: 62%, Disk: 38%)
+\createNodeWithMetrics{srv1}{192.168.1.10}{0}{0}{AppServer}{45}{62}{38}
+
+% Security-focused node
+\createSecurityNode{srv2}{192.168.1.20}{2}{0}{WebServer}{3}{6.5}{warning}
+```
 
 ## Available Connection Types
 
@@ -129,6 +209,58 @@ In `network_diagram_generator.tex`:
 
 % Show data exfiltration
 \visualizeExfiltration{source_node}{attacker_node}{500MB}
+```
+
+## Node Grouping and Clustering (NEW!)
+
+### Cluster Boundaries
+```latex
+% Create cluster around nodes
+\createCluster{webcluster}{Web Tier}{(srv1)(srv2)(srv3)}{0}{0}
+
+% Create HA pair
+\createHAPair{hapair}{HA Pair}{(lb1)}{(lb2)}
+
+% Create server rack
+\createRack{rack1}{Rack A}{(srv1)(srv2)(srv3)}{0}{0}
+```
+
+### IP Address Utilities (NEW!)
+```latex
+% Validate IP addresses
+\validateIPv4{192.168.1.10}{\result}  % Returns 1 if valid
+\validateIPv6{2001:db8::1}{\result}   % Returns 1 if valid
+\validateIP{192.168.1.10}{\result}    % Returns 4 for IPv4, 6 for IPv6
+
+% Extract subnet
+\extractSubnet{192.168.1.100}{\subnet}  % Returns 192.168.1.0
+
+% Check if IPs in same subnet
+\sameSubnet{192.168.1.10}{192.168.1.20}{\result}  % Returns 1 if same
+
+% Format CIDR notation
+\formatCIDR{192.168.1.0}{24}{\cidr}  % Returns 192.168.1.0/24
+```
+
+### Hash Map for Node Lookup (NEW!)
+```latex
+% Register nodes in hash map for fast lookup
+\registerNode{srv1}{192.168.1.10}{WebServer}
+
+% Lookup by IP
+\getNodeByIP{192.168.1.10}{\nodeid}
+
+% Lookup by hostname
+\getNodeByHostname{WebServer}{\nodeid}
+
+% Extended registration with metadata
+\registerNodeExtended{srv1}{192.168.1.10}{WebServer}{server}{Ubuntu 22.04}{online}
+
+% Store additional metadata
+\setNodeServices{srv1}{HTTP, HTTPS, SSH}
+\setNodeSecurity{srv1}{3}{6.5}{PCI-DSS}
+\assignNodeToCluster{srv1}{webcluster}
+\setNodeParent{vm1}{hypervisor1}
 ```
 
 ## Security Zones
@@ -180,15 +312,24 @@ This system is designed for **multiple agents/developers** to work simultaneousl
 - [ ] Badge/label support for OS type and status
 
 ### Agent 2: Node System (`node_definitions.tex`)
-**Priority TODOs:**
-- [ ] Hash map for O(1) node lookup by IP
-- [ ] Node grouping/clustering support
-- [ ] Database server nodes with cylinder shape
-- [ ] Load balancer nodes with special indicators
-- [ ] Virtual machine nested appearance
-- [ ] Container/Docker nodes with stacked appearance
-- [ ] CVE vulnerability badges with scoring
-- [ ] Auto-validation of IP addresses
+**Completed Features:**
+- [x] Hash map for O(1) node lookup by IP, hostname, and node ID
+- [x] Extended hash map with metadata storage (OS, services, security)
+- [x] IP address validation and formatting (IPv4, IPv6, CIDR)
+- [x] Database server nodes with cylinder shape (primary, replica, cluster)
+- [x] Load balancer nodes with special indicators (active/passive)
+- [x] Virtual machine nodes with nested appearance and hypervisors
+- [x] Container/Docker nodes with stacked appearance and Kubernetes pods
+- [x] Node grouping/clustering support (clusters, HA pairs, racks)
+- [x] Multi-part nodes for detailed information display
+- [x] Security-focused nodes with vulnerability counts and CVSS scores
+- [x] Resource utilization nodes with CPU/Memory/Disk bars
+
+**Remaining TODOs:**
+- [ ] Mobile device nodes with phone/tablet shapes
+- [ ] IoT device nodes with specialized icons
+- [ ] Auto-arrange nodes within clusters
+- [ ] Cloud provider-specific nodes (AWS, Azure, GCP)
 
 ### Agent 3: Layout Engine (`network_layout.tex`)
 **Priority TODOs:**
@@ -294,7 +435,8 @@ Free for personal and commercial use. Attribution appreciated.
 ## Version History
 
 - **v1.0 (Foundation)** - Initial modular architecture with core features
-- **v1.1 (Planned)** - Auto-layout algorithms and data import
+- **v1.1 (Current)** - Enhanced node system with VMs, containers, databases, load balancers, clustering, IP validation, and hash map lookups
+- **v1.2 (Planned)** - Auto-layout algorithms and data import
 - **v2.0 (Planned)** - SIEM integration and real-time threat feeds
 
 ## Contact & Support

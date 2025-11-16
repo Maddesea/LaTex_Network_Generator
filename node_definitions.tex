@@ -63,11 +63,73 @@
     \pgfkeysgetvalue{/nodemap/byid/#1/hostname}{#2}
 }
 
-% TODO: Additional hash map features
-% - Add node grouping/clustering support
-% - Create hierarchical node relationships (parent-child)
-% - Support for virtual/container nodes
-% - Store additional metadata (OS, services, status)
+% ============================================================================
+% EXTENDED HASH MAP WITH METADATA STORAGE
+% ============================================================================
+
+% Register node with extended metadata
+% Usage: \registerNodeExtended{nodeID}{IP}{hostname}{type}{os}{status}
+\newcommand{\registerNodeExtended}[6]{
+    % Basic registration
+    \registerNode{#1}{#2}{#3}
+
+    % Extended metadata
+    \pgfkeys{/nodemap/byid/#1/type/.initial={#4}}
+    \pgfkeys{/nodemap/byid/#1/os/.initial={#5}}
+    \pgfkeys{/nodemap/byid/#1/status/.initial={#6}}
+}
+
+% Store node group/cluster membership
+% Usage: \assignNodeToCluster{nodeID}{clusterID}
+\newcommand{\assignNodeToCluster}[2]{
+    \pgfkeys{/nodemap/byid/#1/cluster/.initial={#2}}
+}
+
+% Store parent-child relationship (for VMs, containers)
+% Usage: \setNodeParent{nodeID}{parentID}
+\newcommand{\setNodeParent}[2]{
+    \pgfkeys{/nodemap/byid/#1/parent/.initial={#2}}
+}
+
+% Store node services
+% Usage: \setNodeServices{nodeID}{services}
+\newcommand{\setNodeServices}[2]{
+    \pgfkeys{/nodemap/byid/#1/services/.initial={#2}}
+}
+
+% Store node security status
+% Usage: \setNodeSecurity{nodeID}{vulncount}{cvss}{compliance}
+\newcommand{\setNodeSecurity}[4]{
+    \pgfkeys{/nodemap/byid/#1/vulncount/.initial={#2}}
+    \pgfkeys{/nodemap/byid/#1/cvss/.initial={#3}}
+    \pgfkeys{/nodemap/byid/#1/compliance/.initial={#4}}
+}
+
+% Get node metadata
+\newcommand{\getNodeType}[2]{
+    \pgfkeysgetvalue{/nodemap/byid/#1/type}{#2}
+}
+
+\newcommand{\getNodeOS}[2]{
+    \pgfkeysgetvalue{/nodemap/byid/#1/os}{#2}
+}
+
+\newcommand{\getNodeStatus}[2]{
+    \pgfkeysgetvalue{/nodemap/byid/#1/status}{#2}
+}
+
+\newcommand{\getNodeCluster}[2]{
+    \pgfkeysgetvalue{/nodemap/byid/#1/cluster}{#2}
+}
+
+\newcommand{\getNodeParent}[2]{
+    \pgfkeysgetvalue{/nodemap/byid/#1/parent}{#2}
+}
+
+% TODO: Advanced hash map features
+% - Index nodes by multiple attributes simultaneously
+% - Support for node tagging and label querying
+% - Network topology graph representation
 
 % ============================================================================
 % IP ADDRESS VALIDATION AND FORMATTING
@@ -357,11 +419,245 @@
         at (#1.south) [below=2pt] {Backends: #2};
 }
 
-% TODO: Enhanced node variants
-% - Virtual machine nodes with nested appearance
-% - Container/Docker nodes with stacked appearance
+% ============================================================================
+% VIRTUAL MACHINE NODES
+% ============================================================================
+
+% Create a virtual machine node
+% Usage: \createVM{name}{ip}{x}{y}{label}{hypervisor}
+\newcommand{\createVM}[6]{
+    \node[vm] (#1) at (#3,#4) {
+        \textbf{#5} \\[2pt]
+        \tikz\node[ip label]{#2}; \\[1pt]
+        \tikz\node[font=\tiny\ttfamily, text=vmIndigo!70]{Host: #6};
+    };
+}
+
+% Create a hypervisor node (can contain VMs)
+% Usage: \createHypervisor{name}{ip}{x}{y}{label}{vmcount}
+\newcommand{\createHypervisor}[6]{
+    \node[vm hypervisor] (#1) at (#3,#4) {
+        \textbf{#5} \\[2pt]
+        \tikz\node[ip label]{#2}; \\[3pt]
+        \tikz\node[font=\tiny\bfseries, text=vmIndigo!90]{HYPERVISOR}; \\[1pt]
+        \tikz\node[font=\tiny\ttfamily, text=vmIndigo!70]{VMs: #6};
+    };
+}
+
+% Create VM with resource info
+% Usage: \createVMWithResources{name}{ip}{x}{y}{label}{cpu}{ram}{disk}
+\newcommand{\createVMWithResources}[8]{
+    \node[vm] (#1) at (#3,#4) {
+        \textbf{#5} \\[2pt]
+        \tikz\node[ip label]{#2}; \\[2pt]
+        \tikz\node[font=\tiny\ttfamily, text=black!60]{CPU: #6 | RAM: #7 | Disk: #8};
+    };
+}
+
+% ============================================================================
+% CONTAINER/DOCKER NODES
+% ============================================================================
+
+% Create a container node
+% Usage: \createContainer{name}{ip}{x}{y}{label}{image}
+\newcommand{\createContainer}[6]{
+    \node[container] (#1) at (#3,#4) {
+        \textbf{#5} \\[1pt]
+        \tikz\node[ip label]{#2}; \\[1pt]
+        \tikz\node[font=\tiny\ttfamily, text=containerBlue!70]{#6};
+    };
+    % Add stacked effect
+    \draw[containerBlue!60, line width=0.8pt]
+        ([xshift=-2pt, yshift=2pt]#1.north west) --
+        ([xshift=-2pt, yshift=2pt]#1.north east) --
+        ([xshift=-2pt]#1.south east);
+    \draw[containerBlue!40, line width=0.6pt]
+        ([xshift=-4pt, yshift=4pt]#1.north west) --
+        ([xshift=-4pt, yshift=4pt]#1.north east) --
+        ([xshift=-4pt]#1.south east);
+}
+
+% Create a Kubernetes pod node
+% Usage: \createPod{name}{ip}{x}{y}{label}{namespace}
+\newcommand{\createPod}[6]{
+    \node[container pod] (#1) at (#3,#4) {
+        \textbf{#5} \\[1pt]
+        \tikz\node[ip label]{#2}; \\[1pt]
+        \tikz\node[font=\tiny\ttfamily, text=containerBlue!70]{NS: #6};
+    };
+}
+
+% Create container with port mapping
+% Usage: \createContainerWithPorts{name}{ip}{x}{y}{label}{ports}
+\newcommand{\createContainerWithPorts}[6]{
+    \node[container] (#1) at (#3,#4) {
+        \textbf{#5} \\[1pt]
+        \tikz\node[ip label]{#2}; \\[1pt]
+        \tikz\node[font=\tiny\ttfamily, text=containerBlue!70]{Ports: #6};
+    };
+    % Add stacked effect
+    \draw[containerBlue!60, line width=0.8pt]
+        ([xshift=-2pt, yshift=2pt]#1.north west) --
+        ([xshift=-2pt, yshift=2pt]#1.north east) --
+        ([xshift=-2pt]#1.south east);
+}
+
+% ============================================================================
+% NODE GROUPING AND CLUSTERING
+% ============================================================================
+
+% Create a cluster/group boundary around nodes
+% Usage: \createCluster{name}{label}{nodes}{x}{y}
+% Example: \createCluster{webcluster}{Web Tier}{srv1,srv2,srv3}{0}{0}
+\newcommand{\createCluster}[5]{
+    \node[cluster box, fit=(#3), label=above:\textbf{#2}] (#1) {};
+}
+
+% Create high availability pair boundary
+% Usage: \createHAPair{name}{label}{node1}{node2}
+\newcommand{\createHAPair}[4]{
+    \node[ha pair, fit=(#3)(#4), label=above:\textbf{#2}] (#1) {};
+}
+
+% Create server rack visualization
+% Usage: \createRack{name}{label}{nodes}{x}{y}
+\newcommand{\createRack}[5]{
+    \node[
+        rectangle,
+        rounded corners=2pt,
+        draw=black!60,
+        fill=black!5,
+        line width=2pt,
+        inner sep=8pt,
+        fit=(#3),
+        label={[rotate=90, anchor=south]left:\textbf{#2}}
+    ] (#1) {};
+    % Add rack mounting holes effect
+    \foreach \y in {0.1,0.3,...,0.9} {
+        \fill[black!40] ([yshift=\y*10pt]#1.north west) circle (1pt);
+        \fill[black!40] ([yshift=\y*10pt]#1.north east) circle (1pt);
+    }
+}
+
+% TODO: Enhanced clustering features
 % - Mobile device nodes with phone/tablet shapes
 % - IoT device nodes with specialized icons
+% - Auto-arrange nodes within clusters
+% - Subnet boundary visualization
+
+% ============================================================================
+% MULTI-PART NODES FOR DETAILED INFORMATION
+% ============================================================================
+
+% Create a detailed server node with three sections
+% Usage: \createDetailedServer{name}{ip}{x}{y}{hostname}{services}{status}
+\newcommand{\createDetailedServer}[7]{
+    \node[multipart node] (#1) at (#3,#4) {
+        \textbf{#5}
+        \nodepart{two}
+        \tikz\node[ip label]{#2}; \\
+        \tikz\node[font=\tiny\ttfamily, text=black!70]{#6};
+        \nodepart{three}
+        \tikz\node[font=\tiny\bfseries, text=clientGreen!80]{#7};
+    };
+}
+
+% Create node with port and service information
+% Usage: \createNodeWithServices{name}{ip}{x}{y}{hostname}{ports}{services}
+\newcommand{\createNodeWithServices}[7]{
+    \node[
+        rectangle split,
+        rectangle split parts=3,
+        rectangle split part fill={serverBlue!20, white, serverBlue!10},
+        draw=serverBlue!80,
+        line width=1.5pt,
+        rounded corners=3pt,
+        align=center,
+        minimum width=3cm
+    ] (#1) at (#3,#4) {
+        \textbf{#5}
+        \nodepart{two}
+        \tikz\node[font=\scriptsize\ttfamily, text=black!70]{#2}; \\
+        \tikz\node[font=\tiny\ttfamily, text=serverBlue!80]{Ports: #6};
+        \nodepart{three}
+        \tikz\node[font=\tiny\ttfamily, text=black!60]{#7};
+    };
+}
+
+% Create node with resource utilization bars
+% Usage: \createNodeWithMetrics{name}{ip}{x}{y}{hostname}{cpu}{memory}{disk}
+% CPU, memory, disk should be percentages (0-100)
+\newcommand{\createNodeWithMetrics}[8]{
+    \node[
+        rectangle split,
+        rectangle split parts=4,
+        rectangle split part fill={serverBlue!20, white, white, serverBlue!10},
+        draw=serverBlue!80,
+        line width=1.5pt,
+        rounded corners=3pt,
+        align=center,
+        minimum width=3.5cm
+    ] (#1) at (#3,#4) {
+        \textbf{#5}
+        \nodepart{two}
+        \tikz\node[ip label]{#2};
+        \nodepart{three}
+        % CPU bar
+        \tikz{
+            \node[font=\tiny, anchor=west] at (0,0.3) {CPU:};
+            \draw[fill=black!20, rounded corners=1pt] (0.8,0.25) rectangle (2.5,0.35);
+            \draw[fill=serverBlue!70, rounded corners=1pt] (0.8,0.25) rectangle ({0.8+1.7*#6/100},0.35);
+            \node[font=\tiny, anchor=west] at (2.6,0.3) {#6\%};
+            % Memory bar
+            \node[font=\tiny, anchor=west] at (0,0) {MEM:};
+            \draw[fill=black!20, rounded corners=1pt] (0.8,-0.05) rectangle (2.5,0.05);
+            \draw[fill=clientGreen!70, rounded corners=1pt] (0.8,-0.05) rectangle ({0.8+1.7*#7/100},0.05);
+            \node[font=\tiny, anchor=west] at (2.6,0) {#7\%};
+            % Disk bar
+            \node[font=\tiny, anchor=west] at (0,-0.3) {DSK:};
+            \draw[fill=black!20, rounded corners=1pt] (0.8,-0.35) rectangle (2.5,-0.25);
+            \draw[fill=routerOrange!70, rounded corners=1pt] (0.8,-0.35) rectangle ({0.8+1.7*#8/100},-0.25);
+            \node[font=\tiny, anchor=west] at (2.6,-0.3) {#8\%};
+        }
+        \nodepart{four}
+        \tikz\node[font=\tiny, text=black!60]{System Metrics};
+    };
+}
+
+% Create security-focused node with vulnerability info
+% Usage: \createSecurityNode{name}{ip}{x}{y}{hostname}{vulncount}{cvss}{status}
+\newcommand{\createSecurityNode}[8]{
+    \ifthenelse{\equal{#8}{secure}}{
+        \def\statuscolor{clientGreen}
+        \def\statustext{SECURE}
+    }{
+    \ifthenelse{\equal{#8}{warning}}{
+        \def\statuscolor{threatMedium}
+        \def\statustext{WARNING}
+    }{
+        \def\statuscolor{threatCritical}
+        \def\statustext{CRITICAL}
+    }}
+
+    \node[
+        rectangle split,
+        rectangle split parts=3,
+        rectangle split part fill={\statuscolor!15, white, \statuscolor!10},
+        draw=\statuscolor!80,
+        line width=1.5pt,
+        rounded corners=3pt,
+        align=center,
+        minimum width=3cm
+    ] (#1) at (#3,#4) {
+        \textbf{#5}
+        \nodepart{two}
+        \tikz\node[ip label]{#2}; \\
+        \tikz\node[font=\tiny\ttfamily, text=black!70]{Vulnerabilities: #6}; \\
+        \tikz\node[font=\tiny\ttfamily, text=black!70]{Max CVSS: #7};
+        \nodepart{three}
+        \tikz\node[font=\tiny\bfseries, text=\statuscolor!90]{\statustext};
+    };
+}
 
 % ============================================================================
 % NODE RENDERING ENGINE

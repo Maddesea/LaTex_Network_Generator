@@ -1,0 +1,147 @@
+% example_advanced_nodes.tex
+% Demonstrates advanced node features: VMs, containers, clusters, and multi-part nodes
+% This file should be used with: \generateNetworkDiagram{example_advanced_nodes}
+
+\begin{scope}[on background layer]
+    % Background grid (optional)
+    \draw[step=1cm, gray!20, very thin] (-8,-8) grid (8,8);
+\end{scope}
+
+% ============================================================================
+% VIRTUAL MACHINES AND HYPERVISORS
+% ============================================================================
+
+% Hypervisor hosting VMs
+\createHypervisor{hyperv1}{10.0.0.10}{-5}{5}{ESXi-01}{3}
+
+% Virtual machines on the hypervisor
+\createVM{vm1}{10.0.1.10}{-6}{3}{Web-VM-01}{ESXi-01}
+\createVM{vm2}{10.0.1.11}{-5}{3}{DB-VM-01}{ESXi-01}
+\createVMWithResources{vm3}{10.0.1.12}{-4}{3}{App-VM-01}{4vCPU}{8GB}{50GB}
+
+% Register VMs in hash map with parent relationship
+\registerNode{vm1}{10.0.1.10}{Web-VM-01}
+\setNodeParent{vm1}{hyperv1}
+\registerNode{vm2}{10.0.1.11}{DB-VM-01}
+\setNodeParent{vm2}{hyperv1}
+
+% ============================================================================
+% CONTAINERS AND KUBERNETES
+% ============================================================================
+
+% Container host
+\createServer{docker1}{10.0.2.20}{2}{5}{Docker-Host}
+
+% Containers with stacked appearance
+\createContainer{cont1}{10.0.2.100}{1}{3}{nginx}{nginx:latest}
+\createContainer{cont2}{10.0.2.101}{2}{3}{api}{node:16-alpine}
+\createContainerWithPorts{cont3}{10.0.2.102}{3}{3}{redis}{6379:6379}
+
+% Kubernetes pod
+\createPod{pod1}{10.0.2.200}{4}{3}{web-pod}{production}
+
+% ============================================================================
+% DATABASES WITH DIFFERENT ROLES
+% ============================================================================
+
+% Database cluster
+\createDatabasePrimary{db1}{10.0.3.10}{-2}{0}{PostgreSQL-Primary}
+\createDatabaseReplica{db2}{10.0.3.11}{-1}{0}{PostgreSQL-Replica-1}
+\createDatabaseReplica{db3}{10.0.3.12}{0}{0}{PostgreSQL-Replica-2}
+\createDatabaseCluster{db4}{10.0.3.20}{1}{0}{MongoDB-Cluster}
+
+% ============================================================================
+% LOAD BALANCERS
+% ============================================================================
+
+% Active-Passive load balancer pair
+\createLoadBalancerActive{lb1}{10.0.4.10}{-5}{-2}{LB-Primary}{round-robin}
+\createLoadBalancerPassive{lb2}{10.0.4.11}{-3}{-2}{LB-Standby}
+\addLoadDistribution{lb1}{web1,web2,web3}
+
+% ============================================================================
+% MULTI-PART NODES WITH DETAILED INFORMATION
+% ============================================================================
+
+% Server with services
+\createNodeWithServices{web1}{192.168.1.10}{2}{-2}{WebServer-01}{80,443}{Apache 2.4}
+
+% Server with resource metrics (CPU: 45%, Memory: 62%, Disk: 38%)
+\createNodeWithMetrics{app1}{192.168.1.20}{5}{-2}{AppServer-01}{45}{62}{38}
+
+% Security-focused nodes with different statuses
+\createSecurityNode{srv1}{192.168.1.30}{-2}{-5}{SecureServer}{0}{0.0}{secure}
+\createSecurityNode{srv2}{192.168.1.31}{0}{-5}{WarningServer}{3}{6.5}{warning}
+\createSecurityNode{srv3}{192.168.1.32}{2}{-5}{CriticalServer}{8}{9.8}{critical}
+
+% Detailed server node
+\createDetailedServer{srv4}{192.168.1.40}{5}{-5}{FileServer}{NFS, SMB, FTP}{ONLINE}
+
+% ============================================================================
+% CLUSTERING AND GROUPING
+% ============================================================================
+
+% Create cluster around database nodes
+\begin{scope}[on background layer]
+    \createCluster{dbcluster}{Database Tier}{(db1)(db2)(db3)(db4)}{0}{0}
+\end{scope}
+
+% Create HA pair around load balancers
+\begin{scope}[on background layer]
+    \createHAPair{lbpair}{HA Load Balancers}{(lb1)}{(lb2)}
+\end{scope}
+
+% Server rack
+\begin{scope}[on background layer]
+    \createRack{rack1}{Rack A}{(web1)(app1)}{0}{0}
+\end{scope}
+
+% ============================================================================
+% CONNECTIONS (Examples)
+% ============================================================================
+
+% VM to container connections
+\draw[normal conn] (vm1) -- (cont1);
+\draw[encrypted conn] (vm2) -- (db1);
+
+% Load balancer to web servers
+\draw[normal conn] (lb1) -- (web1);
+\draw[normal conn] (lb1) -- (app1);
+
+% Database replication
+\draw[normal conn, -{Stealth[length=3mm]}, bend left=20] (db1) -- (db2);
+\draw[normal conn, -{Stealth[length=3mm]}, bend left=20] (db1) -- (db3);
+
+% Container to database
+\draw[encrypted conn] (cont2) -- (db4);
+
+% Application to services
+\draw[normal conn] (app1) -- (srv4);
+
+% ============================================================================
+% ANNOTATIONS
+% ============================================================================
+
+% Add threat badge to vulnerable server
+\addThreatBadge{srv3}{critical}
+
+% Add metadata annotations
+\annotateNode{hyperv1}{VMware vSphere 8.0}{south}
+\annotateNode{docker1}{Docker Engine 24.0}{south}
+\annotateNode{dbcluster}{Primary + 2 Replicas}{south}
+
+% ============================================================================
+% LEGEND
+% ============================================================================
+
+\node[legend box, anchor=north west] at (-7.5,-6.5) {
+    \begin{minipage}{6cm}
+        \textbf{Legend} \\[3pt]
+        \tikz\node[vm, minimum size=0.4cm, scale=0.5] {}; Virtual Machine \\
+        \tikz\node[container, minimum size=0.4cm, scale=0.5] {}; Container \\
+        \tikz\node[database, minimum size=0.4cm, scale=0.5] {}; Database \\
+        \tikz\node[loadbalancer, minimum size=0.4cm, scale=0.5] {}; Load Balancer \\
+        \tikz\draw[encrypted conn] (0,0) -- (0.5,0); Encrypted \\
+        \tikz\draw[normal conn] (0,0) -- (0.5,0); Normal
+    \end{minipage}
+};

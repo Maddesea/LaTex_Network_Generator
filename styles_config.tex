@@ -14,6 +14,9 @@
 \definecolor{cloudGray}{RGB}{149, 165, 166}
 \definecolor{databaseTeal}{RGB}{22, 160, 133}
 \definecolor{loadBalancerCyan}{RGB}{41, 128, 185}
+\definecolor{vmIndigo}{RGB}{103, 58, 183}
+\definecolor{containerBlue}{RGB}{33, 150, 243}
+\definecolor{clusterGold}{RGB}{255, 152, 0}
 
 % Threat indicator colors
 \definecolor{threatCritical}{RGB}{192, 57, 43}
@@ -195,6 +198,86 @@
         draw=loadBalancerCyan!60,
         line width=1pt,
         dashed
+    },
+
+    % Virtual Machine style (nested appearance with double border)
+    vm/.style={
+        base node,
+        rectangle,
+        rounded corners=3pt,
+        fill=vmIndigo!15,
+        draw=vmIndigo!80,
+        line width=1.5pt,
+        double,
+        double distance=2pt
+    },
+
+    % VM - Hypervisor (host)
+    vm hypervisor/.style={
+        vm,
+        fill=vmIndigo!25,
+        draw=vmIndigo!90,
+        line width=2pt,
+        double distance=3pt,
+        minimum width=4cm,
+        minimum height=3cm
+    },
+
+    % Container/Docker style (stacked appearance)
+    container/.style={
+        base node,
+        rectangle,
+        rounded corners=2pt,
+        fill=containerBlue!15,
+        draw=containerBlue!80,
+        line width=1pt,
+        minimum width=2cm,
+        minimum height=1.2cm
+    },
+
+    % Container - Pod (Kubernetes)
+    container pod/.style={
+        container,
+        fill=containerBlue!20,
+        draw=containerBlue!85,
+        line width=1.5pt,
+        dashed,
+        dash pattern=on 3pt off 2pt
+    },
+
+    % Cluster/Group boundary style
+    cluster box/.style={
+        rectangle,
+        rounded corners=5pt,
+        draw=clusterGold!70,
+        fill=clusterGold!5,
+        line width=2pt,
+        inner sep=10pt,
+        dashed,
+        dash pattern=on 5pt off 3pt
+    },
+
+    % High Availability pair boundary
+    ha pair/.style={
+        rectangle,
+        rounded corners=4pt,
+        draw=clientGreen!70,
+        fill=clientGreen!5,
+        line width=1.5pt,
+        dotted,
+        inner sep=8pt
+    },
+
+    % Multi-part node style
+    multipart node/.style={
+        base node,
+        rectangle split,
+        rectangle split parts=3,
+        rectangle split part fill={serverBlue!20, white, serverBlue!10},
+        draw=serverBlue!80,
+        line width=1.5pt,
+        rounded corners=3pt,
+        align=center
     }
 }
 
