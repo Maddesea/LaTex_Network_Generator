@@ -96,31 +96,39 @@
   - **COMPLETED**: Added `\createLoadBalancer`, `\createLoadBalancerActive`, `\createLoadBalancerPassive`, `\createLoadBalancerWithAlgo`, `\createLoadBalancerWithPool` commands with visual status indicators
 
 ### Medium Priority
-- [ ] Virtual machine nested appearance
+- [x] Virtual machine nested appearance
   - Create `\createVM` command
   - Show hypervisor relationship (contained within physical host)
   - Support for VM clusters and migration paths
+  - **COMPLETED**: Added `\createVM`, `\createVMWithHypervisor`, `\createVMCluster`, `\createHypervisor` with nested double-line styling
 
-- [ ] Container/Docker nodes with stacked appearance
+- [x] Container/Docker nodes with stacked appearance
   - Create `\createContainer` command
   - Show container orchestration (K8s pods)
   - Display resource limits visually
+  - **COMPLETED**: Added `\createContainer`, `\createContainerWithImage`, `\createK8sPod`, `\createContainerWithResources`, `\createDockerStack` with container-specific styling
 
-- [ ] Node grouping/clustering support
+- [x] Node grouping/clustering support
   - Group nodes into logical clusters
   - Server racks with multiple servers
   - High-availability pairs
+  - **COMPLETED**: Added `\drawCluster`, `\drawHAPair`, `\drawServerRack`, `\addClusterLabel` for grouping nodes
 
-- [ ] Multi-part nodes for detailed info
+- [x] Multi-part nodes for detailed info
   - Split node into sections: header, body, footer
   - Show: hostname | IP | ports | services
   - CPU/memory/disk utilization bars
+  - **COMPLETED**: Added `\createDetailedServer`, `\createNodeWithMetrics`, `\createThreeTierNode` with resource utilization bars and multi-section layouts
 
 ### Low Priority
-- [ ] Mobile device nodes (phone/tablet shapes)
-- [ ] IoT device nodes with specialized icons
-- [ ] Cloud provider nodes (AWS, Azure, GCP specific)
-- [ ] Custom node templates via user config
+- [x] Mobile device nodes (phone/tablet shapes)
+  - **COMPLETED**: Added `\createMobilePhone`, `\createMobilePhoneWithOS`, `\createTablet`, `\createTabletWithOS` with appropriate aspect ratios
+- [x] IoT device nodes with specialized icons
+  - **COMPLETED**: Added `\createIoTDevice`, `\createIoTDeviceWithType`, `\createIoTSensor`, `\createIoTSensorWithType` with circle and diamond shapes
+- [x] Cloud provider nodes (AWS, Azure, GCP specific)
+  - **COMPLETED**: Added `\createAWSNode`, `\createAWSEC2`, `\createAzureNode`, `\createAzureVM`, `\createGCPNode`, `\createGCPCompute` with provider-specific colors
+- [x] Custom node templates via user config
+  - **COMPLETED**: Added `\defineNodeTemplate` and `\createNodeFromTemplate` for custom node type definitions
 
 ---
 

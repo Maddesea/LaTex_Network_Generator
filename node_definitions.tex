@@ -374,11 +374,379 @@
     };
 }
 
+% ============================================================================
+% VIRTUAL MACHINE NODE CREATION COMMANDS
+% ============================================================================
+
+% Create a basic virtual machine node
+% Usage: \createVM{name}{ip}{x}{y}{label}
+\newcommand{\createVM}[5]{
+    \node[vm] (#1) at (#3,#4) {
+        \textbf{#5} \\[2pt]
+        \tikz\node[ip label]{#2}; \\[1pt]
+        \tikz\node[font=\tiny, text=vmYellow!80]{VM};
+    };
+}
+
+% Create VM with hypervisor info
+% Usage: \createVMWithHypervisor{name}{ip}{x}{y}{label}{hypervisor}
+\newcommand{\createVMWithHypervisor}[6]{
+    \node[vm, minimum height=2.2cm] (#1) at (#3,#4) {
+        \textbf{#5} \\[2pt]
+        \tikz\node[ip label]{#2}; \\[2pt]
+        \tikz\node[font=\tiny\ttfamily, text=black!60]{Host: #6};
+    };
+}
+
+% Create VM cluster node
+% Usage: \createVMCluster{name}{ip}{x}{y}{label}{vmcount}
+\newcommand{\createVMCluster}[6]{
+    \node[vm, minimum height=2.2cm] (#1) at (#3,#4) {
+        \textbf{#5} \\[2pt]
+        \tikz\node[ip label]{#2}; \\[1pt]
+        \tikz\node[font=\tiny\bfseries, text=vmYellow!80]{VM CLUSTER}; \\[1pt]
+        \tikz\node[font=\tiny, text=black!60]{#6 instances};
+    };
+}
+
+% Create hypervisor host node (contains VMs)
+% Usage: \createHypervisor{name}{ip}{x}{y}{label}{vmcount}
+\newcommand{\createHypervisor}[6]{
+    \node[server, minimum height=2.5cm, minimum width=3cm] (#1) at (#3,#4) {
+        \textbf{#5} \\[2pt]
+        \tikz\node[ip label]{#2}; \\[2pt]
+        \tikz\node[font=\tiny\bfseries, text=serverBlue!80]{HYPERVISOR}; \\[1pt]
+        \tikz\node[font=\tiny, text=black!60]{VMs: #6};
+    };
+}
+
+% ============================================================================
+% CONTAINER/DOCKER NODE CREATION COMMANDS
+% ============================================================================
+
+% Create a basic container node
+% Usage: \createContainer{name}{ip}{x}{y}{label}
+\newcommand{\createContainer}[5]{
+    \node[container] (#1) at (#3,#4) {
+        \textbf{#5} \\[1pt]
+        \tikz\node[ip label]{#2}; \\[1pt]
+        \tikz\node[font=\tiny, text=containerOrange!80]{CONTAINER};
+    };
+}
+
+% Create container with image info
+% Usage: \createContainerWithImage{name}{ip}{x}{y}{label}{image}
+\newcommand{\createContainerWithImage}[6]{
+    \node[container, minimum height=1.8cm] (#1) at (#3,#4) {
+        \textbf{#5} \\[1pt]
+        \tikz\node[ip label]{#2}; \\[2pt]
+        \tikz\node[font=\tiny\ttfamily, text=black!60]{#6};
+    };
+}
+
+% Create Kubernetes pod
+% Usage: \createK8sPod{name}{ip}{x}{y}{label}{containercount}
+\newcommand{\createK8sPod}[6]{
+    \node[container, minimum height=2cm, minimum width=3cm] (#1) at (#3,#4) {
+        \textbf{#5} \\[1pt]
+        \tikz\node[ip label]{#2}; \\[2pt]
+        \tikz\node[font=\tiny\bfseries, text=containerOrange!80]{K8s POD}; \\[1pt]
+        \tikz\node[font=\tiny, text=black!60]{Containers: #6};
+    };
+}
+
+% Create container with resource limits
+% Usage: \createContainerWithResources{name}{ip}{x}{y}{label}{cpu}{memory}
+\newcommand{\createContainerWithResources}[7]{
+    \node[container, minimum height=2.2cm] (#1) at (#3,#4) {
+        \textbf{#5} \\[1pt]
+        \tikz\node[ip label]{#2}; \\[2pt]
+        \tikz\node[font=\tiny, text=black!60]{CPU: #6 | RAM: #7};
+    };
+}
+
+% Create Docker stack (multiple containers)
+% Usage: \createDockerStack{name}{ip}{x}{y}{label}{services}
+\newcommand{\createDockerStack}[6]{
+    \node[container, minimum height=2.2cm, minimum width=3cm] (#1) at (#3,#4) {
+        \textbf{#5} \\[1pt]
+        \tikz\node[ip label]{#2}; \\[2pt]
+        \tikz\node[font=\tiny\bfseries, text=containerOrange!80]{DOCKER STACK}; \\[1pt]
+        \tikz\node[font=\tiny, text=black!60]{Services: #6};
+    };
+}
+
+% ============================================================================
+% NODE GROUPING AND CLUSTERING COMMANDS
+% ============================================================================
+
+% Draw a cluster boundary around nodes
+% Usage: \drawCluster{name}{label}{nodes}{x}{y}{width}{height}
+\newcommand{\drawCluster}[7]{
+    \node[cluster box, fit=(#3), minimum width=#6cm, minimum height=#7cm,
+          label={[font=\small\bfseries, text=clusterPurple!80]above:#2}]
+          (#1) at (#4,#5) {};
+}
+
+% Draw high-availability pair boundary
+% Usage: \drawHAPair{name}{label}{node1}{node2}
+\newcommand{\drawHAPair}[4]{
+    \node[ha pair, fit=(#3)(#4),
+          label={[font=\tiny\bfseries, text=clientGreen!70]above:#2}] (#1) {};
+}
+
+% Draw server rack container
+% Usage: \drawServerRack{name}{label}{nodes}{x}{y}
+\newcommand{\drawServerRack}[5]{
+    \node[server rack, fit=(#3),
+          label={[font=\small\bfseries, text=black!70]above:#2}]
+          (#1) at (#4,#5) {};
+}
+
+% Create cluster label with node count
+% Usage: \addClusterLabel{clustername}{nodecount}{x}{y}
+\newcommand{\addClusterLabel}[4]{
+    \node[font=\small\sffamily\bfseries, text=clusterPurple!80]
+          at (#3,#4) {#1 (#2 nodes)};
+}
+
+% ============================================================================
+% MULTI-PART NODE CREATION COMMANDS
+% ============================================================================
+
+% Create a detailed multi-part server node
+% Usage: \createDetailedServer{name}{ip}{x}{y}{hostname}{ports}{services}
+\newcommand{\createDetailedServer}[7]{
+    \node[server, minimum height=3cm, minimum width=3.5cm] (#1) at (#3,#4) {
+        \begin{tabular}{c}
+            \textbf{#5} \\[2pt]
+            \hline
+            \tikz\node[ip label]{#2}; \\[2pt]
+            \hline
+            \tikz\node[port label]{Ports: #6}; \\[1pt]
+            \tikz\node[font=\tiny\ttfamily, text=black!60]{#7};
+        \end{tabular}
+    };
+}
+
+% Create node with resource utilization bars
+% Usage: \createNodeWithMetrics{name}{ip}{x}{y}{label}{cpu}{memory}{disk}
+\newcommand{\createNodeWithMetrics}[8]{
+    \node[server, minimum height=3.2cm, minimum width=3.5cm] (#1) at (#3,#4) {
+        \textbf{#5} \\[2pt]
+        \tikz\node[ip label]{#2}; \\[3pt]
+        \tikz{
+            \node[font=\tiny, anchor=west] at (0,0.3) {CPU: #6\%};
+            \draw[fill=serverBlue!50] (0,0.2) rectangle (#6/100*2,0.35);
+            \draw[draw=black!30] (0,0.2) rectangle (2,0.35);
+
+            \node[font=\tiny, anchor=west] at (0,0) {RAM: #7\%};
+            \draw[fill=clientGreen!50] (0,-0.1) rectangle (#7/100*2,0.05);
+            \draw[draw=black!30] (0,-0.1) rectangle (2,0.05);
+
+            \node[font=\tiny, anchor=west] at (0,-0.3) {Disk: #8\%};
+            \draw[fill=routerOrange!50] (0,-0.4) rectangle (#8/100*2,-0.25);
+            \draw[draw=black!30] (0,-0.4) rectangle (2,-0.25);
+        };
+    };
+}
+
+% Create three-tier node (header, body, footer)
+% Usage: \createThreeTierNode{name}{ip}{x}{y}{header}{body}{footer}
+\newcommand{\createThreeTierNode}[7]{
+    \node[server, minimum height=3cm, minimum width=3.5cm] (#1) at (#3,#4) {
+        \begin{tabular}{c}
+            \textbf{\textcolor{serverBlue!80}{#5}} \\[1pt]
+            \hline
+            #6 \\[1pt]
+            \tikz\node[ip label]{#2}; \\[1pt]
+            \hline
+            \tikz\node[font=\tiny, text=black!60]{#7};
+        \end{tabular}
+    };
+}
+
+% ============================================================================
+% MOBILE DEVICE NODE CREATION COMMANDS
+% ============================================================================
+
+% Create a mobile phone node
+% Usage: \createMobilePhone{name}{ip}{x}{y}{label}
+\newcommand{\createMobilePhone}[5]{
+    \node[mobile phone] (#1) at (#3,#4) {
+        \textbf{#5} \\[2pt]
+        \tikz\node[ip label, font=\tiny]{#2}; \\[1pt]
+        \tikz\node[font=\tiny, text=mobileBlue!80]{PHONE};
+    };
+}
+
+% Create a mobile phone with OS info
+% Usage: \createMobilePhoneWithOS{name}{ip}{x}{y}{label}{os}
+\newcommand{\createMobilePhoneWithOS}[6]{
+    \node[mobile phone, minimum height=2.8cm] (#1) at (#3,#4) {
+        \textbf{#5} \\[1pt]
+        \tikz\node[ip label, font=\tiny]{#2}; \\[2pt]
+        \tikz\node[font=\tiny\ttfamily, text=black!60]{#6};
+    };
+}
+
+% Create a tablet node
+% Usage: \createTablet{name}{ip}{x}{y}{label}
+\newcommand{\createTablet}[5]{
+    \node[tablet] (#1) at (#3,#4) {
+        \textbf{#5} \\[1pt]
+        \tikz\node[ip label, font=\tiny]{#2}; \\[1pt]
+        \tikz\node[font=\tiny, text=mobileBlue!80]{TABLET};
+    };
+}
+
+% Create a tablet with OS info
+% Usage: \createTabletWithOS{name}{ip}{x}{y}{label}{os}
+\newcommand{\createTabletWithOS}[6]{
+    \node[tablet, minimum height=2.2cm] (#1) at (#3,#4) {
+        \textbf{#5} \\[1pt]
+        \tikz\node[ip label, font=\tiny]{#2}; \\[2pt]
+        \tikz\node[font=\tiny\ttfamily, text=black!60]{#6};
+    };
+}
+
+% ============================================================================
+% IOT DEVICE NODE CREATION COMMANDS
+% ============================================================================
+
+% Create a basic IoT device node
+% Usage: \createIoTDevice{name}{ip}{x}{y}{label}
+\newcommand{\createIoTDevice}[5]{
+    \node[iot device] (#1) at (#3,#4) {
+        \textbf{\small #5} \\[1pt]
+        \tikz\node[ip label, font=\tiny]{#2};
+    };
+}
+
+% Create an IoT device with type
+% Usage: \createIoTDeviceWithType{name}{ip}{x}{y}{label}{devicetype}
+\newcommand{\createIoTDeviceWithType}[6]{
+    \node[iot device, minimum size=2cm] (#1) at (#3,#4) {
+        \textbf{\small #5} \\[1pt]
+        \tikz\node[ip label, font=\tiny]{#2}; \\[2pt]
+        \tikz\node[font=\tiny, text=iotGreen!80]{#6};
+    };
+}
+
+% Create an IoT sensor node
+% Usage: \createIoTSensor{name}{ip}{x}{y}{label}
+\newcommand{\createIoTSensor}[5]{
+    \node[iot sensor] (#1) at (#3,#4) {
+        \textbf{\small #5} \\[1pt]
+        \tikz\node[ip label, font=\tiny]{#2};
+    };
+}
+
+% Create an IoT sensor with measurement type
+% Usage: \createIoTSensorWithType{name}{ip}{x}{y}{label}{sensortype}
+\newcommand{\createIoTSensorWithType}[6]{
+    \node[iot sensor, minimum size=2cm] (#1) at (#3,#4) {
+        \textbf{\small #5} \\[1pt]
+        \tikz\node[ip label, font=\tiny]{#2}; \\[2pt]
+        \tikz\node[font=\tiny\ttfamily, text=black!60]{#6};
+    };
+}
+
+% ============================================================================
+% CLOUD PROVIDER NODE CREATION COMMANDS
+% ============================================================================
+
+% Create an AWS cloud node
+% Usage: \createAWSNode{name}{ip}{x}{y}{label}{service}
+\newcommand{\createAWSNode}[6]{
+    \node[aws node] (#1) at (#3,#4) {
+        \textbf{#5} \\[2pt]
+        \tikz\node[ip label]{#2}; \\[2pt]
+        \tikz\node[font=\tiny\bfseries, text=awsOrange!80]{AWS}; \\[1pt]
+        \tikz\node[font=\tiny\ttfamily, text=black!60]{#6};
+    };
+}
+
+% Create an AWS EC2 instance
+% Usage: \createAWSEC2{name}{ip}{x}{y}{label}{instancetype}
+\newcommand{\createAWSEC2}[6]{
+    \node[aws node, minimum height=2.5cm] (#1) at (#3,#4) {
+        \textbf{#5} \\[2pt]
+        \tikz\node[ip label]{#2}; \\[2pt]
+        \tikz\node[font=\tiny\bfseries, text=awsOrange!80]{AWS EC2}; \\[1pt]
+        \tikz\node[font=\tiny\ttfamily, text=black!60]{#6};
+    };
+}
+
+% Create an Azure cloud node
+% Usage: \createAzureNode{name}{ip}{x}{y}{label}{service}
+\newcommand{\createAzureNode}[6]{
+    \node[azure node] (#1) at (#3,#4) {
+        \textbf{#5} \\[2pt]
+        \tikz\node[ip label]{#2}; \\[2pt]
+        \tikz\node[font=\tiny\bfseries, text=azureBlue!80]{AZURE}; \\[1pt]
+        \tikz\node[font=\tiny\ttfamily, text=black!60]{#6};
+    };
+}
+
+% Create an Azure VM
+% Usage: \createAzureVM{name}{ip}{x}{y}{label}{vmsize}
+\newcommand{\createAzureVM}[6]{
+    \node[azure node, minimum height=2.5cm] (#1) at (#3,#4) {
+        \textbf{#5} \\[2pt]
+        \tikz\node[ip label]{#2}; \\[2pt]
+        \tikz\node[font=\tiny\bfseries, text=azureBlue!80]{AZURE VM}; \\[1pt]
+        \tikz\node[font=\tiny\ttfamily, text=black!60]{#6};
+    };
+}
+
+% Create a GCP cloud node
+% Usage: \createGCPNode{name}{ip}{x}{y}{label}{service}
+\newcommand{\createGCPNode}[6]{
+    \node[gcp node] (#1) at (#3,#4) {
+        \textbf{#5} \\[2pt]
+        \tikz\node[ip label]{#2}; \\[2pt]
+        \tikz\node[font=\tiny\bfseries, text=gcpBlue!80]{GCP}; \\[1pt]
+        \tikz\node[font=\tiny\ttfamily, text=black!60]{#6};
+    };
+}
+
+% Create a GCP Compute Engine instance
+% Usage: \createGCPCompute{name}{ip}{x}{y}{label}{machinetype}
+\newcommand{\createGCPCompute}[6]{
+    \node[gcp node, minimum height=2.5cm] (#1) at (#3,#4) {
+        \textbf{#5} \\[2pt]
+        \tikz\node[ip label]{#2}; \\[2pt]
+        \tikz\node[font=\tiny\bfseries, text=gcpBlue!80]{GCP Compute}; \\[1pt]
+        \tikz\node[font=\tiny\ttfamily, text=black!60]{#6};
+    };
+}
+
+% ============================================================================
+% CUSTOM NODE TEMPLATE SYSTEM
+% ============================================================================
+
+% Define a custom node template
+% Usage: \defineNodeTemplate{templatename}{style}{defaultlabel}
+\newcommand{\defineNodeTemplate}[3]{
+    \pgfkeys{/nodetemplates/#1/style/.initial=#2}
+    \pgfkeys{/nodetemplates/#1/defaultlabel/.initial=#3}
+}
+
+% Create a node from a template
+% Usage: \createNodeFromTemplate{templatename}{name}{ip}{x}{y}{label}
+\newcommand{\createNodeFromTemplate}[6]{
+    \edef\templatestyle{\pgfkeysvalueof{/nodetemplates/#1/style}}
+    \node[\templatestyle] (#2) at (#4,#5) {
+        \textbf{#6} \\[2pt]
+        \tikz\node[ip label]{#3};
+    };
+}
+
 % TODO: Advanced node creation
 % - Add support for custom node shapes via parameters
-% - Implement node templates for common device types
-% - Create composite nodes (e.g., server rack with multiple servers)
 % - Support for node status indicators (up/down/warning)
+% - Add animation states for live monitoring
 
 % ============================================================================
 % ENHANCED NODE VARIANTS

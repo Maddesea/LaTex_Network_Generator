@@ -92,6 +92,8 @@ In `network_diagram_generator.tex`:
 
 ## Available Node Types
 
+### Basic Network Devices
+
 | Command | Description | Example |
 |---------|-------------|---------|
 | `\createServer` | Server/host | `\createServer{srv1}{192.168.1.10}{0}{0}{Web Server}` |
@@ -101,6 +103,91 @@ In `network_diagram_generator.tex`:
 | `\createSwitch` | Network switch | `\createSwitch{sw1}{192.168.1.2}{-3}{-3}{Access SW}` |
 | `\createCloud` | Cloud/Internet | `\createCloud{inet}{0}{8}{Internet}` |
 | `\createAttacker` | Threat actor | `\createAttacker{bad1}{1.2.3.4}{-6}{8}{Attacker}` |
+
+### Database Servers (NEW!)
+
+| Command | Description | Visual |
+|---------|-------------|--------|
+| `\createDatabase` | Basic database | Cylinder shape |
+| `\createDatabasePrimary` | Primary/master DB | Bold cylinder with PRIMARY label |
+| `\createDatabaseReplica` | Replica/slave DB | Dashed cylinder with REPLICA label |
+| `\createDatabaseCluster` | DB cluster | Double-outlined cylinder |
+| `\createDatabaseWithInfo` | DB with ports/type | Cylinder with additional info |
+
+### Load Balancers (NEW!)
+
+| Command | Description | Visual |
+|---------|-------------|--------|
+| `\createLoadBalancer` | Basic load balancer | Trapezium shape |
+| `\createLoadBalancerActive` | Active LB | Bold with ACTIVE label |
+| `\createLoadBalancerPassive` | Passive/standby LB | Dashed with PASSIVE label |
+| `\createLoadBalancerWithAlgo` | LB with algorithm | Shows algorithm (Round Robin, etc.) |
+| `\createLoadBalancerWithPool` | LB with pool size | Shows backend node count |
+
+### Virtual Machines (NEW!)
+
+| Command | Description | Visual |
+|---------|-------------|--------|
+| `\createVM` | Basic VM | Double-outlined box |
+| `\createVMWithHypervisor` | VM with host info | Shows hypervisor name |
+| `\createVMCluster` | VM cluster | Cluster with instance count |
+| `\createHypervisor` | Hypervisor host | Server with HYPERVISOR label |
+
+### Containers & Orchestration (NEW!)
+
+| Command | Description | Visual |
+|---------|-------------|--------|
+| `\createContainer` | Basic container | Orange container box |
+| `\createContainerWithImage` | Container with image | Shows Docker image name |
+| `\createK8sPod` | Kubernetes pod | Dashed box with container count |
+| `\createContainerWithResources` | Container with limits | Shows CPU/RAM limits |
+| `\createDockerStack` | Docker stack | Multi-service stack |
+
+### Mobile Devices (NEW!)
+
+| Command | Description | Visual |
+|---------|-------------|--------|
+| `\createMobilePhone` | Mobile phone | Portrait rectangle |
+| `\createMobilePhoneWithOS` | Phone with OS | Shows iOS/Android |
+| `\createTablet` | Tablet | Landscape rectangle |
+| `\createTabletWithOS` | Tablet with OS | Shows OS information |
+
+### IoT Devices (NEW!)
+
+| Command | Description | Visual |
+|---------|-------------|--------|
+| `\createIoTDevice` | IoT device | Circle shape |
+| `\createIoTDeviceWithType` | IoT with type | Shows device type |
+| `\createIoTSensor` | IoT sensor | Diamond shape |
+| `\createIoTSensorWithType` | Sensor with type | Shows sensor type (temp, motion, etc.) |
+
+### Cloud Provider Nodes (NEW!)
+
+| Command | Description | Provider |
+|---------|-------------|----------|
+| `\createAWSNode` | AWS service | Amazon Web Services |
+| `\createAWSEC2` | AWS EC2 instance | Shows instance type |
+| `\createAzureNode` | Azure service | Microsoft Azure |
+| `\createAzureVM` | Azure VM | Shows VM size |
+| `\createGCPNode` | GCP service | Google Cloud Platform |
+| `\createGCPCompute` | GCP Compute | Shows machine type |
+
+### Multi-Part & Detailed Nodes (NEW!)
+
+| Command | Description | Features |
+|---------|-------------|----------|
+| `\createDetailedServer` | Server with details | Hostname, IP, ports, services |
+| `\createNodeWithMetrics` | Node with metrics | CPU/RAM/Disk utilization bars |
+| `\createThreeTierNode` | Three-section node | Header, body, footer layout |
+
+### Node Grouping & Clustering (NEW!)
+
+| Command | Description | Usage |
+|---------|-------------|-------|
+| `\drawCluster` | Cluster boundary | Groups multiple nodes |
+| `\drawHAPair` | HA pair boundary | Marks high-availability pairs |
+| `\drawServerRack` | Server rack | Visual rack container |
+| `\addClusterLabel` | Cluster label | Adds label with node count |
 
 ## Available Connection Types
 
@@ -180,15 +267,23 @@ This system is designed for **multiple agents/developers** to work simultaneousl
 - [ ] Badge/label support for OS type and status
 
 ### Agent 2: Node System (`node_definitions.tex`)
-**Priority TODOs:**
-- [ ] Hash map for O(1) node lookup by IP
-- [ ] Node grouping/clustering support
-- [ ] Database server nodes with cylinder shape
-- [ ] Load balancer nodes with special indicators
-- [ ] Virtual machine nested appearance
-- [ ] Container/Docker nodes with stacked appearance
+**Completed:**
+- [x] Hash map for O(1) node lookup by IP, hostname, and node ID
+- [x] Node grouping/clustering support with visual boundaries
+- [x] Database server nodes with cylinder shapes (primary, replica, cluster)
+- [x] Load balancer nodes with special indicators (active/passive, algorithms)
+- [x] Virtual machine nested appearance with hypervisor support
+- [x] Container/Docker nodes with Kubernetes pod support
+- [x] Mobile device nodes (phones, tablets) with OS indicators
+- [x] IoT device nodes (sensors, actuators) with specialized shapes
+- [x] Cloud provider nodes (AWS, Azure, GCP) with service types
+- [x] Multi-part nodes with resource utilization bars
+- [x] IP address validation and formatting (IPv4, IPv6, CIDR)
+- [x] Custom node template system
+
+**Remaining TODOs:**
 - [ ] CVE vulnerability badges with scoring
-- [ ] Auto-validation of IP addresses
+- [ ] Advanced IP validation with subnet parsing
 
 ### Agent 3: Layout Engine (`network_layout.tex`)
 **Priority TODOs:**

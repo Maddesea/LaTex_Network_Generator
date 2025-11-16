@@ -14,6 +14,14 @@
 \definecolor{cloudGray}{RGB}{149, 165, 166}
 \definecolor{databaseTeal}{RGB}{22, 160, 133}
 \definecolor{loadBalancerCyan}{RGB}{41, 128, 185}
+\definecolor{vmYellow}{RGB}{241, 196, 15}
+\definecolor{containerOrange}{RGB}{243, 156, 18}
+\definecolor{clusterPurple}{RGB}{142, 68, 173}
+\definecolor{mobileBlue}{RGB}{52, 73, 94}
+\definecolor{iotGreen}{RGB}{39, 174, 96}
+\definecolor{awsOrange}{RGB}{255, 153, 0}
+\definecolor{azureBlue}{RGB}{0, 120, 212}
+\definecolor{gcpBlue}{RGB}{66, 133, 244}
 
 % Threat indicator colors
 \definecolor{threatCritical}{RGB}{192, 57, 43}
@@ -188,6 +196,172 @@
         loadbalancer,
         fill=loadBalancerCyan!10,
         dashed
+    },
+
+    % Virtual Machine style (nested box appearance)
+    vm/.style={
+        base node,
+        rectangle,
+        rounded corners=3pt,
+        fill=vmYellow!15,
+        draw=vmYellow!70,
+        line width=1pt,
+        double,
+        double distance=2pt
+    },
+
+    % VM inner box (for nested appearance)
+    vm inner/.style={
+        rectangle,
+        rounded corners=2pt,
+        fill=vmYellow!25,
+        draw=vmYellow!80,
+        line width=0.5pt,
+        inner sep=3pt
+    },
+
+    % Hypervisor/Host style
+    hypervisor/.style={
+        rectangle,
+        rounded corners=4pt,
+        fill=vmYellow!5,
+        draw=vmYellow!60,
+        line width=2pt,
+        dashed,
+        dash pattern=on 4pt off 2pt,
+        inner sep=8pt
+    },
+
+    % Container/Docker style (stacked appearance)
+    container/.style={
+        base node,
+        rectangle,
+        rounded corners=2pt,
+        fill=containerOrange!20,
+        draw=containerOrange!80,
+        line width=1pt,
+        minimum height=1.2cm
+    },
+
+    % Container stack layer
+    container layer/.style={
+        rectangle,
+        rounded corners=1pt,
+        fill=containerOrange!30,
+        draw=containerOrange!70,
+        line width=0.5pt,
+        minimum height=0.3cm
+    },
+
+    % Kubernetes Pod style
+    k8s pod/.style={
+        rectangle,
+        rounded corners=3pt,
+        fill=containerOrange!15,
+        draw=containerOrange!70,
+        line width=1.5pt,
+        dashed,
+        dash pattern=on 3pt off 2pt
+    },
+
+    % Cluster/Group boundary box
+    cluster box/.style={
+        rectangle,
+        rounded corners=5pt,
+        fill=clusterPurple!5,
+        draw=clusterPurple!50,
+        line width=1.5pt,
+        inner sep=10pt
+    },
+
+    % High-availability pair box
+    ha pair/.style={
+        rectangle,
+        rounded corners=4pt,
+        fill=clientGreen!5,
+        draw=clientGreen!40,
+        line width=1.5pt,
+        dashed,
+        dash pattern=on 5pt off 3pt
+    },
+
+    % Server rack style
+    server rack/.style={
+        rectangle,
+        fill=black!10,
+        draw=black!50,
+        line width=2pt,
+        inner sep=5pt
+    },
+
+    % Mobile device styles
+    mobile phone/.style={
+        base node,
+        rectangle,
+        rounded corners=5pt,
+        fill=mobileBlue!20,
+        draw=mobileBlue!80,
+        line width=1pt,
+        minimum width=1.5cm,
+        minimum height=2.5cm
+    },
+
+    tablet/.style={
+        base node,
+        rectangle,
+        rounded corners=4pt,
+        fill=mobileBlue!20,
+        draw=mobileBlue!80,
+        line width=1pt,
+        minimum width=2.2cm,
+        minimum height=1.8cm
+    },
+
+    % IoT device styles
+    iot device/.style={
+        base node,
+        circle,
+        fill=iotGreen!20,
+        draw=iotGreen!80,
+        line width=1pt,
+        minimum size=1.5cm
+    },
+
+    iot sensor/.style={
+        base node,
+        diamond,
+        fill=iotGreen!25,
+        draw=iotGreen!80,
+        line width=1pt,
+        minimum size=1.5cm
+    },
+
+    % Cloud provider styles
+    aws node/.style={
+        base node,
+        rectangle,
+        rounded corners=3pt,
+        fill=awsOrange!15,
+        draw=awsOrange!80,
+        line width=1.5pt
+    },
+
+    azure node/.style={
+        base node,
+        rectangle,
+        rounded corners=3pt,
+        fill=azureBlue!15,
+        draw=azureBlue!80,
+        line width=1.5pt
+    },
+
+    gcp node/.style={
+        base node,
+        rectangle,
+        rounded corners=3pt,
+        fill=gcpBlue!15,
+        draw=gcpBlue!80,
+        line width=1.5pt
     }
 }
 
