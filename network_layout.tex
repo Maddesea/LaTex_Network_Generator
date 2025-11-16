@@ -436,21 +436,211 @@
 }
 
 % ============================================================================
-% BACKGROUND ELEMENTS
+% BACKGROUND ELEMENTS AND OVERLAYS
 % ============================================================================
 
-% Draw optional background grid
-\newcommand{\drawBackgroundGrid}{
-    % Optional grid for reference - can be toggled
-    % \draw[step=1cm, gray!20, very thin] (-10,-10) grid (10,10);
+% Background grid parameters
+\newlength{\gridStep}
+\setlength{\gridStep}{1cm}
+
+% Draw configurable background grid
+% Usage: \drawBackgroundGrid{step}{color}{opacity}
+\newcommand{\drawBackgroundGrid}[3]{
+    \begin{scope}[on background layer]
+        \draw[step=#1, #2, opacity=#3, very thin]
+            (current bounding box.south west) grid (current bounding box.north east);
+    \end{scope}
 }
 
-% TODO: Background enhancements
-% - Configurable grid density and color
-% - Network topology background patterns
-% - Geographic map overlays for WAN diagrams
-% - Data center floor plan backgrounds
-% - Custom background image support
+% Draw major/minor grid (like graph paper)
+% Usage: \drawGraphPaperGrid{minor_step}{major_step}{minor_color}{major_color}
+\newcommand{\drawGraphPaperGrid}[4]{
+    \begin{scope}[on background layer]
+        % Minor grid
+        \draw[step=#1, #3, opacity=0.2, very thin]
+            (current bounding box.south west) grid (current bounding box.north east);
+        % Major grid
+        \draw[step=#2, #4, opacity=0.4, thin]
+            (current bounding box.south west) grid (current bounding box.north east);
+    \end{scope}
+}
+
+% Geographic map overlay for WAN diagrams
+% Usage: \addGeographicMap{image_path}{x}{y}{width}{height}{opacity}
+\newcommand{\addGeographicMap}[6]{
+    \begin{scope}[on background layer]
+        \node[opacity=#6, inner sep=0pt] at (#2, #3) {
+            \includegraphics[width=#4, height=#5]{#1}
+        };
+    \end{scope}
+}
+
+% Simplified continent outlines (for global networks)
+% Usage: \drawWorldMapOutline{scale}{opacity}
+\newcommand{\drawWorldMapOutline}[2]{
+    \begin{scope}[on background layer, scale=#1, opacity=#2]
+        % Simplified world map can be drawn with basic shapes
+        % Or include from external file
+        % This is a placeholder for actual map coordinates
+    \end{scope}
+}
+
+% Data center floor plan background
+% Usage: \drawFloorPlan{width}{length}{rows}{cols}{aisle_width}
+\newcommand{\drawFloorPlan}[5]{
+    \begin{scope}[on background layer]
+        % Draw floor outline
+        \draw[black!30, very thick] (0,0) rectangle (#1, -#2);
+
+        % Draw aisles
+        \pgfmathsetmacro{\aislecount}{#4 - 1}
+        \foreach \i in {1,...,\aislecount} {
+            \pgfmathsetmacro{\xpos}{#1 / #4 * \i}
+            \draw[blue!20, thick, dashed]
+                (\xpos, 0) -- (\xpos, -#2);
+        }
+
+        % Draw cold/hot aisle indicators
+        \foreach \i in {0,...,#3} {
+            \pgfmathsetmacro{\ypos}{-#2 / #3 * \i}
+            \pgfmathparse{mod(\i, 2) == 0 ? "Cold" : "Hot"}
+            \let\aisletype\pgfmathresult
+
+            \node[font=\tiny, text=gray, rotate=90]
+                at (#5/2, \ypos + #2/#3/2) {\aisletype Aisle};
+        }
+    \end{scope}
+}
+
+% Network topology pattern backgrounds
+% Usage: \drawTopologyPattern{pattern_type}{density}{color}
+% pattern_type: mesh, star, ring, bus
+\newcommand{\drawTopologyPattern}[3]{
+    \begin{scope}[on background layer, opacity=0.05]
+        \def\patterntype{#1}
+        \def\mesh{mesh}
+        \def\star{star}
+        \def\ring{ring}
+
+        \ifx\patterntype\mesh
+            % Mesh pattern
+            \foreach \x in {0,...,#2} {
+                \foreach \y in {0,...,#2} {
+                    \filldraw[#3] (\x, -\y) circle (0.05cm);
+                }
+            }
+        \else\ifx\patterntype\star
+            % Star pattern from center
+            \foreach \angle in {0,30,...,330} {
+                \draw[#3] (0,0) -- (\angle:#2);
+            }
+        \else\ifx\patterntype\ring
+            % Concentric rings
+            \foreach \r in {1,...,#2} {
+                \draw[#3] (0,0) circle (\r cm);
+            }
+        \fi\fi\fi
+    \end{scope}
+}
+
+% Custom background image support
+% Usage: \setBackgroundImage{image_path}{opacity}{fit_to_diagram}
+% fit_to_diagram: true to scale image to diagram bounds
+\newcommand{\setBackgroundImage}[3]{
+    \begin{scope}[on background layer]
+        \def\fitdiagram{#3}
+        \def\true{true}
+
+        \ifx\fitdiagram\true
+            % Scale to fit current diagram
+            \node[opacity=#2, inner sep=0pt] at (current bounding box.center) {
+                \includegraphics[
+                    width=\pgfkeysvalueof{/pgf/bounding box/width},
+                    height=\pgfkeysvalueof{/pgf/bounding box/height}
+                ]{#1}
+            };
+        \else
+            % Use original size
+            \node[opacity=#2, inner sep=0pt] at (0,0) {
+                \includegraphics{#1}
+            };
+        \fi
+    \end{scope}
+}
+
+% Shaded region backgrounds (for zones)
+% Usage: \drawZoneBackground{corner1}{corner2}{color}{opacity}{label}
+\newcommand{\drawZoneBackground}[5]{
+    \begin{scope}[on background layer]
+        \fill[#3, opacity=#4] #1 rectangle #2;
+        \node[font=\large\bfseries, text=#3!80!black, opacity=0.3]
+            at ($(#1)!0.5!(#2)$) {#5};
+    \end{scope}
+}
+
+% Gradient background
+% Usage: \drawGradientBackground{start_color}{end_color}{direction}
+% direction: vertical, horizontal, radial
+\newcommand{\drawGradientBackground}[3]{
+    \begin{scope}[on background layer]
+        \def\direction{#3}
+        \def\vertical{vertical}
+        \def\horizontal{horizontal}
+        \def\radial{radial}
+
+        \ifx\direction\vertical
+            \shade[top color=#1, bottom color=#2]
+                (current bounding box.south west) rectangle (current bounding box.north east);
+        \else\ifx\direction\horizontal
+            \shade[left color=#1, right color=#2]
+                (current bounding box.south west) rectangle (current bounding box.north east);
+        \else\ifx\direction\radial
+            \shade[inner color=#1, outer color=#2]
+                (current bounding box.center) circle (5cm);
+        \fi\fi\fi
+    \end{scope}
+}
+
+% Coordinate system overlay (for debugging/reference)
+% Usage: \drawCoordinateSystem{x_range}{y_range}{label_step}
+\newcommand{\drawCoordinateSystem}[3]{
+    \begin{scope}[on background layer]
+        % X-axis
+        \draw[->, thick, gray!50] (-#1, 0) -- (#1, 0) node[right] {x};
+        % Y-axis
+        \draw[->, thick, gray!50] (0, -#2) -- (0, #2) node[above] {y};
+
+        % X labels
+        \foreach \x in {-#1,-(#1-#3),...,#1} {
+            \ifnum\x=0\else
+                \draw[gray!50] (\x, -0.1) -- (\x, 0.1);
+                \node[below, font=\tiny, gray] at (\x, -0.1) {\x};
+            \fi
+        }
+
+        % Y labels
+        \foreach \y in {-#2,-(#2-#3),...,#2} {
+            \ifnum\y=0\else
+                \draw[gray!50] (-0.1, \y) -- (0.1, \y);
+                \node[left, font=\tiny, gray] at (-0.1, \y) {\y};
+            \fi
+        }
+    \end{scope}
+}
+
+% Watermark (for draft diagrams)
+% Usage: \addWatermark{text}{opacity}
+\newcommand{\addWatermark}[2]{
+    \begin{scope}[on background layer]
+        \node[
+            font=\Huge\bfseries,
+            text=gray,
+            opacity=#2,
+            rotate=45,
+            scale=3
+        ] at (current bounding box.center) {#1};
+    \end{scope}
+}
 
 % ============================================================================
 % HIERARCHICAL TREE LAYOUTS
@@ -1508,4 +1698,328 @@
     % - Unbalanced distribution
     % - Poor spacing
     % - Excessive diagram size
+}
+
+% ============================================================================
+% ZOOM LEVEL SYSTEM (LOD - Level of Detail)
+% ============================================================================
+
+% Zoom level state
+\newcounter{zoomlevel}
+\setcounter{zoomlevel}{100}  % percentage
+
+% Define zoom levels
+\newcommand{\setZoomLevel}[1]{
+    \setcounter{zoomlevel}{#1}
+}
+
+% Get current zoom as scale factor
+\newcommand{\getZoomScale}{
+    \pgfmathsetmacro{\zoomscale}{\value{zoomlevel} / 100}
+}
+
+% Apply zoom to scope
+% Usage: \applyZoom{content}
+\newcommand{\applyZoom}[1]{
+    \getZoomScale
+    \begin{scope}[scale=\zoomscale, transform shape]
+        #1
+    \end{scope}
+}
+
+% Zoom presets
+% Usage: \setZoomPreset{preset_name}
+% preset_name: overview, normal, detail, extreme
+\newcommand{\setZoomPreset}[1]{
+    \def\preset{#1}
+    \def\overview{overview}
+    \def\normal{normal}
+    \def\detail{detail}
+    \def\extreme{extreme}
+
+    \ifx\preset\overview
+        \setcounter{zoomlevel}{50}
+    \else\ifx\preset\normal
+        \setcounter{zoomlevel}{100}
+    \else\ifx\preset\detail
+        \setcounter{zoomlevel}{150}
+    \else\ifx\preset\extreme
+        \setcounter{zoomlevel}{200}
+    \fi\fi\fi\fi
+}
+
+% Level of Detail (LOD) rendering
+% Shows/hides elements based on zoom level
+% Usage: \ifZoomAtLeast{threshold}{content}
+\newcommand{\ifZoomAtLeast}[2]{
+    \pgfmathparse{\value{zoomlevel} >= #1 ? 1 : 0}
+    \ifnum\pgfmathresult=1
+        #2
+    \fi
+}
+
+% Show labels only at sufficient zoom
+% Usage: \showAtZoom{min_zoom}{label_content}
+\newcommand{\showAtZoom}[2]{
+    \ifZoomAtLeast{#1}{#2}
+}
+
+% Adaptive detail based on zoom
+% Usage: \adaptiveDetail{zoom_threshold}{simple_content}{detailed_content}
+\newcommand{\adaptiveDetail}[3]{
+    \pgfmathparse{\value{zoomlevel} >= #1 ? 1 : 0}
+    \ifnum\pgfmathresult=1
+        #3  % detailed version
+    \else
+        #2  % simple version
+    \fi
+}
+
+% Smooth zoom transition
+% Usage: \smoothZoom{start_zoom}{end_zoom}{steps}
+\newcommand{\smoothZoom}[3]{
+    % For animation or multi-page progressive zoom
+    \pgfmathsetmacro{\zoomstep}{(#2 - #1) / #3}
+}
+
+% ============================================================================
+% LAYOUT PRESETS (Quick Start Templates)
+% ============================================================================
+
+% Apply enterprise 3-tier architecture preset
+% Usage: \applyEnterprisePreset
+\newcommand{\applyEnterprisePreset}{
+    \setTierOrientation{vertical}
+    \setlength{\treeLevelSpacing}{4cm}
+    \setlength{\nodeSpacing}{3cm}
+    \optimizeForPrint{a4}
+}
+
+% Apply data center layout preset
+% Usage: \applyDataCenterPreset
+\newcommand{\applyDataCenterPreset}{
+    \setGridSpacing{2.5cm}{2cm}
+    \setNodeDimensions{2cm}{1cm}
+    \drawFloorPlan{20cm}{15cm}{4}{5}{1cm}
+}
+
+% Apply cloud architecture preset
+% Usage: \applyCloudPreset
+\newcommand{\applyCloudPreset}{
+    \setTierOrientation{horizontal}
+    \setlength{\nodeSpacing}{3.5cm}
+    \adaptiveNodeSize{30}
+    \optimizeForScreen{fullhd}
+}
+
+% Apply small office network preset
+% Usage: \applySmallOfficePreset
+\newcommand{\applySmallOfficePreset}{
+    \calculateOptimalRadius{10}{2cm}
+    \setlength{\nodeSpacing}{2.5cm}
+    \optimizeForPrint{letter}
+}
+
+% Apply IoT network preset (many nodes)
+% Usage: \applyIoTPreset
+\newcommand{\applyIoTPreset}{
+    \adaptiveNodeSize{100}
+    \optimizePerformance{100}
+    \setZoomPreset{overview}
+}
+
+% Apply security operations center (SOC) preset
+% Usage: \applySOCPreset
+\newcommand{\applySOCPreset}{
+    % High visibility colors
+    \tikzset{every node/.append style={line width=1pt}}
+    \setlength{\nodeSpacing}{3cm}
+}
+
+% ============================================================================
+% DEBUG AND VISUALIZATION HELPERS
+% ============================================================================
+
+% Enable debug mode
+\newif\ifdebugmode
+\debugmodefalse
+
+\newcommand{\enableDebugMode}{
+    \debugmodetrue
+}
+
+\newcommand{\disableDebugMode}{
+    \debugmodefalse
+}
+
+% Show node bounding boxes
+% Usage: \showNodeBounds{node_name}
+\newcommand{\showNodeBounds}[1]{
+    \ifdebugmode
+        \draw[red, dashed, thin] (#1.south west) rectangle (#1.north east);
+    \fi
+}
+
+% Show node center point
+% Usage: \showNodeCenter{node_name}
+\newcommand{\showNodeCenter}[1]{
+    \ifdebugmode
+        \fill[red] (#1.center) circle (0.05cm);
+        \node[above right, font=\tiny, red] at (#1.center) {#1};
+    \fi
+}
+
+% Display node coordinates
+% Usage: \showNodeCoords{node_name}
+\newcommand{\showNodeCoords}[1]{
+    \ifdebugmode
+        \pgfextractx{\pgf@xa}{\pgfpointanchor{#1}{center}}
+        \pgfextracty{\pgf@ya}{\pgfpointanchor{#1}{center}}
+        \node[below, font=\tiny, blue] at (#1.south)
+            {(\pgfmathprintnumber{\pgf@xa}, \pgfmathprintnumber{\pgf@ya})};
+    \fi
+}
+
+% Highlight collision zones
+% Usage: \highlightCollisions
+\newcommand{\highlightCollisions}{
+    \ifdebugmode
+        % Visual indicator for nodes too close together
+        % Would check all pairs and draw warning circles
+    \fi
+}
+
+% Show spacing guides
+% Usage: \showSpacingGuides{node1}{node2}
+\newcommand{\showSpacingGuides}[2]{
+    \ifdebugmode
+        \draw[green, dashed] (#1.center) -- (#2.center);
+        \pgfextractx{\pgf@xa}{\pgfpointanchor{#1}{center}}
+        \pgfextracty{\pgf@ya}{\pgfpointanchor{#1}{center}}
+        \pgfextractx{\pgf@xb}{\pgfpointanchor{#2}{center}}
+        \pgfextracty{\pgf@yb}{\pgfpointanchor{#2}{center}}
+        \pgfmathsetmacro{\dist}{sqrt((\pgf@xb-\pgf@xa)^2 + (\pgf@yb-\pgf@ya)^2)}
+        \node[font=\tiny, fill=white] at ($(#1)!0.5!(#2)$) {\dist};
+    \fi
+}
+
+% Performance profiling
+% Usage: \profileLayout{description}
+\newcommand{\profileLayout}[1]{
+    \ifdebugmode
+        \typeout{PROFILE: #1}
+        % Could measure compilation time, memory, etc.
+    \fi
+}
+
+% Validate layout constraints
+% Usage: \validateLayout
+\newcommand{\validateLayout}{
+    \ifdebugmode
+        \typeout{=== Layout Validation ===}
+        \typeout{Node count: \the\value{nodecount}}
+        \typeout{Connection count: \the\value{connectioncount}}
+        \typeout{Zoom level: \the\value{zoomlevel}\%}
+        \typeout{======================}
+    \fi
+}
+
+% ============================================================================
+% ADVANCED SPACING CONTROLS
+% ============================================================================
+
+% Fine-tune spacing parameters
+\newlength{\nodePadding}
+\newlength{\connectionPadding}
+\setlength{\nodePadding}{0.5cm}
+\setlength{\connectionPadding}{0.2cm}
+
+% Set all spacing at once
+% Usage: \setAllSpacing{node}{layer}{tier}{grid}
+\newcommand{\setAllSpacing}[4]{
+    \setlength{\nodeSpacing}{#1}
+    \setlength{\layerSpacing}{#2}
+    \setlength{\currentTierSpacing}{#3}
+    \setlength{\gridSpacingX}{#4}
+    \setlength{\gridSpacingY}{#4}
+}
+
+% Proportional spacing
+% Usage: \setProportionalSpacing{base_size}{scale_factor}
+\newcommand{\setProportionalSpacing}[2]{
+    \setlength{\nodeSpacing}{#1 * #2}
+    \setlength{\layerSpacing}{#1 * #2 * 1.5}
+    \setlength{\treeLevelSpacing}{#1 * #2 * 1.2}
+}
+
+% Tight spacing preset
+\newcommand{\useTightSpacing}{
+    \setAllSpacing{2cm}{3cm}{3cm}{2cm}
+    \setlength{\nodePadding}{0.3cm}
+}
+
+% Comfortable spacing preset
+\newcommand{\useComfortableSpacing}{
+    \setAllSpacing{3.5cm}{5cm}{5cm}{3.5cm}
+    \setlength{\nodePadding}{0.7cm}
+}
+
+% Loose spacing preset
+\newcommand{\useLooseSpacing}{
+    \setAllSpacing{5cm}{7cm}{7cm}{5cm}
+    \setlength{\nodePadding}{1cm}
+}
+
+% Dynamic spacing based on diagram density
+% Usage: \autoSpacing{node_count}{area}
+\newcommand{\autoSpacing}[2]{
+    \pgfmathsetmacro{\density}{#1 / #2}
+    \pgfmathparse{\density > 2 ? "tight" : (\density > 0.5 ? "comfortable" : "loose")}
+    \let\spacingmode\pgfmathresult
+
+    \def\tight{tight}
+    \def\comfortable{comfortable}
+    \def\loose{loose}
+
+    \ifx\spacingmode\tight
+        \useTightSpacing
+    \else\ifx\spacingmode\comfortable
+        \useComfortableSpacing
+    \else
+        \useLooseSpacing
+    \fi\fi\fi
+}
+
+% ============================================================================
+% LAYOUT TEMPLATES SYSTEM
+% ============================================================================
+
+% Save current layout configuration
+% Usage: \saveLayoutTemplate{template_name}
+\newcommand{\saveLayoutTemplate}[1]{
+    % Would save all spacing and style parameters
+    % to reuse later
+    \typeout{Saving layout template: #1}
+}
+
+% Load layout template
+% Usage: \loadLayoutTemplate{template_name}
+\newcommand{\loadLayoutTemplate}[1]{
+    % Restore saved configuration
+    \typeout{Loading layout template: #1}
+}
+
+% Export layout to external format
+% Usage: \exportLayout{filename}{format}
+% format: json, yaml, graphml
+\newcommand{\exportLayout}[2]{
+    % Export node positions and connections
+    % for use in other tools
+}
+
+% Import layout from external source
+% Usage: \importLayout{filename}{format}
+\newcommand{\importLayout}[2]{
+    % Read positions from external file
+    % Apply to current diagram
 }
