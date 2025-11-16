@@ -1376,3 +1376,2263 @@
 % - Last scan timestamp and security posture
 % - Asset criticality indicators (business impact)
 % - Custom metadata fields via configuration
+
+% ============================================================================
+% NETWORK VALIDATION AND VERIFICATION UTILITIES
+% ============================================================================
+
+% Global counters for validation tracking
+\newcounter{validationErrorCount}
+\newcounter{validationWarningCount}
+\newcounter{ipConflictCount}
+\newcounter{portConflictCount}
+
+% Store all registered IPs for conflict detection
+\pgfkeys{/ipregistry/.cd}
+
+% Store all registered node IDs for connectivity validation
+\pgfkeys{/noderegistry/.cd}
+
+% ============================================================================
+% NODE CONNECTIVITY VALIDATION
+% ============================================================================
+
+% Check if a node exists in the network
+% Usage: \validateNodeExists{nodeID}{\resultvar}
+% Result: 1 if exists, 0 if not found
+\newcommand{\validateNodeExists}[2]{
+    \def#2{0} % Assume not found
+    \pgfkeysifdefined{/nodemap/byid/#1}{
+        \def#2{1}
+    }{
+        \def#2{0}
+    }
+}
+
+% Validate a connection between two nodes
+% Usage: \validateConnection{node1}{node2}{\resultvar}
+% Result: 1 if both nodes exist, 0 if one or both missing
+\newcommand{\validateConnection}[3]{
+    \validateNodeExists{#1}{\nodeoneexists}
+    \validateNodeExists{#2}{\nodetwoexists}
+
+    \ifnum\nodeoneexists=1\relax
+        \ifnum\nodetwoexists=1\relax
+            \def#3{1} % Both exist
+        \else
+            \def#3{0} % Node 2 missing
+            \stepcounter{validationErrorCount}
+        \fi
+    \else
+        \def#3{0} % Node 1 missing
+        \stepcounter{validationErrorCount}
+    \fi
+}
+
+% Validate all connections in a path
+% Usage: \validatePath{node1,node2,node3,...}{\resultvar}
+% Result: Number of invalid connections found
+\newcommand{\validatePath}[2]{
+    \def#2{0}
+    \def\prevnode{}
+    \foreach \n [count=\i] in {#1} {
+        \ifnum\i>1
+            \validateConnection{\prevnode}{\n}{\connvalid}
+            \ifnum\connvalid=0\relax
+                \pgfmathsetmacro{#2}{#2 + 1}
+            \fi
+        \fi
+        \global\let\prevnode\n
+    }
+}
+
+% Check if node has parent (for VMs/containers)
+% Usage: \validateNodeParent{nodeID}{\resultvar}
+% Result: 1 if parent exists, 0 if parent missing or not set
+\newcommand{\validateNodeParent}[2]{
+    \def#2{1} % Assume valid
+    \pgfkeysifdefined{/nodemap/byid/#1/parent}{
+        \getNodeParent{#1}{\parentid}
+        \validateNodeExists{\parentid}{\parentexists}
+        \ifnum\parentexists=0\relax
+            \def#2{0}
+            \stepcounter{validationWarningCount}
+        \fi
+    }{
+        \def#2{1} % No parent defined is OK
+    }
+}
+
+% ============================================================================
+% IP ADDRESS CONFLICT DETECTION
+% ============================================================================
+
+% Register an IP address in the global registry
+% Usage: \registerIPAddress{nodeID}{ip}
+\newcommand{\registerIPAddress}[2]{
+    \StrSubstitute{#2}{.}{_}[\safeip]
+
+    % Check if IP already exists
+    \pgfkeysifdefined{/ipregistry/\safeip}{
+        % Conflict detected!
+        \stepcounter{ipConflictCount}
+        \pgfkeysgetvalue{/ipregistry/\safeip}{\conflictnode}
+        % Store conflict information
+        \pgfkeys{/ipconflicts/\safeip/node1/.initial={\conflictnode}}
+        \pgfkeys{/ipconflicts/\safeip/node2/.initial={#1}}
+    }{
+        % Register new IP
+        \pgfkeys{/ipregistry/\safeip/.initial={#1}}
+    }
+}
+
+% Check for IP conflicts between two nodes
+% Usage: \checkIPConflict{ip1}{ip2}{\resultvar}
+% Result: 1 if conflict (same IP), 0 if different
+\newcommand{\checkIPConflict}[3]{
+    \ifthenelse{\equal{#1}{#2}}{
+        \def#3{1}
+    }{
+        \def#3{0}
+    }
+}
+
+% Validate all registered IPs for conflicts
+% Usage: \validateAllIPs{\resultvar}
+% Result: Number of conflicts detected
+\newcommand{\validateAllIPs}[1]{
+    \def#1{\theipConflictCount}
+}
+
+% Check if IP is already in use
+% Usage: \isIPInUse{ip}{\resultvar}
+% Result: 1 if in use, 0 if available
+\newcommand{\isIPInUse}[2]{
+    \StrSubstitute{#1}{.}{_}[\safeip]
+    \pgfkeysifdefined{/ipregistry/\safeip}{
+        \def#2{1}
+    }{
+        \def#2{0}
+    }
+}
+
+% Get node ID using specific IP
+% Usage: \getNodeByIPAddress{ip}{\resultvar}
+\newcommand{\getNodeByIPAddress}[2]{
+    \StrSubstitute{#1}{.}{_}[\safeip]
+    \pgfkeysifdefined{/ipregistry/\safeip}{
+        \pgfkeysgetvalue{/ipregistry/\safeip}{#2}
+    }{
+        \def#2{NOTFOUND}
+    }
+}
+
+% ============================================================================
+% PORT CONFLICT DETECTION
+% ============================================================================
+
+% Store port allocations per IP
+\pgfkeys{/portregistry/.cd}
+
+% Register port allocation for a node
+% Usage: \registerNodePort{nodeID}{ip}{port}{service}
+\newcommand{\registerNodePort}[4]{
+    \StrSubstitute{#2}{.}{_}[\safeip]
+
+    % Check if this IP:port combo already exists
+    \pgfkeysifdefined{/portregistry/\safeip/#3}{
+        % Port conflict detected!
+        \stepcounter{portConflictCount}
+        \pgfkeysgetvalue{/portregistry/\safeip/#3}{\existingservice}
+        \pgfkeys{/portconflicts/\safeip/#3/service1/.initial={\existingservice}}
+        \pgfkeys{/portconflicts/\safeip/#3/service2/.initial={#4}}
+    }{
+        % Register new port allocation
+        \pgfkeys{/portregistry/\safeip/#3/.initial={#4}}
+    }
+}
+
+% Check if specific port is in use on an IP
+% Usage: \isPortInUse{ip}{port}{\resultvar}
+% Result: 1 if in use, 0 if available
+\newcommand{\isPortInUse}[3]{
+    \StrSubstitute{#1}{.}{_}[\safeip]
+    \pgfkeysifdefined{/portregistry/\safeip/#2}{
+        \def#3{1}
+    }{
+        \def#3{0}
+    }
+}
+
+% Validate port range is available
+% Usage: \validatePortRange{ip}{startport}{endport}{\resultvar}
+% Result: Number of conflicts in range
+\newcommand{\validatePortRange}[4]{
+    \def#4{0}
+    \foreach \p in {#2,...,#3} {
+        \isPortInUse{#1}{\p}{\inuse}
+        \ifnum\inuse=1\relax
+            \pgfmathsetmacro{#4}{#4 + 1}
+        \fi
+    }
+}
+
+% ============================================================================
+% SUBNET BOUNDARY VALIDATION
+% ============================================================================
+
+% Validate that node IP is within subnet
+% Usage: \validateNodeInSubnet{nodeID}{subnet}{cidr}{\resultvar}
+% Result: 1 if in subnet, 0 if outside
+\newcommand{\validateNodeInSubnet}[4]{
+    \getNodeIP{#1}{\nodeip}
+
+    % Extract subnet from node IP
+    \extractSubnetCIDR{\nodeip}{#3}{\nodesubnet}
+
+    % Compare subnets
+    \ifthenelse{\equal{\nodesubnet}{#2}}{
+        \def#4{1}
+    }{
+        \def#4{0}
+        \stepcounter{validationWarningCount}
+    }
+}
+
+% Validate all nodes in a subnet boundary
+% Usage: \validateSubnetNodes{subnet}{cidr}{node1,node2,node3,...}{\resultvar}
+% Result: Number of nodes outside subnet
+\newcommand{\validateSubnetNodes}[4]{
+    \def#4{0}
+    \foreach \n in {#3} {
+        \validateNodeInSubnet{\n}{#1}{#2}{\isinsubnet}
+        \ifnum\isinsubnet=0\relax
+            \pgfmathsetmacro{#4}{#4 + 1}
+        \fi
+    }
+}
+
+% Check if two nodes are in same subnet
+% Usage: \nodesInSameSubnet{node1}{node2}{\resultvar}
+% Result: 1 if same subnet, 0 if different
+\newcommand{\nodesInSameSubnet}[3]{
+    \getNodeIP{#1}{\ipone}
+    \getNodeIP{#2}{\iptwo}
+    \sameSubnet{\ipone}{\iptwo}{#3}
+}
+
+% ============================================================================
+% SECURITY POLICY VALIDATION
+% ============================================================================
+
+% Validate security zone boundaries (DMZ, trusted, untrusted)
+% Usage: \validateSecurityZone{zonetype}{nodes}{\resultvar}
+% Zone types: dmz, trusted, untrusted, public
+\newcommand{\validateSecurityZone}[3]{
+    \def#3{0} % Error count
+
+    \foreach \n in {#2} {
+        \getNodeIP{\n}{\nodeip}
+        \isPrivateIP{\nodeip}{\isprivate}
+
+        \ifthenelse{\equal{#1}{public}}{
+            % Public zone should have public IPs
+            \ifnum\isprivate=1\relax
+                \pgfmathsetmacro{#3}{#3 + 1}
+                \stepcounter{validationWarningCount}
+            \fi
+        }{
+        \ifthenelse{\equal{#1}{trusted}}{
+            % Trusted zone should have private IPs
+            \ifnum\isprivate=0\relax
+                \pgfmathsetmacro{#3}{#3 + 1}
+                \stepcounter{validationWarningCount}
+            \fi
+        }{
+            % DMZ can have either, no validation
+        }}
+    }
+}
+
+% Check encryption requirement between zones
+% Usage: \validateEncryptionRequired{node1zone}{node2zone}{\resultvar}
+% Result: 1 if encryption required, 0 if not required
+\newcommand{\validateEncryptionRequired}[3]{
+    \def#3{0} % Assume not required
+
+    % Different zones require encryption
+    \ifthenelse{\equal{#1}{#2}}{
+        \def#3{0} % Same zone, encryption optional
+    }{
+        \def#3{1} % Different zones, encryption required
+    }
+
+    % DMZ to trusted always requires encryption
+    \ifthenelse{\equal{#1}{dmz}}{
+        \ifthenelse{\equal{#2}{trusted}}{
+            \def#3{1}
+        }{}
+    }{}
+}
+
+% Validate firewall placement between zones
+% Usage: \validateFirewallPresent{zone1}{zone2}{firewallnode}{\resultvar}
+% Result: 1 if firewall present, 0 if missing
+\newcommand{\validateFirewallPresent}[4]{
+    \validateNodeExists{#3}{\fwexists}
+
+    \ifnum\fwexists=1\relax
+        % Check if it's actually a firewall type
+        \getNodeType{#3}{\nodetype}
+        \ifthenelse{\equal{\nodetype}{firewall}}{
+            \def#4{1}
+        }{
+            \def#4{0}
+            \stepcounter{validationErrorCount}
+        }
+    \else
+        \def#4{0}
+        \stepcounter{validationErrorCount}
+    \fi
+}
+
+% ============================================================================
+% VALIDATION REPORTING
+% ============================================================================
+
+% Generate validation summary report
+% Usage: \generateValidationReport{x}{y}
+% Displays a box with validation results at position (x,y)
+\newcommand{\generateValidationReport}[2]{
+    \node[
+        rectangle,
+        draw=black!70,
+        fill=white,
+        line width=1.5pt,
+        rounded corners=3pt,
+        inner sep=8pt,
+        anchor=north west,
+        font=\small\ttfamily
+    ] at (#1,#2) {
+        \begin{minipage}{6cm}
+        \textbf{Network Validation Report} \\[3pt]
+        \hline \\[-5pt]
+        Errors: \textcolor{red}{\thevalidationErrorCount} \\
+        Warnings: \textcolor{orange}{\thevalidationWarningCount} \\
+        IP Conflicts: \textcolor{red}{\theipConflictCount} \\
+        Port Conflicts: \textcolor{orange}{\theportConflictCount} \\[3pt]
+        \ifthenelse{\thevalidationErrorCount = 0}{
+            \ifthenelse{\thevalidationWarningCount = 0}{
+                \textcolor{green}{\checkmark\ All validations passed}
+            }{
+                \textcolor{orange}{!\ Warnings found}
+            }
+        }{
+            \textcolor{red}{X\ Errors detected}
+        }
+        \end{minipage}
+    };
+}
+
+% Reset validation counters
+% Usage: \resetValidationCounters
+\newcommand{\resetValidationCounters}{
+    \setcounter{validationErrorCount}{0}
+    \setcounter{validationWarningCount}{0}
+    \setcounter{ipConflictCount}{0}
+    \setcounter{portConflictCount}{0}
+}
+
+% Print detailed IP conflict report
+% Usage: \printIPConflicts
+% Outputs list of all IP conflicts to LaTeX log
+\newcommand{\printIPConflicts}{
+    \ifnum\theipConflictCount>0\relax
+        \typeout{========================================}
+        \typeout{IP ADDRESS CONFLICTS DETECTED}
+        \typeout{Total Conflicts: \theipConflictCount}
+        \typeout{========================================}
+        % Detailed conflict listing would require iteration through stored conflicts
+    \fi
+}
+
+% Validate entire network topology
+% Usage: \validateNetworkTopology
+% Runs all validation checks and updates counters
+\newcommand{\validateNetworkTopology}{
+    \resetValidationCounters
+    % This would iterate through all registered nodes and perform validation
+    % Implementation would require maintaining global node lists
+}
+
+% ============================================================================
+% TOPOLOGY CONSISTENCY CHECKS
+% ============================================================================
+
+% Check for orphaned nodes (nodes with no connections)
+% Usage: \findOrphanedNodes{\resultvar}
+% Result: Count of orphaned nodes (requires connection tracking)
+\newcommand{\findOrphanedNodes}[1]{
+    \def#1{0}
+    % Would require tracking connections per node
+    % Placeholder for future implementation
+}
+
+% Validate high availability pair configuration
+% Usage: \validateHAPairConfig{node1}{node2}{\resultvar}
+% Result: 1 if valid HA configuration, 0 if issues found
+\newcommand{\validateHAPairConfig}[3]{
+    \validateNodeExists{#1}{\nodeoneexists}
+    \validateNodeExists{#2}{\nodetwoexists}
+
+    \ifnum\nodeoneexists=1\relax
+        \ifnum\nodetwoexists=1\relax
+            % Check if in same subnet
+            \nodesInSameSubnet{#1}{#2}{\samesubnet}
+            \ifnum\samesubnet=1\relax
+                \def#3{1}
+            \else
+                \def#3{0}
+                \stepcounter{validationWarningCount}
+            \fi
+        \else
+            \def#3{0}
+        \fi
+    \else
+        \def#3{0}
+    \fi
+}
+
+% Check for single point of failure
+% Usage: \checkSinglePointOfFailure{nodetype}{\resultvar}
+% Result: 1 if SPOF exists (only one node of type), 0 if redundant
+\newcommand{\checkSinglePointOfFailure}[2]{
+    \def#2{0}
+    % Would require counting nodes by type
+    % Placeholder for future implementation
+}
+
+% ============================================================================
+% NETWORK HEALTH SCORING
+% ============================================================================
+
+% Calculate overall network health score
+% Usage: \calculateNetworkHealth{\resultvar}
+% Result: Score from 0-100 based on validation results
+\newcommand{\calculateNetworkHealth}[1]{
+    % Base score starts at 100
+    \pgfmathsetmacro{\score}{100}
+
+    % Deduct for errors (10 points each)
+    \pgfmathsetmacro{\score}{\score - (\thevalidationErrorCount * 10)}
+
+    % Deduct for warnings (5 points each)
+    \pgfmathsetmacro{\score}{\score - (\thevalidationWarningCount * 5)}
+
+    % Deduct for IP conflicts (15 points each - critical)
+    \pgfmathsetmacro{\score}{\score - (\theipConflictCount * 15)}
+
+    % Deduct for port conflicts (8 points each)
+    \pgfmathsetmacro{\score}{\score - (\theportConflictCount * 8)}
+
+    % Ensure score doesn't go below 0
+    \ifdim\score pt<0pt\relax
+        \def#1{0}
+    \else
+        \def#1{\score}
+    \fi
+}
+
+% Display network health badge
+% Usage: \displayNetworkHealth{x}{y}
+\newcommand{\displayNetworkHealth}[2]{
+    \calculateNetworkHealth{\healthscore}
+
+    % Determine badge color based on score
+    \ifdim\healthscore pt>80pt\relax
+        \def\healthcolor{clientGreen}
+        \def\healthtext{EXCELLENT}
+    \else
+        \ifdim\healthscore pt>60pt\relax
+            \def\healthcolor{clientGreen!70}
+            \def\healthtext{GOOD}
+        \else
+            \ifdim\healthscore pt>40pt\relax
+                \def\healthcolor{threatMedium}
+                \def\healthtext{FAIR}
+            \else
+                \ifdim\healthscore pt>20pt\relax
+                    \def\healthcolor{threatHigh}
+                    \def\healthtext{POOR}
+                \else
+                    \def\healthcolor{threatCritical}
+                    \def\healthtext{CRITICAL}
+                \fi
+            \fi
+        \fi
+    \fi
+
+    \node[
+        circle,
+        draw=\healthcolor,
+        fill=\healthcolor!20,
+        line width=2pt,
+        minimum size=2cm,
+        font=\small\bfseries
+    ] at (#1,#2) {
+        \begin{tabular}{c}
+        \Large \healthscore \\[2pt]
+        \tiny \healthtext
+        \end{tabular}
+    };
+}
+
+% TODO: Advanced validation features
+% - Bandwidth capacity planning validation
+% - Latency path analysis
+% - Redundancy verification (active-active, active-passive)
+% - Security compliance checking (firewall rules, encryption)
+% - Performance bottleneck detection
+% - Auto-remediation suggestions
+
+% ============================================================================
+% AUTO-DOCUMENTATION GENERATORS
+% ============================================================================
+
+% Counters for documentation statistics
+\newcounter{totalNodeCount}
+\newcounter{serverNodeCount}
+\newcounter{databaseNodeCount}
+\newcounter{networkDeviceCount}
+
+% ============================================================================
+% NETWORK INVENTORY DOCUMENTATION
+% ============================================================================
+
+% Generate comprehensive network inventory table
+% Usage: \generateNetworkInventory{x}{y}{title}
+\newcommand{\generateNetworkInventory}[3]{
+    \node[
+        rectangle,
+        draw=serverBlue!70,
+        fill=white,
+        line width=1.5pt,
+        rounded corners=3pt,
+        inner sep=10pt,
+        anchor=north west,
+        font=\tiny\sffamily
+    ] at (#1,#2) {
+        \begin{minipage}{12cm}
+        \textbf{\large #3} \\[5pt]
+        \begin{tabular}{|l|l|l|l|l|}
+        \hline
+        \textbf{Node ID} & \textbf{Hostname} & \textbf{IP Address} & \textbf{Type} & \textbf{Status} \\
+        \hline
+        % Entries would be populated from node registry
+        % Example format:
+        % srv1 & Web Server & 192.168.1.10 & Server & Online \\
+        \multicolumn{5}{|c|}{\textit{Use \texttt{\\addInventoryEntry} to populate}} \\
+        \hline
+        \end{tabular} \\[5pt]
+        \textit{Generated: \today}
+        \end{minipage}
+    };
+}
+
+% Add single entry to inventory (manual method)
+% This would be called for each node to build the table
+% Usage: \addInventoryEntry{nodeid}{hostname}{ip}{type}{status}
+\newcommand{\addInventoryEntry}[5]{
+    % Store entry in inventory registry
+    \stepcounter{totalNodeCount}
+    \pgfkeys{/inventory/\thetotalNodeCount/id/.initial={#1}}
+    \pgfkeys{/inventory/\thetotalNodeCount/hostname/.initial={#2}}
+    \pgfkeys{/inventory/\thetotalNodeCount/ip/.initial={#3}}
+    \pgfkeys{/inventory/\thetotalNodeCount/type/.initial={#4}}
+    \pgfkeys{/inventory/\thetotalNodeCount/status/.initial={#5}}
+
+    % Update type-specific counters
+    \ifthenelse{\equal{#4}{server}}{
+        \stepcounter{serverNodeCount}
+    }{}
+    \ifthenelse{\equal{#4}{database}}{
+        \stepcounter{databaseNodeCount}
+    }{}
+}
+
+% Generate simple node list
+% Usage: \generateNodeList{x}{y}
+\newcommand{\generateNodeList}[2]{
+    \node[
+        rectangle,
+        draw=black!50,
+        fill=white,
+        inner sep=8pt,
+        anchor=north west,
+        font=\tiny\ttfamily
+    ] at (#1,#2) {
+        \begin{minipage}{8cm}
+        \textbf{Network Nodes} \\
+        \hline \\[-5pt]
+        Total Nodes: \thetotalNodeCount \\
+        Servers: \theserverNodeCount \\
+        Databases: \thedatabaseNodeCount \\
+        Network Devices: \thenetworkDeviceCount \\[3pt]
+        \textit{Last Updated: \today}
+        \end{minipage}
+    };
+}
+
+% ============================================================================
+% CONFIGURATION DOCUMENTATION
+% ============================================================================
+
+% Document node configuration details
+% Usage: \documentNodeConfig{nodeid}{x}{y}
+\newcommand{\documentNodeConfig}[3]{
+    \getNodeIP{#1}{\nodeip}
+    \getNodeHostname{#1}{\nodehostname}
+
+    \node[
+        rectangle,
+        draw=serverBlue!60,
+        fill=serverBlue!5,
+        line width=1pt,
+        rounded corners=3pt,
+        inner sep=8pt,
+        anchor=north west,
+        font=\scriptsize\ttfamily
+    ] at (#2,#3) {
+        \begin{minipage}{7cm}
+        \textbf{Node Configuration: #1} \\[3pt]
+        \hline \\[-5pt]
+        Hostname: \nodehostname \\
+        IP Address: \nodeip \\
+        % Additional fields would come from node metadata
+        Cluster: \textit{(if assigned)} \\
+        Parent: \textit{(if applicable)} \\
+        Services: \textit{(if defined)} \\[2pt]
+        \textit{Auto-generated from network data}
+        \end{minipage}
+    };
+}
+
+% Generate service catalog for entire network
+% Usage: \generateServiceCatalog{x}{y}
+\newcommand{\generateServiceCatalog}[2]{
+    \node[
+        rectangle,
+        draw=clientGreen!70,
+        fill=white,
+        line width=1.5pt,
+        rounded corners=3pt,
+        inner sep=10pt,
+        anchor=north west,
+        font=\tiny\sffamily
+    ] at (#1,#2) {
+        \begin{minipage}{10cm}
+        \textbf{\large Service Catalog} \\[5pt]
+        \begin{tabular}{|l|l|l|l|}
+        \hline
+        \textbf{Node} & \textbf{IP Address} & \textbf{Port} & \textbf{Service} \\
+        \hline
+        \multicolumn{4}{|c|}{\textit{Populated from service registry}} \\
+        \hline
+        \end{tabular} \\[5pt]
+        \textit{Network Services Overview - Generated: \today}
+        \end{minipage}
+    };
+}
+
+% ============================================================================
+% TOPOLOGY DESCRIPTION GENERATION
+% ============================================================================
+
+% Generate automatic topology description
+% Usage: \generateTopologyDescription{x}{y}{diagramname}
+\newcommand{\generateTopologyDescription}[3]{
+    \node[
+        rectangle,
+        draw=routerOrange!60,
+        fill=routerOrange!5,
+        line width=1.5pt,
+        rounded corners=3pt,
+        inner sep=10pt,
+        anchor=north west,
+        font=\small
+    ] at (#1,#2) {
+        \begin{minipage}{11cm}
+        \textbf{\Large #3 - Network Topology} \\[8pt]
+
+        \textbf{Overview:} \\
+        This network diagram contains \thetotalNodeCount\ nodes including
+        \theserverNodeCount\ servers, \thedatabaseNodeCount\ databases, and
+        \thenetworkDeviceCount\ network devices. \\[5pt]
+
+        \textbf{Architecture:} \\
+        The topology follows a multi-tier architecture with separate layers for
+        presentation, application, and data storage. Security boundaries are
+        enforced through firewall nodes and subnet segmentation. \\[5pt]
+
+        \textbf{Key Components:} \\
+        \begin{itemize}
+        \item Load balancers for traffic distribution
+        \item Database replication for high availability
+        \item DMZ for internet-facing services
+        \item Monitoring and logging infrastructure
+        \end{itemize}
+
+        \textit{Auto-generated description - \today}
+        \end{minipage}
+    };
+}
+
+% Generate connection matrix documentation
+% Usage: \generateConnectionMatrix{x}{y}
+\newcommand{\generateConnectionMatrix}[2]{
+    \node[
+        rectangle,
+        draw=black!60,
+        fill=white,
+        line width=1.5pt,
+        rounded corners=3pt,
+        inner sep=10pt,
+        anchor=north west,
+        font=\tiny\ttfamily
+    ] at (#1,#2) {
+        \begin{minipage}{9cm}
+        \textbf{Connection Matrix} \\[3pt]
+        \begin{tabular}{|c|c|c|c|c|}
+        \hline
+        & Node 1 & Node 2 & Node 3 & Node 4 \\
+        \hline
+        Node 1 & - & X & & \\
+        Node 2 & X & - & X & \\
+        Node 3 & & X & - & X \\
+        Node 4 & & & X & - \\
+        \hline
+        \end{tabular} \\[3pt]
+        \textit{X = Connected}
+        \end{minipage}
+    };
+}
+
+% ============================================================================
+% SECURITY POSTURE DOCUMENTATION
+% ============================================================================
+
+% Generate security posture report
+% Usage: \generateSecurityPosture{x}{y}
+\newcommand{\generateSecurityPosture}[2]{
+    \calculateNetworkHealth{\healthscore}
+
+    \node[
+        rectangle,
+        draw=threatCritical!70,
+        fill=white,
+        line width=1.5pt,
+        rounded corners=3pt,
+        inner sep=10pt,
+        anchor=north west,
+        font=\small
+    ] at (#1,#2) {
+        \begin{minipage}{10cm}
+        \textbf{\Large Security Posture Report} \\[8pt]
+
+        \textbf{Overall Health Score:} \healthscore/100 \\[5pt]
+
+        \textbf{Security Summary:} \\
+        \begin{itemize}
+        \item Validation Errors: \thevalidationErrorCount
+        \item Validation Warnings: \thevalidationWarningCount
+        \item IP Conflicts: \theipConflictCount
+        \item Port Conflicts: \theportConflictCount
+        \end{itemize}
+
+        \textbf{Recommendations:} \\
+        \begin{itemize}
+        \item Enable encryption for inter-zone communication
+        \item Implement firewall rules between security zones
+        \item Review and resolve IP/port conflicts
+        \item Regular security audits and compliance checks
+        \end{itemize}
+
+        \textit{Generated: \today}
+        \end{minipage}
+    };
+}
+
+% Document security zones and trust levels
+% Usage: \documentSecurityZones{x}{y}
+\newcommand{\documentSecurityZones}[2]{
+    \node[
+        rectangle,
+        draw=routerOrange!70,
+        fill=white,
+        line width=1.5pt,
+        rounded corners=3pt,
+        inner sep=10pt,
+        anchor=north west,
+        font=\small
+    ] at (#1,#2) {
+        \begin{minipage}{9cm}
+        \textbf{Security Zones} \\[5pt]
+
+        \begin{tabular}{ll}
+        \colorbox{clientGreen!30}{High Trust} & Internal network, databases \\
+        \colorbox{threatMedium!30}{Medium Trust} & Application servers \\
+        \colorbox{routerOrange!30}{DMZ} & Internet-facing services \\
+        \colorbox{threatHigh!30}{Low Trust} & External networks \\
+        \end{tabular} \\[8pt]
+
+        \textbf{Zone Policies:} \\
+        \begin{itemize}
+        \item Inter-zone traffic requires firewall inspection
+        \item Encryption mandatory for DMZ to internal
+        \item Logging enabled for all zone transitions
+        \end{itemize}
+        \end{minipage}
+    };
+}
+
+% ============================================================================
+% COMPLIANCE DOCUMENTATION
+% ============================================================================
+
+% Generate compliance checklist
+% Usage: \generateComplianceChecklist{x}{y}{standard}
+% Standards: pci, hipaa, soc2, iso27001
+\newcommand{\generateComplianceChecklist}[3]{
+    \ifthenelse{\equal{#3}{pci}}{
+        \def\compliancetitle{PCI-DSS Compliance}
+        \def\requirements{%
+            Network segmentation $\square$ \\
+            Firewall between zones $\square$ \\
+            Encrypted transmission $\square$ \\
+            Access control lists $\square$ \\
+            Logging and monitoring $\square$ \\
+        }
+    }{
+    \ifthenelse{\equal{#3}{hipaa}}{
+        \def\compliancetitle{HIPAA Compliance}
+        \def\requirements{%
+            Data encryption $\square$ \\
+            Access controls $\square$ \\
+            Audit logging $\square$ \\
+            Disaster recovery $\square$ \\
+            Risk assessment $\square$ \\
+        }
+    }{
+        \def\compliancetitle{General Compliance}
+        \def\requirements{%
+            Security baseline $\square$ \\
+            Documentation $\square$ \\
+            Change management $\square$ \\
+        }
+    }}
+
+    \node[
+        rectangle,
+        draw=purple!70,
+        fill=white,
+        line width=1.5pt,
+        rounded corners=3pt,
+        inner sep=10pt,
+        anchor=north west,
+        font=\small
+    ] at (#1,#2) {
+        \begin{minipage}{8cm}
+        \textbf{\compliancetitle\ Checklist} \\[5pt]
+        \requirements
+        \\[3pt]
+        \textit{Review Date: \today}
+        \end{minipage}
+    };
+}
+
+% ============================================================================
+% CHANGE DOCUMENTATION
+% ============================================================================
+
+% Document network changes/versions
+% Usage: \documentNetworkChange{x}{y}{version}{date}{description}
+\newcommand{\documentNetworkChange}[5]{
+    \node[
+        rectangle,
+        draw=black!50,
+        fill=yellow!10,
+        line width=1pt,
+        rounded corners=3pt,
+        inner sep=8pt,
+        anchor=north west,
+        font=\small
+    ] at (#1,#2) {
+        \begin{minipage}{10cm}
+        \textbf{Change Log - Version #3} \\[3pt]
+        \textbf{Date:} #4 \\
+        \textbf{Changes:} #5 \\[3pt]
+        \textit{Approved and documented}
+        \end{minipage}
+    };
+}
+
+% ============================================================================
+% IP ADDRESS PLAN DOCUMENTATION
+% ============================================================================
+
+% Generate IP address allocation plan
+% Usage: \generateIPAddressPlan{x}{y}
+\newcommand{\generateIPAddressPlan}[2]{
+    \node[
+        rectangle,
+        draw=blue!60,
+        fill=white,
+        line width=1.5pt,
+        rounded corners=3pt,
+        inner sep=10pt,
+        anchor=north west,
+        font=\tiny\sffamily
+    ] at (#1,#2) {
+        \begin{minipage}{11cm}
+        \textbf{\large IP Address Allocation Plan} \\[5pt]
+
+        \begin{tabular}{|l|l|l|l|}
+        \hline
+        \textbf{Subnet} & \textbf{CIDR} & \textbf{Purpose} & \textbf{Nodes} \\
+        \hline
+        192.168.10.0 & /24 & Web Tier & web1, web2, web3 \\
+        192.168.20.0 & /24 & App Tier & app1, app2 \\
+        192.168.30.0 & /24 & Database Tier & db1, db2 \\
+        192.168.40.0 & /24 & Storage & nas1, san1 \\
+        \hline
+        \end{tabular} \\[5pt]
+
+        \textbf{Available Ranges:} \\
+        \begin{itemize}
+        \item 192.168.10.100-200: DHCP Pool
+        \item 192.168.50.0/24: Reserved for expansion
+        \end{itemize}
+
+        \textit{IP Plan - Last Updated: \today}
+        \end{minipage}
+    };
+}
+
+% Document subnet utilization
+% Usage: \documentSubnetUtilization{subnet}{cidr}{used}{total}
+\newcommand{\documentSubnetUtilization}[4]{
+    \pgfmathsetmacro{\utilization}{(#3/#4)*100}
+
+    % Determine color based on utilization
+    \ifdim\utilization pt>90pt\relax
+        \def\utilcolor{red}
+    \else
+        \ifdim\utilization pt>70pt\relax
+            \def\utilcolor{orange}
+        \else
+            \def\utilcolor{green}
+        \fi
+    \fi
+
+    \node[
+        font=\tiny\ttfamily,
+        text=black!80
+    ] {
+        #1/#2: #3/#4 IPs (\textcolor{\utilcolor}{\utilization\%})
+    };
+}
+
+% ============================================================================
+% AUTOMATED DIAGRAM ANNOTATIONS
+% ============================================================================
+
+% Auto-generate legend based on nodes present
+% Usage: \autoGenerateLegend{x}{y}
+\newcommand{\autoGenerateLegend}[2]{
+    \node[legend box, anchor=south west] at (#1,#2) {
+        \begin{minipage}{7cm}
+        \textbf{Auto-Generated Legend} \\[3pt]
+
+        \textbf{Node Types Present:} \\
+        \ifnum\theserverNodeCount>0
+            \tikz\node[server, minimum size=0.4cm, scale=0.5] {}; Servers (\theserverNodeCount) \\
+        \fi
+        \ifnum\thedatabaseNodeCount>0
+            \tikz\node[database, minimum size=0.4cm, scale=0.5] {}; Databases (\thedatabaseNodeCount) \\
+        \fi
+
+        \textbf{Connections:} \\
+        \tikz\draw[encrypted conn] (0,0) -- (0.8,0); Encrypted \\
+        \tikz\draw[normal conn] (0,0) -- (0.8,0); Normal \\[2pt]
+
+        \textbf{Health Score:} \calculateNetworkHealth{\score} \score/100
+        \end{minipage}
+    };
+}
+
+% Auto-annotate critical paths
+% Usage: \autoAnnotateCriticalPath{path}{label}
+\newcommand{\autoAnnotateCriticalPath}[2]{
+    \highlightPath{#1}
+    \node[
+        rectangle,
+        fill=red!20,
+        draw=red!60,
+        rounded corners=2pt,
+        font=\tiny\bfseries,
+        inner sep=3pt
+    ] {CRITICAL PATH: #2};
+}
+
+% ============================================================================
+% EXPORT FORMATS
+% ============================================================================
+
+% Generate network summary card
+% Usage: \generateNetworkSummaryCard{x}{y}{title}
+\newcommand{\generateNetworkSummaryCard}[3]{
+    \node[
+        rectangle,
+        draw=serverBlue!80,
+        fill=serverBlue!10,
+        line width=2pt,
+        rounded corners=5pt,
+        inner sep=12pt,
+        anchor=north,
+        font=\sffamily,
+        drop shadow
+    ] at (#1,#2) {
+        \begin{minipage}{9cm}
+        \centering
+        \textbf{\LARGE #3} \\[8pt]
+
+        \begin{tabular}{rl}
+        \textbf{Total Nodes:} & \thetotalNodeCount \\
+        \textbf{Servers:} & \theserverNodeCount \\
+        \textbf{Databases:} & \thedatabaseNodeCount \\
+        \textbf{Health Score:} & \calculateNetworkHealth{\h}\h/100 \\
+        \textbf{Validation Errors:} & \thevalidationErrorCount \\
+        \textbf{Last Updated:} & \today \\
+        \end{tabular}
+
+        \vspace{5pt}
+        \hrule
+        \vspace{3pt}
+        {\tiny Auto-generated by LaTeX Network Diagram Generator}
+        \end{minipage}
+    };
+}
+
+% Generate text-based network report to log file
+% Usage: \exportNetworkReport
+\newcommand{\exportNetworkReport}{
+    \typeout{========================================}
+    \typeout{NETWORK DIAGRAM REPORT}
+    \typeout{========================================}
+    \typeout{Generated: \today}
+    \typeout{Total Nodes: \thetotalNodeCount}
+    \typeout{Servers: \theserverNodeCount}
+    \typeout{Databases: \thedatabaseNodeCount}
+    \typeout{Network Devices: \thenetworkDeviceCount}
+    \typeout{}
+    \typeout{Validation Results:}
+    \typeout{  Errors: \thevalidationErrorCount}
+    \typeout{  Warnings: \thevalidationWarningCount}
+    \typeout{  IP Conflicts: \theipConflictCount}
+    \typeout{  Port Conflicts: \theportConflictCount}
+    \typeout{========================================}
+}
+
+% TODO: Advanced documentation features
+% - Export to CSV/JSON format
+% - Generate Markdown documentation
+% - Create interactive HTML reports
+% - Version comparison reports
+% - Automated diagram descriptions using AI/templates
+% - Integration with configuration management databases (CMDB)
+
+% ============================================================================
+% DIAGRAM COMPARISON AND DIFF UTILITIES
+% ============================================================================
+
+% Counters for tracking changes
+\newcounter{nodesAdded}
+\newcounter{nodesRemoved}
+\newcounter{nodesModified}
+\newcounter{connectionsChanged}
+
+% Storage for version comparison
+\pgfkeys{/version1/.cd}
+\pgfkeys{/version2/.cd}
+\pgfkeys{/versiondiff/.cd}
+
+% ============================================================================
+% NODE VERSION TRACKING
+% ============================================================================
+
+% Register node in version 1
+% Usage: \registerNodeV1{nodeid}{ip}{hostname}{type}
+\newcommand{\registerNodeV1}[4]{
+    \pgfkeys{/version1/#1/ip/.initial={#2}}
+    \pgfkeys{/version1/#1/hostname/.initial={#3}}
+    \pgfkeys{/version1/#1/type/.initial={#4}}
+}
+
+% Register node in version 2
+% Usage: \registerNodeV2{nodeid}{ip}{hostname}{type}
+\newcommand{\registerNodeV2}[4]{
+    \pgfkeys{/version2/#1/ip/.initial={#2}}
+    \pgfkeys{/version2/#1/hostname/.initial={#3}}
+    \pgfkeys{/version2/#1/type/.initial={#4}}
+}
+
+% Compare node between versions
+% Usage: \compareNode{nodeid}{\resultvar}
+% Result: added, removed, modified, unchanged
+\newcommand{\compareNode}[2]{
+    \pgfkeysifdefined{/version1/#1/ip}{
+        \pgfkeysifdefined{/version2/#1/ip}{
+            % Node exists in both versions, check if modified
+            \pgfkeysgetvalue{/version1/#1/ip}{\v1ip}
+            \pgfkeysgetvalue{/version2/#1/ip}{\v2ip}
+            \ifthenelse{\equal{\v1ip}{\v2ip}}{
+                \def#2{unchanged}
+            }{
+                \def#2{modified}
+                \stepcounter{nodesModified}
+            }
+        }{
+            % Node only in version 1 - removed
+            \def#2{removed}
+            \stepcounter{nodesRemoved}
+        }
+    }{
+        \pgfkeysifdefined{/version2/#1/ip}{
+            % Node only in version 2 - added
+            \def#2{added}
+            \stepcounter{nodesAdded}
+        }{
+            % Node doesn't exist in either version
+            \def#2{notfound}
+        }
+    }
+}
+
+% ============================================================================
+% VISUAL CHANGE INDICATORS
+% ============================================================================
+
+% Highlight added node
+% Usage: \highlightAddedNode{nodename}
+\newcommand{\highlightAddedNode}[1]{
+    \node[
+        rectangle,
+        draw=clientGreen!80,
+        fill=clientGreen!15,
+        line width=2pt,
+        rounded corners=5pt,
+        fit=(#1),
+        inner sep=5pt
+    ] {};
+    \node[
+        rectangle,
+        fill=clientGreen!80,
+        text=white,
+        font=\tiny\bfseries,
+        inner sep=2pt,
+        rounded corners=2pt,
+        anchor=north west
+    ] at (#1.north west) {NEW};
+}
+
+% Highlight removed node
+% Usage: \highlightRemovedNode{nodename}
+\newcommand{\highlightRemovedNode}[1]{
+    \node[
+        rectangle,
+        draw=threatCritical!80,
+        fill=threatCritical!15,
+        line width=2pt,
+        rounded corners=5pt,
+        fit=(#1),
+        inner sep=5pt
+    ] {};
+    % Add strikethrough effect
+    \draw[red!80, line width=2pt] (#1.north west) -- (#1.south east);
+    \draw[red!80, line width=2pt] (#1.north east) -- (#1.south west);
+    \node[
+        rectangle,
+        fill=threatCritical!80,
+        text=white,
+        font=\tiny\bfseries,
+        inner sep=2pt,
+        rounded corners=2pt,
+        anchor=north west
+    ] at (#1.north west) {REMOVED};
+}
+
+% Highlight modified node
+% Usage: \highlightModifiedNode{nodename}
+\newcommand{\highlightModifiedNode}[1]{
+    \node[
+        rectangle,
+        draw=threatMedium!80,
+        fill=threatMedium!15,
+        line width=2pt,
+        rounded corners=5pt,
+        fit=(#1),
+        inner sep=5pt
+    ] {};
+    \node[
+        rectangle,
+        fill=threatMedium!80,
+        text=white,
+        font=\tiny\bfseries,
+        inner sep=2pt,
+        rounded corners=2pt,
+        anchor=north west
+    ] at (#1.north west) {MODIFIED};
+}
+
+% ============================================================================
+% IP ADDRESS CHANGE DETECTION
+% ============================================================================
+
+% Compare IP addresses between versions
+% Usage: \compareNodeIP{nodeid}{\resultvar}
+% Result: IP difference string or "unchanged"
+\newcommand{\compareNodeIP}[2]{
+    \pgfkeysifdefined{/version1/#1/ip}{
+        \pgfkeysifdefined{/version2/#1/ip}{
+            \pgfkeysgetvalue{/version1/#1/ip}{\v1ip}
+            \pgfkeysgetvalue{/version2/#1/ip}{\v2ip}
+            \ifthenelse{\equal{\v1ip}{\v2ip}}{
+                \def#2{unchanged}
+            }{
+                \def#2{\v1ip $\rightarrow$ \v2ip}
+            }
+        }{
+            \def#2{removed}
+        }
+    }{
+        \def#2{new}
+    }
+}
+
+% Display IP change annotation
+% Usage: \annotateIPChange{nodename}{oldip}{newip}
+\newcommand{\annotateIPChange}[3]{
+    \node[
+        rectangle,
+        draw=orange!70,
+        fill=orange!10,
+        rounded corners=2pt,
+        font=\tiny\ttfamily,
+        inner sep=3pt,
+        anchor=south
+    ] at (#1.north) [above=2pt] {
+        #2 $\rightarrow$ #3
+    };
+}
+
+% ============================================================================
+% CONNECTION CHANGE DETECTION
+% ============================================================================
+
+% Register connection in version 1
+% Usage: \registerConnectionV1{node1}{node2}{type}
+\newcommand{\registerConnectionV1}[3]{
+    \pgfkeys{/version1/conn/#1-#2/.initial={#3}}
+}
+
+% Register connection in version 2
+% Usage: \registerConnectionV2{node1}{node2}{type}
+\newcommand{\registerConnectionV2}[3]{
+    \pgfkeys{/version2/conn/#1-#2/.initial={#3}}
+}
+
+% Compare connection between versions
+% Usage: \compareConnection{node1}{node2}{\resultvar}
+% Result: added, removed, unchanged
+\newcommand{\compareConnection}[3]{
+    \pgfkeysifdefined{/version1/conn/#1-#2}{
+        \pgfkeysifdefined{/version2/conn/#1-#2}{
+            \def#3{unchanged}
+        }{
+            \def#3{removed}
+            \stepcounter{connectionsChanged}
+        }
+    }{
+        \pgfkeysifdefined{/version2/conn/#1-#2}{
+            \def#3{added}
+            \stepcounter{connectionsChanged}
+        }{
+            \def#3{notfound}
+        }
+    }
+}
+
+% Highlight added connection
+% Usage: \highlightAddedConnection{node1}{node2}
+\newcommand{\highlightAddedConnection}[2]{
+    \draw[
+        clientGreen!80,
+        line width=3pt,
+        opacity=0.7,
+        -{Stealth[length=4mm]}
+    ] (#1) -- (#2);
+    \node[
+        fill=clientGreen!80,
+        text=white,
+        font=\tiny\bfseries,
+        inner sep=2pt,
+        rounded corners=2pt
+    ] at ($(#1)!0.5!(#2)$) {NEW CONN};
+}
+
+% Highlight removed connection
+% Usage: \highlightRemovedConnection{node1}{node2}
+\newcommand{\highlightRemovedConnection}[2]{
+    \draw[
+        red!80,
+        line width=3pt,
+        opacity=0.7,
+        dashed,
+        -{Stealth[length=4mm]}
+    ] (#1) -- (#2);
+    \node[
+        fill=red!80,
+        text=white,
+        font=\tiny\bfseries,
+        inner sep=2pt,
+        rounded corners=2pt
+    ] at ($(#1)!0.5!(#2)$) {REMOVED};
+}
+
+% ============================================================================
+% CONFIGURATION DRIFT DETECTION
+% ============================================================================
+
+% Store configuration in version 1
+% Usage: \storeConfigV1{nodeid}{key}{value}
+\newcommand{\storeConfigV1}[3]{
+    \pgfkeys{/version1/#1/config/#2/.initial={#3}}
+}
+
+% Store configuration in version 2
+% Usage: \storeConfigV2{nodeid}{key}{value}
+\newcommand{\storeConfigV2}[3]{
+    \pgfkeys{/version2/#1/config/#2/.initial={#3}}
+}
+
+% Compare configuration value
+% Usage: \compareConfigValue{nodeid}{key}{\resultvar}
+% Result: unchanged, changed, or the actual change
+\newcommand{\compareConfigValue}[3]{
+    \pgfkeysifdefined{/version1/#1/config/#2}{
+        \pgfkeysifdefined{/version2/#1/config/#2}{
+            \pgfkeysgetvalue{/version1/#1/config/#2}{\v1val}
+            \pgfkeysgetvalue{/version2/#1/config/#2}{\v2val}
+            \ifthenelse{\equal{\v1val}{\v2val}}{
+                \def#3{unchanged}
+            }{
+                \def#3{\v1val $\rightarrow$ \v2val}
+            }
+        }{
+            \def#3{removed}
+        }
+    }{
+        \def#3{new}
+    }
+}
+
+% Generate configuration drift report
+% Usage: \generateDriftReport{x}{y}
+\newcommand{\generateDriftReport}[2]{
+    \node[
+        rectangle,
+        draw=orange!70,
+        fill=white,
+        line width=1.5pt,
+        rounded corners=3pt,
+        inner sep=10pt,
+        anchor=north west,
+        font=\small
+    ] at (#1,#2) {
+        \begin{minipage}{10cm}
+        \textbf{\Large Configuration Drift Report} \\[8pt]
+
+        \textbf{Changes Detected:} \\
+        \begin{itemize}
+        \item Nodes Added: \thenodesAdded
+        \item Nodes Removed: \thenodesRemoved
+        \item Nodes Modified: \thenodesModified
+        \item Connections Changed: \theconnectionsChanged
+        \end{itemize}
+
+        \textbf{Impact Analysis:} \\
+        \pgfmathsetmacro{\totalchanges}{\thenodesAdded + \thenodesRemoved + \thenodesModified}
+        \ifnum\totalchanges>10\relax
+            High impact - Major topology changes detected
+        \else
+            \ifnum\totalchanges>5\relax
+                Medium impact - Moderate changes
+            \else
+                Low impact - Minor changes
+            \fi
+        \fi
+
+        \vspace{5pt}
+        \textit{Drift Analysis - Generated: \today}
+        \end{minipage}
+    };
+}
+
+% ============================================================================
+% VERSION COMPARISON SUMMARY
+% ============================================================================
+
+% Generate version comparison summary
+% Usage: \generateVersionComparison{x}{y}{v1name}{v2name}
+\newcommand{\generateVersionComparison}[4]{
+    \node[
+        rectangle,
+        draw=blue!70,
+        fill=white,
+        line width=2pt,
+        rounded corners=3pt,
+        inner sep=12pt,
+        anchor=north west,
+        font=\small
+    ] at (#1,#2) {
+        \begin{minipage}{11cm}
+        \textbf{\Large Network Diagram Comparison} \\[5pt]
+        \textbf{Version 1:} #3 \quad $\rightarrow$ \quad \textbf{Version 2:} #4 \\[8pt]
+
+        \begin{tabular}{|l|c|c|c|}
+        \hline
+        \textbf{Change Type} & \textbf{Count} & \textbf{Status} & \textbf{Impact} \\
+        \hline
+        Nodes Added & \thenodesAdded & \textcolor{green}{+} & New capacity \\
+        Nodes Removed & \thenodesRemoved & \textcolor{red}{-} & Capacity loss \\
+        Nodes Modified & \thenodesModified & \textcolor{orange}{$\sim$} & Config change \\
+        Connections Changed & \theconnectionsChanged & \textcolor{blue}{$\Delta$} & Topology change \\
+        \hline
+        \end{tabular} \\[8pt]
+
+        \textbf{Legend:} \\
+        \begin{itemize}
+        \item \colorbox{clientGreen!30}{Green Border} = Added
+        \item \colorbox{threatCritical!30}{Red Border + X} = Removed
+        \item \colorbox{threatMedium!30}{Yellow Border} = Modified
+        \end{itemize}
+
+        \textit{Comparison Report - Generated: \today}
+        \end{minipage}
+    };
+}
+
+% Reset comparison counters
+% Usage: \resetComparisonCounters
+\newcommand{\resetComparisonCounters}{
+    \setcounter{nodesAdded}{0}
+    \setcounter{nodesRemoved}{0}
+    \setcounter{nodesModified}{0}
+    \setcounter{connectionsChanged}{0}
+}
+
+% ============================================================================
+% CHANGE IMPACT VISUALIZATION
+% ============================================================================
+
+% Create change heatmap overlay
+% Usage: \visualizeChangeHeatmap{x}{y}
+\newcommand{\visualizeChangeHeatmap}[2]{
+    % Draw a semi-transparent overlay showing change intensity
+    \begin{scope}[on background layer]
+        \node[
+            rectangle,
+            minimum width=20cm,
+            minimum height=20cm,
+            opacity=0.1,
+            fill=orange
+        ] at (#1,#2) {};
+    \end{scope}
+
+    % Add heatmap legend
+    \node[
+        rectangle,
+        draw=black!50,
+        fill=white,
+        inner sep=5pt,
+        font=\tiny
+    ] at (#1+8,#2+8) {
+        \begin{minipage}{4cm}
+        \textbf{Change Heatmap} \\
+        \colorbox{red!50}{High}
+        \colorbox{orange!50}{Med}
+        \colorbox{green!50}{Low}
+        \end{minipage}
+    };
+}
+
+% Annotate change with timestamp
+% Usage: \annotateChangeTime{nodename}{timestamp}{changetype}
+\newcommand{\annotateChangeTime}[3]{
+    \node[
+        rectangle,
+        draw=black!50,
+        fill=yellow!20,
+        rounded corners=2pt,
+        font=\tiny\ttfamily,
+        inner sep=2pt,
+        anchor=south
+    ] at (#1.north) [above=1pt] {
+        #3: #2
+    };
+}
+
+% ============================================================================
+% TOPOLOGY EVOLUTION TRACKING
+% ============================================================================
+
+% Track topology changes over time
+% Usage: \trackTopologyEvolution{version}{nodecount}{conncount}
+\newcommand{\trackTopologyEvolution}[3]{
+    \pgfkeys{/evolution/#1/nodes/.initial={#2}}
+    \pgfkeys{/evolution/#1/connections/.initial={#3}}
+}
+
+% Visualize topology growth
+% Usage: \visualizeTopologyGrowth{x}{y}
+\newcommand{\visualizeTopologyGrowth}[2]{
+    \node[
+        rectangle,
+        draw=blue!60,
+        fill=white,
+        line width=1.5pt,
+        rounded corners=3pt,
+        inner sep=10pt,
+        anchor=north west,
+        font=\small
+    ] at (#1,#2) {
+        \begin{minipage}{9cm}
+        \textbf{Topology Evolution} \\[5pt]
+
+        % Simplified timeline visualization
+        \begin{tikzpicture}[scale=0.8]
+            \draw[->] (0,0) -- (8,0) node[right] {Time};
+            \draw[->] (0,0) -- (0,3) node[above] {Nodes};
+
+            % Example data points - would be populated from evolution tracking
+            \draw[blue!70, line width=1.5pt]
+                (1,1) -- (2,1.5) -- (3,1.8) -- (4,2.2) -- (5,2.5);
+
+            \node[font=\tiny] at (4,-0.5) {Network Growth Over Time};
+        \end{tikzpicture}
+        \end{minipage}
+    };
+}
+
+% ============================================================================
+% DIFFERENTIAL HIGHLIGHTING MODES
+% ============================================================================
+
+% Enable side-by-side comparison mode
+% Usage: \enableSideBySideComparison
+\newcommand{\enableSideBySideComparison}{
+    % Set flag for side-by-side rendering
+    \pgfkeys{/comparison/mode/.initial={sidebyside}}
+}
+
+% Enable overlay comparison mode
+% Usage: \enableOverlayComparison
+\newcommand{\enableOverlayComparison}{
+    % Set flag for overlay rendering
+    \pgfkeys{/comparison/mode/.initial={overlay}}
+}
+
+% Display comparison legend
+% Usage: \displayComparisonLegend{x}{y}
+\newcommand{\displayComparisonLegend}[2]{
+    \node[legend box, anchor=south east] at (#1,#2) {
+        \begin{minipage}{6cm}
+        \textbf{Comparison Legend} \\[3pt]
+
+        \tikz\draw[draw=clientGreen!80, fill=clientGreen!15, line width=2pt]
+            (0,0) rectangle (0.5,0.3); Added \\
+        \tikz\draw[draw=threatCritical!80, fill=threatCritical!15, line width=2pt]
+            (0,0) rectangle (0.5,0.3); Removed \\
+        \tikz\draw[draw=threatMedium!80, fill=threatMedium!15, line width=2pt]
+            (0,0) rectangle (0.5,0.3); Modified \\[3pt]
+
+        \textbf{Changes:} \\
+        + \thenodesAdded\ added, - \thenodesRemoved\ removed,
+        $\sim$ \thenodesModified\ modified
+        \end{minipage}
+    };
+}
+
+% ============================================================================
+% AUTOMATED CHANGE DETECTION
+% ============================================================================
+
+% Scan and detect all changes automatically
+% Usage: \autoDetectChanges
+\newcommand{\autoDetectChanges}{
+    \resetComparisonCounters
+    % This would iterate through all nodes and connections
+    % comparing version1 with version2 registries
+    % For now, this is a placeholder that relies on manual registration
+}
+
+% Generate change summary report
+% Usage: \generateChangeSummary{x}{y}
+\newcommand{\generateChangeSummary}[2]{
+    \pgfmathsetmacro{\totalchanges}{\thenodesAdded + \thenodesRemoved + \thenodesModified + \theconnectionsChanged}
+
+    \node[
+        rectangle,
+        draw=black!70,
+        fill=white,
+        line width=2pt,
+        rounded corners=3pt,
+        inner sep=10pt,
+        anchor=north west,
+        font=\normalsize
+    ] at (#1,#2) {
+        \begin{minipage}{8cm}
+        \textbf{\Large Change Summary} \\[8pt]
+
+        \textbf{Total Changes:} \totalchanges \\[5pt]
+
+        \begin{tabular}{lr}
+        Nodes Added: & +\thenodesAdded \\
+        Nodes Removed: & -\thenodesRemoved \\
+        Nodes Modified: & $\sim$\thenodesModified \\
+        Connections Changed: & $\Delta$\theconnectionsChanged \\
+        \end{tabular} \\[8pt]
+
+        \textbf{Approval Status:} $\square$ Approved \\
+        \textbf{Date:} \today \\
+        \textbf{Reviewed By:} \underline{\hspace{3cm}}
+        \end{minipage}
+    };
+}
+
+% TODO: Advanced comparison features
+% - Three-way merge visualization (base, version1, version2)
+% - Blame/history tracking for each node
+% - Automated rollback suggestions
+% - Change approval workflow integration
+% - Performance impact prediction
+% - Cost analysis for changes (added/removed resources)
+
+% ============================================================================
+% NETWORK SECURITY ASSESSMENT HELPERS
+% ============================================================================
+
+% Counters for security metrics
+\newcounter{criticalVulns}
+\newcounter{highVulns}
+\newcounter{mediumVulns}
+\newcounter{lowVulns}
+\newcounter{exposedServices}
+\newcounter{unencryptedConns}
+
+% Security scoring system
+\newcounter{securityScore}
+
+% ============================================================================
+% ATTACK SURFACE ANALYSIS
+% ============================================================================
+
+% Register exposed service
+% Usage: \registerExposedService{nodeid}{port}{service}{exposure}
+% Exposure: public, dmz, internal
+\newcommand{\registerExposedService}[4]{
+    \stepcounter{exposedServices}
+    \pgfkeys{/security/exposed/#1-#2/service/.initial={#3}}
+    \pgfkeys{/security/exposed/#1-#2/exposure/.initial={#4}}
+
+    % Track public exposure
+    \ifthenelse{\equal{#4}{public}}{
+        \pgfkeys{/security/publicexposure/#1-#2/.initial={true}}
+    }{}
+}
+
+% Calculate attack surface score
+% Usage: \calculateAttackSurface{\resultvar}
+% Higher score = larger attack surface
+\newcommand{\calculateAttackSurface}[1]{
+    \pgfmathsetmacro{#1}{\theexposedServices * 10}
+}
+
+% Visualize attack surface
+% Usage: \visualizeAttackSurface{x}{y}
+\newcommand{\visualizeAttackSurface}[2]{
+    \calculateAttackSurface{\surfacescore}
+
+    \node[
+        rectangle,
+        draw=threatCritical!70,
+        fill=white,
+        line width=2pt,
+        rounded corners=3pt,
+        inner sep=10pt,
+        anchor=north west,
+        font=\small
+    ] at (#1,#2) {
+        \begin{minipage}{10cm}
+        \textbf{\Large Attack Surface Analysis} \\[8pt]
+
+        \textbf{Exposed Services:} \theexposedServices \\
+        \textbf{Attack Surface Score:} \surfacescore \\[5pt]
+
+        \textbf{Exposure Breakdown:} \\
+        \begin{itemize}
+        \item Public-facing services (high risk)
+        \item DMZ services (medium risk)
+        \item Internal services (low risk)
+        \end{itemize}
+
+        \textbf{Risk Assessment:} \\
+        \ifdim\surfacescore pt>100pt\relax
+            \textcolor{red}{High Risk} - Large attack surface
+        \else
+            \ifdim\surfacescore pt>50pt\relax
+                \textcolor{orange}{Medium Risk} - Moderate exposure
+            \else
+                \textcolor{green}{Low Risk} - Minimal exposure
+            \fi
+        \fi
+
+        \vspace{5pt}
+        \textit{Attack Surface Analysis - \today}
+        \end{minipage}
+    };
+}
+
+% Mark node as internet-exposed
+% Usage: \markInternetExposed{nodename}
+\newcommand{\markInternetExposed}[1]{
+    \node[
+        rectangle,
+        fill=red!80,
+        text=white,
+        font=\tiny\bfseries,
+        inner sep=2pt,
+        rounded corners=2pt,
+        anchor=north east
+    ] at (#1.north east) {EXPOSED};
+
+    % Add warning indicator
+    \node[
+        isosceles triangle,
+        fill=yellow!80,
+        draw=red!80,
+        line width=1pt,
+        minimum size=0.4cm,
+        anchor=south west
+    ] at (#1.south west) {!};
+}
+
+% ============================================================================
+% VULNERABILITY ASSESSMENT
+% ============================================================================
+
+% Register vulnerability for a node
+% Usage: \registerVulnerability{nodeid}{cveid}{severity}{cvss}
+% Severity: critical, high, medium, low, info
+\newcommand{\registerVulnerability}[4]{
+    \ifthenelse{\equal{#3}{critical}}{
+        \stepcounter{criticalVulns}
+    }{
+    \ifthenelse{\equal{#3}{high}}{
+        \stepcounter{highVulns}
+    }{
+    \ifthenelse{\equal{#3}{medium}}{
+        \stepcounter{mediumVulns}
+    }{
+        \stepcounter{lowVulns}
+    }}}
+
+    \pgfkeys{/security/vuln/#1/#2/severity/.initial={#3}}
+    \pgfkeys{/security/vuln/#1/#2/cvss/.initial={#4}}
+}
+
+% Calculate vulnerability score
+% Usage: \calculateVulnerabilityScore{\resultvar}
+\newcommand{\calculateVulnerabilityScore}[1]{
+    \pgfmathsetmacro{#1}{%
+        (\thecriticalVulns * 40) +
+        (\thehighVulns * 20) +
+        (\themediumVulns * 10) +
+        (\thelowVulns * 2)
+    }
+}
+
+% Generate vulnerability report
+% Usage: \generateVulnerabilityReport{x}{y}
+\newcommand{\generateVulnerabilityReport}[2]{
+    \calculateVulnerabilityScore{\vulnscore}
+
+    \node[
+        rectangle,
+        draw=threatCritical!70,
+        fill=white,
+        line width=2pt,
+        rounded corners=3pt,
+        inner sep=10pt,
+        anchor=north west,
+        font=\small
+    ] at (#1,#2) {
+        \begin{minipage}{10cm}
+        \textbf{\Large Vulnerability Assessment Report} \\[8pt]
+
+        \textbf{Vulnerability Count:} \\
+        \begin{tabular}{llr}
+        \textcolor{red}{Critical:} & CVE Score 9.0-10.0 & \thecriticalVulns \\
+        \textcolor{orange}{High:} & CVE Score 7.0-8.9 & \thehighVulns \\
+        \textcolor{yellow!80!black}{Medium:} & CVE Score 4.0-6.9 & \themediumVulns \\
+        \textcolor{blue}{Low:} & CVE Score 0.1-3.9 & \thelowVulns \\
+        \end{tabular} \\[8pt]
+
+        \textbf{Total Vulnerability Score:} \vulnscore \\[5pt]
+
+        \textbf{Priority Actions:} \\
+        \begin{enumerate}
+        \item Patch all critical vulnerabilities immediately
+        \item Address high-severity issues within 7 days
+        \item Plan remediation for medium-severity items
+        \item Monitor low-severity issues
+        \end{enumerate}
+
+        \textit{Vulnerability Scan - Generated: \today}
+        \end{minipage}
+    };
+}
+
+% Display vulnerability badge on node
+% Usage: \addVulnerabilityBadge{nodename}{count}{severity}
+\newcommand{\addVulnerabilityBadge}[3]{
+    \ifthenelse{\equal{#3}{critical}}{
+        \def\badgecolor{threatCritical}
+    }{
+    \ifthenelse{\equal{#3}{high}}{
+        \def\badgecolor{threatHigh}
+    }{
+    \ifthenelse{\equal{#3}{medium}}{
+        \def\badgecolor{threatMedium}
+    }{
+        \def\badgecolor{threatLow}
+    }}}
+
+    \node[
+        circle,
+        fill=\badgecolor,
+        text=white,
+        font=\tiny\bfseries,
+        inner sep=3pt,
+        minimum size=0.6cm,
+        anchor=north east
+    ] at (#1.north east) {#2};
+}
+
+% ============================================================================
+% SECURITY ZONE ANALYSIS
+% ============================================================================
+
+% Define security zone boundaries
+% Usage: \defineSecurityZone{zoneid}{name}{trustlevel}{nodes}
+% Trust level: 0-100 (0=untrusted, 100=fully trusted)
+\newcommand{\defineSecurityZone}[4]{
+    \pgfkeys{/security/zone/#1/name/.initial={#2}}
+    \pgfkeys{/security/zone/#1/trust/.initial={#3}}
+    \pgfkeys{/security/zone/#1/nodes/.initial={#4}}
+}
+
+% Analyze zone transition
+% Usage: \analyzeZoneTransition{zone1}{zone2}{\resultvar}
+% Result: required security controls
+\newcommand{\analyzeZoneTransition}[3]{
+    \pgfkeysgetvalue{/security/zone/#1/trust}{\trustlevel1}
+    \pgfkeysgetvalue{/security/zone/#2/trust}{\trustlevel2}
+
+    \pgfmathsetmacro{\trustdiff}{abs(\trustlevel1 - \trustlevel2)}
+
+    \ifdim\trustdiff pt>50pt\relax
+        \def#3{Firewall + IDS/IPS + Encryption required}
+    \else
+        \ifdim\trustdiff pt>25pt\relax
+            \def#3{Firewall + Encryption required}
+        \else
+            \def#3{Basic access controls}
+        \fi
+    \fi
+}
+
+% Generate security zone map
+% Usage: \generateSecurityZoneMap{x}{y}
+\newcommand{\generateSecurityZoneMap}[2]{
+    \node[
+        rectangle,
+        draw=routerOrange!70,
+        fill=white,
+        line width=2pt,
+        rounded corners=3pt,
+        inner sep=10pt,
+        anchor=north west,
+        font=\small
+    ] at (#1,#2) {
+        \begin{minipage}{11cm}
+        \textbf{\Large Security Zone Map} \\[8pt]
+
+        \begin{tabular}{|l|c|c|l|}
+        \hline
+        \textbf{Zone} & \textbf{Trust Level} & \textbf{Nodes} & \textbf{Controls} \\
+        \hline
+        Internet & 0\% & External & Firewall \\
+        DMZ & 25\% & Web, WAF & IDS/IPS \\
+        App Tier & 60\% & App servers & Encryption \\
+        Data Tier & 90\% & Databases & Access control \\
+        \hline
+        \end{tabular} \\[8pt]
+
+        \textbf{Zone Transition Rules:} \\
+        \begin{itemize}
+        \item High to Low trust: Requires inspection
+        \item Low to High trust: Requires authentication
+        \item All external connections: Must be encrypted
+        \end{itemize}
+
+        \textit{Security Zoning - Generated: \today}
+        \end{minipage}
+    };
+}
+
+% ============================================================================
+% THREAT MODELING
+% ============================================================================
+
+% Register threat vector
+% Usage: \registerThreat{threatid}{name}{target}{likelihood}{impact}
+% Likelihood/Impact: critical, high, medium, low
+\newcommand{\registerThreat}[5]{
+    \pgfkeys{/security/threat/#1/name/.initial={#2}}
+    \pgfkeys{/security/threat/#1/target/.initial={#3}}
+    \pgfkeys{/security/threat/#1/likelihood/.initial={#4}}
+    \pgfkeys{/security/threat/#1/impact/.initial={#5}}
+}
+
+% Calculate threat risk score
+% Usage: \calculateThreatRisk{likelihood}{impact}{\resultvar}
+\newcommand{\calculateThreatRisk}[3]{
+    % Convert likelihood to numeric
+    \ifthenelse{\equal{#1}{critical}}{
+        \def\likelihoodscore{4}
+    }{
+    \ifthenelse{\equal{#1}{high}}{
+        \def\likelihoodscore{3}
+    }{
+    \ifthenelse{\equal{#1}{medium}}{
+        \def\likelihoodscore{2}
+    }{
+        \def\likelihoodscore{1}
+    }}}
+
+    % Convert impact to numeric
+    \ifthenelse{\equal{#2}{critical}}{
+        \def\impactscore{4}
+    }{
+    \ifthenelse{\equal{#2}{high}}{
+        \def\impactscore{3}
+    }{
+    \ifthenelse{\equal{#2}{medium}}{
+        \def\impactscore{2}
+    }{
+        \def\impactscore{1}
+    }}}
+
+    \pgfmathsetmacro{#3}{\likelihoodscore * \impactscore}
+}
+
+% Visualize threat model
+% Usage: \visualizeThreatModel{x}{y}
+\newcommand{\visualizeThreatModel}[2]{
+    \node[
+        rectangle,
+        draw=red!70,
+        fill=white,
+        line width=2pt,
+        rounded corners=3pt,
+        inner sep=10pt,
+        anchor=north west,
+        font=\small
+    ] at (#1,#2) {
+        \begin{minipage}{11cm}
+        \textbf{\Large Threat Model Matrix} \\[8pt]
+
+        % Risk matrix
+        \begin{tikzpicture}[scale=0.8]
+            % Draw grid
+            \draw[step=1.5cm, black!30, thin] (0,0) grid (6,6);
+
+            % Axes labels
+            \node[rotate=90] at (-0.5,3) {\textbf{Impact}};
+            \node at (3,-0.5) {\textbf{Likelihood}};
+
+            % Color zones
+            \fill[green!20] (0,0) rectangle (3,3);
+            \fill[yellow!20] (3,0) rectangle (6,3);
+            \fill[yellow!20] (0,3) rectangle (3,4.5);
+            \fill[orange!20] (3,3) rectangle (6,4.5);
+            \fill[orange!20] (0,4.5) rectangle (3,6);
+            \fill[red!20] (3,4.5) rectangle (6,6);
+
+            % Labels
+            \node[font=\tiny] at (1.5,0.5) {Low Risk};
+            \node[font=\tiny] at (4.5,4.5) {Critical};
+
+            % Example threats (would be populated from registry)
+            \node[circle, fill=red, inner sep=2pt] at (5,5) {};
+            \node[circle, fill=orange, inner sep=2pt] at (4,3.5) {};
+            \node[circle, fill=yellow, inner sep=2pt] at (2,2) {};
+        \end{tikzpicture}
+
+        \vspace{5pt}
+        \textit{Threat Assessment - Generated: \today}
+        \end{minipage}
+    };
+}
+
+% Annotate node with threat indicator
+% Usage: \annotateThreatVector{nodename}{threattype}
+% Threat types: ddos, malware, injection, mitm, etc.
+\newcommand{\annotateThreatVector}[2]{
+    \node[
+        rectangle,
+        draw=red!70,
+        fill=red!10,
+        rounded corners=2pt,
+        font=\tiny\ttfamily,
+        inner sep=2pt,
+        anchor=south
+    ] at (#1.south) [below=2pt] {
+        THREAT: #2
+    };
+}
+
+% ============================================================================
+% COMPLIANCE GAP ANALYSIS
+% ============================================================================
+
+% Register compliance requirement
+% Usage: \registerComplianceReq{reqid}{standard}{requirement}{status}
+% Status: compliant, noncompliant, partial
+\newcommand{\registerComplianceReq}[4]{
+    \pgfkeys{/security/compliance/#1/standard/.initial={#2}}
+    \pgfkeys{/security/compliance/#1/requirement/.initial={#3}}
+    \pgfkeys{/security/compliance/#1/status/.initial={#4}}
+}
+
+% Generate compliance gap report
+% Usage: \generateComplianceGap{x}{y}{standard}
+\newcommand{\generateComplianceGap}[3]{
+    \node[
+        rectangle,
+        draw=purple!70,
+        fill=white,
+        line width=2pt,
+        rounded corners=3pt,
+        inner sep=10pt,
+        anchor=north west,
+        font=\small
+    ] at (#1,#2) {
+        \begin{minipage}{10cm}
+        \textbf{\Large Compliance Gap Analysis} \\
+        \textbf{Standard:} #3 \\[8pt]
+
+        \textbf{Compliance Status:} \\
+        \begin{tabular}{|l|l|l|}
+        \hline
+        \textbf{Requirement} & \textbf{Status} & \textbf{Gap} \\
+        \hline
+        Network Segmentation & \textcolor{green}{Compliant} & None \\
+        Encryption at Rest & \textcolor{orange}{Partial} & DB encryption \\
+        Access Controls & \textcolor{green}{Compliant} & None \\
+        Audit Logging & \textcolor{red}{Non-compliant} & Missing logs \\
+        Incident Response & \textcolor{orange}{Partial} & No playbooks \\
+        \hline
+        \end{tabular} \\[8pt]
+
+        \textbf{Recommended Actions:} \\
+        \begin{enumerate}
+        \item Implement comprehensive audit logging
+        \item Enable database encryption
+        \item Develop incident response playbooks
+        \end{enumerate}
+
+        \textit{Compliance Assessment - Generated: \today}
+        \end{minipage}
+    };
+}
+
+% ============================================================================
+% SECURITY HARDENING RECOMMENDATIONS
+% ============================================================================
+
+% Generate security hardening checklist
+% Usage: \generateHardeningChecklist{x}{y}
+\newcommand{\generateHardeningChecklist}[2]{
+    \node[
+        rectangle,
+        draw=blue!70,
+        fill=white,
+        line width=2pt,
+        rounded corners=3pt,
+        inner sep=10pt,
+        anchor=north west,
+        font=\small
+    ] at (#1,#2) {
+        \begin{minipage}{10cm}
+        \textbf{\Large Security Hardening Checklist} \\[8pt]
+
+        \textbf{Network Layer:} \\
+        $\square$ Enable firewall rules between zones \\
+        $\square$ Implement network segmentation \\
+        $\square$ Deploy IDS/IPS on critical paths \\
+        $\square$ Enable DDoS protection \\[5pt]
+
+        \textbf{Application Layer:} \\
+        $\square$ Patch all known vulnerabilities \\
+        $\square$ Enable WAF for web applications \\
+        $\square$ Implement rate limiting \\
+        $\square$ Use secure protocols (TLS 1.3+) \\[5pt]
+
+        \textbf{Data Layer:} \\
+        $\square$ Enable encryption at rest \\
+        $\square$ Enable encryption in transit \\
+        $\square$ Implement database access controls \\
+        $\square$ Regular backup verification \\[5pt]
+
+        \textbf{Monitoring:} \\
+        $\square$ Centralized logging \\
+        $\square$ SIEM integration \\
+        $\square$ Alerting on suspicious activity \\
+        $\square$ Regular security audits \\
+
+        \vspace{5pt}
+        \textit{Hardening Guide - Generated: \today}
+        \end{minipage}
+    };
+}
+
+% ============================================================================
+% SECURITY METRICS DASHBOARD
+% ============================================================================
+
+% Generate comprehensive security dashboard
+% Usage: \generateSecurityDashboard{x}{y}
+\newcommand{\generateSecurityDashboard}[2]{
+    \calculateVulnerabilityScore{\vulnscore}
+    \calculateAttackSurface{\attacksurf}
+    \calculateNetworkHealth{\healthscore}
+
+    \node[
+        rectangle,
+        draw=black!70,
+        fill=white,
+        line width=3pt,
+        rounded corners=5pt,
+        inner sep=15pt,
+        anchor=north,
+        font=\sffamily,
+        drop shadow
+    ] at (#1,#2) {
+        \begin{minipage}{12cm}
+        \centering
+        \textbf{\Huge Security Dashboard} \\[10pt]
+
+        \begin{tabular}{|l|r|l|}
+        \hline
+        \textbf{Metric} & \textbf{Value} & \textbf{Status} \\
+        \hline
+        Network Health & \healthscore/100 &
+            \ifdim\healthscore pt>80pt\relax
+                \textcolor{green}{Good}
+            \else
+                \textcolor{orange}{Fair}
+            \fi \\
+        Vulnerability Score & \vulnscore &
+            \ifdim\vulnscore pt>100pt\relax
+                \textcolor{red}{High}
+            \else
+                \textcolor{green}{Low}
+            \fi \\
+        Attack Surface & \attacksurf &
+            \ifdim\attacksurf pt>100pt\relax
+                \textcolor{red}{Large}
+            \else
+                \textcolor{green}{Small}
+            \fi \\
+        \hline
+        Critical Vulnerabilities & \thecriticalVulns &
+            \ifnum\thecriticalVulns>0\relax
+                \textcolor{red}{Action Needed}
+            \else
+                \textcolor{green}{OK}
+            \fi \\
+        Exposed Services & \theexposedServices &
+            \ifnum\theexposedServices>10\relax
+                \textcolor{orange}{Review}
+            \else
+                \textcolor{green}{OK}
+            \fi \\
+        Validation Errors & \thevalidationErrorCount &
+            \ifnum\thevalidationErrorCount>0\relax
+                \textcolor{red}{Fix Required}
+            \else
+                \textcolor{green}{OK}
+            \fi \\
+        \hline
+        \end{tabular} \\[10pt]
+
+        \textbf{Overall Security Posture:}
+        \pgfmathsetmacro{\secposture}{(100 - \vulnscore/10)}
+        \ifdim\secposture pt>80pt\relax
+            \textcolor{green}{\Large STRONG}
+        \else
+            \ifdim\secposture pt>60pt\relax
+                \textcolor{orange}{\Large MODERATE}
+            \else
+                \textcolor{red}{\Large WEAK}
+            \fi
+        \fi
+
+        \vspace{5pt}
+        \hrule
+        \vspace{3pt}
+        {\tiny Security Assessment - Generated: \today}
+        \end{minipage}
+    };
+}
+
+% Reset security counters
+% Usage: \resetSecurityCounters
+\newcommand{\resetSecurityCounters}{
+    \setcounter{criticalVulns}{0}
+    \setcounter{highVulns}{0}
+    \setcounter{mediumVulns}{0}
+    \setcounter{lowVulns}{0}
+    \setcounter{exposedServices}{0}
+    \setcounter{unencryptedConns}{0}
+}
+
+% TODO: Advanced security assessment features
+% - Automated penetration testing visualization
+% - Zero-trust architecture validation
+% - Microsegmentation recommendations
+% - Security event correlation
+% - Threat intelligence integration
+% - Ransomware resilience scoring

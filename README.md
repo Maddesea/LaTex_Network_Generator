@@ -14,6 +14,15 @@ A professional, scalable network diagram generation system using LaTeX/TikZ, des
 ✅ **Rich Connection Types** - Encrypted, suspicious, attack, and bidirectional connections
 ✅ **TeXLive 2024/2025 Compatible** - Uses stable, widely-supported packages
 
+### 🆕 Advanced Analysis Features (v1.2)
+
+✅ **Network Validation** - Automated IP conflict detection, port conflict checking, and connectivity validation
+✅ **Auto-Documentation** - Generate network inventories, service catalogs, and topology descriptions automatically
+✅ **Diagram Comparison** - Version diff visualization, change tracking, and configuration drift detection
+✅ **Security Assessment** - Vulnerability scoring, attack surface analysis, threat modeling, and compliance gap analysis
+✅ **Health Monitoring** - Real-time network health scoring (0-100) with automated issue detection
+✅ **Security Dashboard** - Comprehensive security metrics dashboard with visual indicators
+
 ## Quick Start
 
 **⚡ New to the project? Check out [QUICKSTART.md](QUICKSTART.md) for a 5-minute tutorial!**
@@ -85,8 +94,89 @@ network_diagram_generator.tex  # Main entry point
 ├── QUICKSTART.md              # 5-minute tutorial (NEW!)
 ├── example_complete_network.tex   # Comprehensive 45+ node example
 ├── example_advanced_nodes.tex     # Advanced features demo
-└── example_templates.tex      # Template usage examples (NEW!)
+├── example_templates.tex      # Template usage examples (NEW!)
+└── example_advanced_analysis.tex  # Advanced analysis demo (NEW!)
 ```
+
+## Advanced Features Usage
+
+### Network Validation & Health Monitoring
+
+```latex
+% Register IPs for conflict detection
+\registerIPAddress{web1}{192.168.1.10}
+\registerIPAddress{web2}{192.168.1.10}  % Detects duplicate!
+
+% Register ports for conflict checking
+\registerNodePort{web1}{192.168.1.10}{80}{nginx}
+
+% Generate validation report
+\generateValidationReport{-9}{-5}
+
+% Display network health score (0-100)
+\displayNetworkHealth{8}{6}
+```
+
+### Auto-Documentation
+
+```latex
+% Generate network inventory
+\generateNetworkInventory{0}{9}{Network Inventory}
+
+% Create service catalog
+\generateServiceCatalog{-9}{5}
+
+% Generate topology description
+\generateTopologyDescription{0}{0}{Production Network}
+
+% Export summary card
+\generateNetworkSummaryCard{0}{9}{My Network}
+```
+
+### Diagram Comparison & Version Tracking
+
+```latex
+% Register nodes in version 1
+\registerNodeV1{web1}{192.168.1.10}{WebServer}{server}
+
+% Register nodes in version 2
+\registerNodeV2{web1}{192.168.1.20}{WebServer}{server}  % IP changed!
+
+% Compare and highlight changes
+\compareNode{web1}{\result}
+\highlightModifiedNode{web1}
+
+% Generate comparison report
+\generateVersionComparison{0}{0}{v1.0}{v2.0}
+```
+
+### Security Assessment
+
+```latex
+% Register vulnerabilities
+\registerVulnerability{web1}{CVE-2024-1234}{critical}{9.8}
+
+% Register exposed services
+\registerExposedService{web1}{443}{HTTPS}{public}
+
+% Generate security reports
+\generateVulnerabilityReport{0}{0}
+\visualizeAttackSurface{0}{5}
+\generateSecurityDashboard{0}{9}
+
+% Add security badges to nodes
+\addVulnerabilityBadge{web1}{3}{critical}
+\markInternetExposed{web1}
+```
+
+### Complete Analysis Example
+
+See `example_advanced_analysis.tex` for a full demonstration including:
+- IP conflict detection
+- Vulnerability tracking
+- Security assessment
+- Auto-generated documentation
+- Health monitoring dashboard
 
 ## Creating Your Own Diagrams
 
