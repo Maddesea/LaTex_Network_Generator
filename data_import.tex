@@ -1,6 +1,6 @@
 % data_import.tex - Data Import/Export Module
 % Agent 6: Data Import/Export System
-% Version: 1.0
+% Version: 1.2 - Enhanced with Nessus support and complete export functions
 % Requires: LuaLaTeX for JSON/YAML/XML parsing
 %
 % This module provides comprehensive data import/export functionality:
@@ -8,7 +8,9 @@
 % - YAML parser for human-readable configs
 % - CSV bulk import for nodes and connections
 % - Nmap XML parser for network discovery integration
-% - Export to GraphML/DOT formats
+% - Nessus XML parser for vulnerability scan integration
+% - Complete GraphML export (Gephi, Cytoscape compatible)
+% - Complete DOT export (GraphViz compatible)
 %
 % ============================================================================
 % PACKAGE DEPENDENCIES
@@ -394,6 +396,257 @@ function convertNmapToNodes(hosts)
     end
 end
 
+-- ========================================================================
+-- NESSUS XML PARSER
+-- ========================================================================
+
+nessus = {}
+
+function nessus.parseXML(xmlString)
+    -- Parse Nessus .nessus XML output and extract vulnerability data
+    -- Returns: table of hosts with vulnerabilities and CVSS scores
+
+    local hosts = {}
+
+    -- Extract ReportHost blocks
+    for reportHost in xmlString:gmatch('<ReportHost[^>]*>.-</ReportHost>') do
+        local hostInfo = {}
+
+        -- Extract host properties
+        local hostName = reportHost:match('<tag name="host%-fqdn">([^<]+)</tag>') or
+                         reportHost:match('<tag name="host%-ip">([^<]+)</tag>')
+
+        if hostName then
+            hostInfo.hostname = hostName
+        else
+            hostInfo.hostname = "unknown"
+        end
+
+        -- Extract IP address
+        local hostIP = reportHost:match('<tag name="host%-ip">([^<]+)</tag>')
+        if hostIP then
+            hostInfo.ip = hostIP
+        end
+
+        -- Extract OS
+        local os = reportHost:match('<tag name="operating%-system">([^<]+)</tag>')
+        if os then
+            hostInfo.os = os
+        end
+
+        -- Extract vulnerabilities
+        hostInfo.vulnerabilities = {}
+        for reportItem in reportHost:gmatch('<ReportItem[^>]*>.-</ReportItem>') do
+            local vuln = {}
+
+            -- Extract severity
+            local severity = reportItem:match('severity="(%d+)"')
+            if severity and tonumber(severity) > 0 then
+                vuln.severity = tonumber(severity)
+
+                -- Extract plugin name
+                vuln.name = reportItem:match('pluginName="([^"]+)"')
+
+                -- Extract CVE
+                vuln.cve = reportItem:match('<cve>([^<]+)</cve>')
+
+                -- Extract CVSS score
+                local cvss = reportItem:match('<cvss_base_score>([^<]+)</cvss_base_score>') or
+                            reportItem:match('<cvss3_base_score>([^<]+)</cvss3_base_score>')
+                if cvss then
+                    vuln.cvss = tonumber(cvss)
+                end
+
+                -- Extract description
+                vuln.description = reportItem:match('<description>([^<]+)</description>')
+
+                -- Extract solution
+                vuln.solution = reportItem:match('<solution>([^<]+)</solution>')
+
+                -- Only add if it's a real vulnerability (not info)
+                if vuln.severity >= 2 then
+                    table.insert(hostInfo.vulnerabilities, vuln)
+                end
+            end
+        end
+
+        -- Only add hosts with vulnerabilities
+        if #hostInfo.vulnerabilities > 0 then
+            table.insert(hosts, hostInfo)
+        end
+    end
+
+    return hosts
+end
+
+function convertNessusToNodes(hosts)
+    -- Convert Nessus scan results to node definitions with vulnerability indicators
+    local nodeX = 0
+    local nodeY = 0
+    local nodesPerRow = 4
+
+    for i, host in ipairs(hosts) do
+        local nodeId = "nessus_host" .. i
+        local nodeIP = host.ip or "unknown"
+        local nodeLabel = host.hostname or nodeIP
+
+        -- Calculate position in grid layout
+        nodeX = ((i - 1) % nodesPerRow) * 3
+        nodeY = -math.floor((i - 1) / nodesPerRow) * 2
+
+        -- Determine highest severity
+        local maxSeverity = 0
+        local criticalCVE = nil
+        local maxCVSS = 0
+
+        for _, vuln in ipairs(host.vulnerabilities) do
+            if vuln.severity > maxSeverity then
+                maxSeverity = vuln.severity
+            end
+            if vuln.cvss and vuln.cvss > maxCVSS then
+                maxCVSS = vuln.cvss
+                criticalCVE = vuln.cve or vuln.name
+            end
+        end
+
+        -- Create server node
+        local cmd = string.format("\\createServer{%s}{%s}{%s}{%s}{%s}",
+            nodeId, nodeIP, nodeX, nodeY, nodeLabel)
+        tex.print(cmd)
+
+        -- Add vulnerability indicator if critical
+        if maxCVSS >= 7.0 and criticalCVE then
+            cmd = string.format("\\markVulnerability{%s}{%s}{%.1f}",
+                nodeId, criticalCVE, maxCVSS)
+            tex.print(cmd)
+        end
+
+        -- Add threat badge based on severity
+        local threatLevel = "low"
+        if maxSeverity >= 4 then
+            threatLevel = "critical"
+        elseif maxSeverity >= 3 then
+            threatLevel = "high"
+        elseif maxSeverity >= 2 then
+            threatLevel = "medium"
+        end
+
+        if maxSeverity >= 2 then
+            cmd = string.format("\\addThreatBadge{%s}{%s}",
+                nodeId, threatLevel)
+            tex.print(cmd)
+        end
+    end
+end
+
+-- ========================================================================
+-- ENHANCED EXPORT FUNCTIONS
+-- ========================================================================
+
+graphml = {}
+
+function graphml.exportNodes(nodes, file)
+    -- Export nodes to GraphML format
+    if not nodes then return end
+
+    for i, node in ipairs(nodes) do
+        local nodeId = node.id or ("node" .. i)
+        local nodeLabel = node.label or nodeId
+        local nodeType = node.type or "server"
+        local nodeIP = node.ip or ""
+
+        file:write(string.format('    <node id="%s">\n', nodeId))
+        file:write(string.format('      <data key="label">%s</data>\n', nodeLabel))
+        file:write(string.format('      <data key="type">%s</data>\n', nodeType))
+        file:write(string.format('      <data key="ip">%s</data>\n', nodeIP))
+        file:write('    </node>\n')
+    end
+end
+
+function graphml.exportEdges(connections, file)
+    -- Export connections to GraphML format
+    if not connections then return end
+
+    for i, conn in ipairs(connections) do
+        local source = conn.source or conn.from
+        local dest = conn.dest or conn.to
+        local connType = conn.type or "normal"
+        local label = conn.label or ""
+
+        file:write(string.format('    <edge id="e%d" source="%s" target="%s">\n',
+            i, source, dest))
+        file:write(string.format('      <data key="type">%s</data>\n', connType))
+        file:write(string.format('      <data key="label">%s</data>\n', label))
+        file:write('    </edge>\n')
+    end
+end
+
+dot = {}
+
+function dot.exportNodes(nodes, file)
+    -- Export nodes to DOT format
+    if not nodes then return end
+
+    for i, node in ipairs(nodes) do
+        local nodeId = node.id or ("node" .. i)
+        local nodeLabel = node.label or nodeId
+        local nodeType = node.type or "server"
+        local nodeIP = node.ip or ""
+
+        -- Determine node shape based on type
+        local shape = "box"
+        if nodeType == "firewall" then
+            shape = "octagon"
+        elseif nodeType == "router" then
+            shape = "diamond"
+        elseif nodeType == "switch" then
+            shape = "hexagon"
+        elseif nodeType == "client" then
+            shape = "ellipse"
+        elseif nodeType == "cloud" then
+            shape = "cloud"
+        end
+
+        file:write(string.format('  "%s" [label="%s\\n%s", shape=%s];\n',
+            nodeId, nodeLabel, nodeIP, shape))
+    end
+end
+
+function dot.exportEdges(connections, file)
+    -- Export connections to DOT format
+    if not connections then return end
+
+    for i, conn in ipairs(connections) do
+        local source = conn.source or conn.from
+        local dest = conn.dest or conn.to
+        local connType = conn.type or "normal"
+        local label = conn.label or ""
+
+        -- Determine edge style
+        local style = "solid"
+        local color = "black"
+
+        if connType == "encrypted" then
+            style = "bold"
+            color = "green"
+        elseif connType == "attack" then
+            style = "bold"
+            color = "red"
+        elseif connType == "suspicious" then
+            style = "dashed"
+            color = "orange"
+        end
+
+        if label ~= "" then
+            file:write(string.format('  "%s" -> "%s" [label="%s", style=%s, color=%s];\n',
+                source, dest, label, style, color))
+        else
+            file:write(string.format('  "%s" -> "%s" [style=%s, color=%s];\n',
+                source, dest, style, color))
+        end
+    end
+end
+
 \end{luacode}
 
 % ============================================================================
@@ -596,38 +849,155 @@ end
 }
 
 % ============================================================================
+% NESSUS IMPORT FUNCTIONS
+% ============================================================================
+
+\newcommand{\importNessusXML}[1]{%
+    % Import vulnerability scan data from Nessus .nessus XML output
+    % Usage: \importNessusXML{scan_results.nessus}
+    \IfFileExists{#1}{%
+        \directlua{
+            local file = io.open("#1", "r")
+            if file then
+                local content = file:read("*all")
+                file:close()
+
+                local hosts = nessus.parseXML(content)
+                if hosts and \string#hosts > 0 then
+                    tex.print("\string\\renewcommand{\string\\renderNetworkNodes}{")
+                    convertNessusToNodes(hosts)
+                    tex.print("}")
+                else
+                    tex.print("\string\\PackageWarning{data_import}{No vulnerable hosts found in Nessus XML: #1}")
+                end
+            else
+                tex.print("\string\\PackageWarning{data_import}{Could not open Nessus XML file: #1}")
+            end
+        }
+    }{%
+        \PackageWarning{data_import}{Nessus XML file not found: #1}
+    }
+}
+
+% ============================================================================
 % EXPORT FUNCTIONS
 % ============================================================================
 
 \newcommand{\exportToGraphML}[2]{%
     % Export network topology to GraphML format
-    % Usage: \exportToGraphML{output.graphml}{network_data}
+    % Usage: \exportToGraphML{output.graphml}{jsonfile.json}
     % Note: This creates a file that can be imported into Gephi, Cytoscape, etc.
-    \newwrite\graphmlfile
-    \immediate\openout\graphmlfile=#1
-    \immediate\write\graphmlfile{<?xml version="1.0" encoding="UTF-8"?>}
-    \immediate\write\graphmlfile{<graphml xmlns="http://graphml.graphdrawing.org/xmlns">}
-    \immediate\write\graphmlfile{  <graph id="G" edgedefault="directed">}
+    \directlua{
+        -- Read the JSON data file
+        local datafile = io.open("#2", "r")
+        if not datafile then
+            tex.print("\string\\PackageWarning{data_import}{Could not open data file: #2}")
+            return
+        end
 
-    % TODO: Write nodes and edges based on #2 data
-    % This requires access to the node and connection data structures
+        local content = datafile:read("*all")
+        datafile:close()
 
-    \immediate\write\graphmlfile{  </graph>}
-    \immediate\write\graphmlfile{</graphml>}
-    \immediate\closeout\graphmlfile
+        local data = json.decode(content)
+        if not data then
+            tex.print("\string\\PackageWarning{data_import}{Could not parse JSON data: #2}")
+            return
+        end
+
+        -- Open output file
+        local file = io.open("#1", "w")
+        if not file then
+            tex.print("\string\\PackageWarning{data_import}{Could not create output file: #1}")
+            return
+        end
+
+        -- Write GraphML header
+        file:write('<?xml version="1.0" encoding="UTF-8"?>\string\n')
+        file:write('<graphml xmlns="http://graphml.graphdrawing.org/xmlns"\string\n')
+        file:write('  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"\string\n')
+        file:write('  xsi:schemaLocation="http://graphml.graphdrawing.org/xmlns\string\n')
+        file:write('  http://graphml.graphdrawing.org/xmlns/1.0/graphml.xsd">\string\n')
+
+        -- Define keys
+        file:write('  <key id="label" for="node" attr.name="label" attr.type="string"/>\string\n')
+        file:write('  <key id="type" for="node" attr.name="type" attr.type="string"/>\string\n')
+        file:write('  <key id="ip" for="node" attr.name="ip" attr.type="string"/>\string\n')
+        file:write('  <key id="type" for="edge" attr.name="type" attr.type="string"/>\string\n')
+        file:write('  <key id="label" for="edge" attr.name="label" attr.type="string"/>\string\n')
+
+        -- Start graph
+        file:write('  <graph id="NetworkDiagram" edgedefault="directed">\string\n')
+
+        -- Write nodes
+        if data.nodes then
+            graphml.exportNodes(data.nodes, file)
+        end
+
+        -- Write edges
+        if data.connections then
+            graphml.exportEdges(data.connections, file)
+        end
+
+        -- Close graph and file
+        file:write('  </graph>\string\n')
+        file:write('</graphml>\string\n')
+        file:close()
+
+        tex.print("Exported to GraphML: #1")
+    }
 }
 
 \newcommand{\exportToDOT}[2]{%
     % Export network topology to DOT format (GraphViz)
-    % Usage: \exportToDOT{output.dot}{network_data}
-    \newwrite\dotfile
-    \immediate\openout\dotfile=#1
-    \immediate\write\dotfile{digraph network \string{}
+    % Usage: \exportToDOT{output.dot}{jsonfile.json}
+    \directlua{
+        -- Read the JSON data file
+        local datafile = io.open("#2", "r")
+        if not datafile then
+            tex.print("\string\\PackageWarning{data_import}{Could not open data file: #2}")
+            return
+        end
 
-    % TODO: Write nodes and edges in DOT format
+        local content = datafile:read("*all")
+        datafile:close()
 
-    \immediate\write\dotfile{\string}}
-    \immediate\closeout\dotfile
+        local data = json.decode(content)
+        if not data then
+            tex.print("\string\\PackageWarning{data_import}{Could not parse JSON data: #2}")
+            return
+        end
+
+        -- Open output file
+        local file = io.open("#1", "w")
+        if not file then
+            tex.print("\string\\PackageWarning{data_import}{Could not create output file: #1}")
+            return
+        end
+
+        -- Write DOT header
+        file:write('digraph NetworkDiagram {\string\n')
+        file:write('  rankdir=TB;\string\n')
+        file:write('  node [fontname="Arial"];\string\n')
+        file:write('  edge [fontname="Arial"];\string\n\string\n')
+
+        -- Write nodes
+        if data.nodes then
+            dot.exportNodes(data.nodes, file)
+        end
+
+        file:write('\string\n')
+
+        -- Write edges
+        if data.connections then
+            dot.exportEdges(data.connections, file)
+        end
+
+        -- Close file
+        file:write('}\string\n')
+        file:close()
+
+        tex.print("Exported to DOT: #1")
+    }
 }
 
 % ============================================================================

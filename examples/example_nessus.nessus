@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<NessusClientData_v2>
+<Policy>
+    <policyName>Basic Network Scan</policyName>
+    <Preferences>
+        <ServerPreferences/>
+    </Preferences>
+</Policy>
+
+<Report name="Example Vulnerability Scan" xmlns:cm="http://www.nessus.org/cm">
+
+<ReportHost name="webserver.local">
+    <HostProperties>
+        <tag name="host-ip">192.168.1.10</tag>
+        <tag name="host-fqdn">webserver.local</tag>
+        <tag name="operating-system">Linux Kernel 5.15 on Ubuntu 22.04</tag>
+        <tag name="system-type">general-purpose</tag>
+    </HostProperties>
+
+    <!-- Critical Vulnerability: Remote Code Execution -->
+    <ReportItem port="443" svc_name="https" protocol="tcp" severity="4"
+                pluginID="12345" pluginName="Apache HTTP Server RCE Vulnerability"
+                pluginFamily="Web Servers">
+        <cvss_base_score>9.8</cvss_base_score>
+        <cvss3_base_score>9.8</cvss3_base_score>
+        <cve>CVE-2024-1234</cve>
+        <description>Apache HTTP Server versions 2.4.0 through 2.4.54 contain a remote code execution vulnerability that allows attackers to execute arbitrary code.</description>
+        <solution>Upgrade to Apache 2.4.55 or later</solution>
+        <risk_factor>Critical</risk_factor>
+    </ReportItem>
+
+    <!-- High Vulnerability: SQL Injection -->
+    <ReportItem port="80" svc_name="http" protocol="tcp" severity="3"
+                pluginID="23456" pluginName="SQL Injection in Web Application"
+                pluginFamily="CGI abuses">
+        <cvss_base_score>8.6</cvss_base_score>
+        <cvss3_base_score>8.6</cvss3_base_score>
+        <cve>CVE-2024-5678</cve>
+        <description>The web application is vulnerable to SQL injection attacks.</description>
+        <solution>Update application and implement proper input validation</solution>
+        <risk_factor>High</risk_factor>
+    </ReportItem>
+
+    <!-- Medium Vulnerability: Outdated SSL/TLS -->
+    <ReportItem port="443" svc_name="https" protocol="tcp" severity="2"
+                pluginID="34567" pluginName="SSL/TLS Deprecated Protocol"
+                pluginFamily="General">
+        <cvss_base_score>5.3</cvss_base_score>
+        <cvss3_base_score>5.3</cvss3_base_score>
+        <description>Server supports deprecated SSL/TLS protocols</description>
+        <solution>Disable TLS 1.0 and 1.1, enable only TLS 1.2 and 1.3</solution>
+        <risk_factor>Medium</risk_factor>
+    </ReportItem>
+</ReportHost>
+
+<ReportHost name="dbserver.local">
+    <HostProperties>
+        <tag name="host-ip">192.168.1.20</tag>
+        <tag name="host-fqdn">dbserver.local</tag>
+        <tag name="operating-system">Linux Kernel 5.15 on Ubuntu 22.04</tag>
+    </HostProperties>
+
+    <!-- Critical Vulnerability: Unpatched MySQL -->
+    <ReportItem port="3306" svc_name="mysql" protocol="tcp" severity="4"
+                pluginID="45678" pluginName="MySQL Server Multiple Vulnerabilities"
+                pluginFamily="Databases">
+        <cvss_base_score>9.1</cvss_base_score>
+        <cvss3_base_score>9.1</cvss3_base_score>
+        <cve>CVE-2024-9012</cve>
+        <description>MySQL server contains multiple critical vulnerabilities allowing privilege escalation and data exfiltration.</description>
+        <solution>Upgrade to MySQL 8.0.34 or later</solution>
+        <risk_factor>Critical</risk_factor>
+    </ReportItem>
+
+    <!-- High Vulnerability: Weak Database Credentials -->
+    <ReportItem port="3306" svc_name="mysql" protocol="tcp" severity="3"
+                pluginID="56789" pluginName="Database Uses Default Credentials"
+                pluginFamily="Databases">
+        <cvss_base_score>8.1</cvss_base_score>
+        <cvss3_base_score>8.1</cvss3_base_score>
+        <description>Database server is using default or weak credentials</description>
+        <solution>Change default credentials and implement strong password policy</solution>
+        <risk_factor>High</risk_factor>
+    </ReportItem>
+</ReportHost>
+
+<ReportHost name="workstation1.local">
+    <HostProperties>
+        <tag name="host-ip">192.168.1.50</tag>
+        <tag name="host-fqdn">workstation1.local</tag>
+        <tag name="operating-system">Microsoft Windows 10 Pro</tag>
+    </HostProperties>
+
+    <!-- High Vulnerability: Unpatched Windows -->
+    <ReportItem port="445" svc_name="microsoft-ds" protocol="tcp" severity="3"
+                pluginID="67890" pluginName="Microsoft Windows SMB Remote Code Execution"
+                pluginFamily="Windows">
+        <cvss_base_score>8.8</cvss_base_score>
+        <cvss3_base_score>8.8</cvss3_base_score>
+        <cve>CVE-2024-3456</cve>
+        <description>Windows SMB server is vulnerable to remote code execution</description>
+        <solution>Install Windows security updates</solution>
+        <risk_factor>High</risk_factor>
+    </ReportItem>
+
+    <!-- Medium Vulnerability: Missing Updates -->
+    <ReportItem port="135" svc_name="msrpc" protocol="tcp" severity="2"
+                pluginID="78901" pluginName="Microsoft Windows Missing Security Updates"
+                pluginFamily="Windows">
+        <cvss_base_score>6.5</cvss_base_score>
+        <cvss3_base_score>6.5</cvss3_base_score>
+        <description>System is missing critical security updates</description>
+        <solution>Install all available Windows updates</solution>
+        <risk_factor>Medium</risk_factor>
+    </ReportItem>
+</ReportHost>
+
+<ReportHost name="firewall.local">
+    <HostProperties>
+        <tag name="host-ip">192.168.1.1</tag>
+        <tag name="host-fqdn">firewall.local</tag>
+        <tag name="operating-system">FreeBSD 13.1 (pfSense)</tag>
+    </HostProperties>
+
+    <!-- Medium Vulnerability: Firewall Configuration -->
+    <ReportItem port="443" svc_name="https" protocol="tcp" severity="2"
+                pluginID="89012" pluginName="Firewall Management Interface Exposed"
+                pluginFamily="Firewalls">
+        <cvss_base_score>5.9</cvss_base_score>
+        <cvss3_base_score>5.9</cvss3_base_score>
+        <description>Firewall management interface is accessible from external network</description>
+        <solution>Restrict management interface access to internal networks only</solution>
+        <risk_factor>Medium</risk_factor>
+    </ReportItem>
+</ReportHost>
+
+<ReportHost name="router.local">
+    <HostProperties>
+        <tag name="host-ip">192.168.1.2</tag>
+        <tag name="host-fqdn">router.local</tag>
+        <tag name="operating-system">Linux Kernel 5.10</tag>
+    </HostProperties>
+
+    <!-- Medium Vulnerability: SNMP Configuration -->
+    <ReportItem port="161" svc_name="snmp" protocol="udp" severity="2"
+                pluginID="90123" pluginName="SNMP Default Community String"
+                pluginFamily="SNMP">
+        <cvss_base_score>5.3</cvss_base_score>
+        <cvss3_base_score>5.3</cvss3_base_score>
+        <description>SNMP service uses default community strings</description>
+        <solution>Change default SNMP community strings or disable SNMP</solution>
+        <risk_factor>Medium</risk_factor>
+    </ReportItem>
+</ReportHost>
+
+</Report>
+</NessusClientData_v2>

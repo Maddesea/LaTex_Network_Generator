@@ -280,6 +280,22 @@ This will automatically:
 - Use hostnames as labels
 - Arrange nodes in a grid layout
 
+#### 5. Nessus XML Parser
+
+**Requires:** LuaLaTeX
+
+Import vulnerability scan results from Nessus:
+
+```latex
+\importNessusXML{scan_results.nessus}
+```
+
+This will automatically:
+- Create nodes for vulnerable hosts
+- Mark critical vulnerabilities (CVSS >= 7.0)
+- Add threat badges based on severity
+- Include CVE identifiers
+
 ### Export Formats
 
 Export your network diagrams to other tools:
@@ -307,10 +323,13 @@ lualatex network_diagram_generator.tex
 ### Example Files
 
 See the `examples/` directory for complete working examples:
-- `example_network.json` - JSON format
-- `example_network.yaml` - YAML format
-- `nodes.csv`, `connections.csv`, `threats.csv` - CSV format
-- `example_nmap.xml` - Nmap XML format
+- `example_network.json` - JSON format example
+- `example_network.yaml` - YAML format example
+- `nodes.csv`, `connections.csv`, `threats.csv` - CSV format examples
+- `example_nmap.xml` - Nmap XML format example
+- `example_nessus.nessus` - Nessus vulnerability scan example (NEW!)
+- `json_import_demo.tex` - Complete demo using JSON import (NEW!)
+- `convert_network_data.py` - Python conversion utility (NEW!)
 - `README.md` - Detailed usage guide
 
 ## Parallel Development Guide
@@ -367,13 +386,17 @@ This system is designed for **multiple agents/developers** to work simultaneousl
 - [ ] Real-time threat feed integration
 - [ ] Security compliance dashboard (NIST, CIS, PCI-DSS)
 
-### Agent 6: Data Import/Export ✅ HIGH PRIORITY COMPLETE
-**Priority TODOs:**
+### Agent 6: Data Import/Export ✅ HIGH PRIORITY COMPLETE + MEDIUM PRIORITY COMPLETE
+**High Priority TODOs:**
 - [✅] JSON/YAML parser for network data input
 - [✅] CSV import for bulk node creation
 - [✅] Nmap XML output parser
-- [ ] Nessus scan result integration
-- [✅] Export to GraphML/DOT format (basic implementation)
+- [✅] Export to GraphML/DOT format
+
+**Medium Priority TODOs:**
+- [✅] Nessus scan result integration
+- [✅] Complete GraphML/DOT export implementation
+- [✅] Python data conversion utility
 - [ ] Database connectivity for live network data
 - [ ] REST API for dynamic diagram generation
 

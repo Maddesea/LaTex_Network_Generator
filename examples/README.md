@@ -251,6 +251,150 @@ To validate your JSON files before importing:
 
 This will check for syntax errors and report any issues.
 
+## Utility Scripts
+
+### Network Data Converter (Python)
+
+**File:** `convert_network_data.py`
+
+A Python script to convert between different network data formats. Supports:
+- Nmap XML → JSON/YAML/CSV
+- Nessus XML → JSON/YAML/CSV
+- JSON ↔ YAML ↔ CSV
+
+**Usage:**
+```bash
+# Convert Nmap scan to JSON
+python convert_network_data.py nmap_scan.xml network.json
+
+# Convert JSON to YAML
+python convert_network_data.py network.json network.yaml
+
+# Convert Nessus scan to JSON
+python convert_network_data.py scan_results.nessus network.json
+
+# Convert JSON to CSV (creates nodes.csv and connections.csv)
+python convert_network_data.py network.json nodes.csv
+```
+
+**Requirements:**
+```bash
+# Optional: for YAML support
+pip install pyyaml
+```
+
+**Features:**
+- Automatic connection generation for imported scans
+- Preserves all network metadata
+- Handles vulnerability data from Nessus
+- Batch conversion support
+
+### Nessus Integration
+
+**File:** `example_nessus.nessus`
+
+Example Nessus vulnerability scan results showing:
+- Critical vulnerabilities (CVSS 9.0+)
+- High severity issues (CVSS 7.0-8.9)
+- Medium severity issues (CVSS 4.0-6.9)
+- CVE identifiers and descriptions
+
+**Usage in LaTeX:**
+```latex
+\importNessusXML{examples/example_nessus.nessus}
+```
+
+This will automatically:
+- Create nodes for all vulnerable hosts
+- Mark vulnerabilities with CVSS scores >= 7.0
+- Add threat badges (critical, high, medium, low)
+- Position nodes in grid layout
+
+## Demonstration Files
+
+### JSON Import Demo
+
+**File:** `json_import_demo.tex`
+
+A complete working example demonstrating JSON import:
+
+```bash
+# Compile with LuaLaTeX
+cd examples/
+lualatex json_import_demo.tex
+```
+
+This demo:
+- Imports network topology from `example_network.json`
+- Automatically renders all nodes and connections
+- Adds legend and metadata
+- Produces a complete network diagram
+
+## Advanced Features
+
+### Export to Other Tools
+
+Export your network diagrams to work with other visualization tools:
+
+```latex
+% Export to Gephi/Cytoscape (GraphML)
+\importJSON{examples/example_network.json}
+\exportToGraphML{output.graphml}{examples/example_network.json}
+
+% Export to GraphViz (DOT)
+\exportToDOT{output.dot}{examples/example_network.json}
+```
+
+Then visualize with:
+```bash
+# GraphViz
+dot -Tpng output.dot -o network.png
+
+# Or open in Gephi/Cytoscape for interactive exploration
+```
+
+### Batch Processing
+
+Process multiple network scans:
+
+```bash
+#!/bin/bash
+# Convert all Nmap scans to JSON
+for scan in scans/*.xml; do
+    python convert_network_data.py "$scan" "json/${scan%.xml}.json"
+done
+
+# Generate diagrams from all JSON files
+for json in json/*.json; do
+    basename=$(basename "$json" .json)
+    lualatex -jobname="$basename" "\input{json_import_demo.tex}"
+done
+```
+
+### Combining Multiple Data Sources
+
+Merge data from different sources:
+
+```latex
+\renewcommand{\renderNetworkNodes}{
+    % Load base topology from Nmap
+    \loadJSONNodes{nmap_data.json}
+
+    % Add manual nodes
+    \createFirewall{fw1}{192.168.1.1}{0}{8}{Main Firewall}
+}
+
+\renewcommand{\renderConnections}{
+    % Load connections from CSV
+    \importConnectionsFromCSV{examples/connections.csv}
+}
+
+\renewcommand{\renderThreats}{
+    % Load vulnerabilities from CSV
+    \importThreatsFromCSV{examples/threats.csv}
+}
+```
+
 ## Troubleshooting
 
 **Issue:** "JSON file not found"

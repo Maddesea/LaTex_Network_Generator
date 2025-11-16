@@ -1,0 +1,67 @@
+% json_import_demo.tex
+% Demonstration of JSON import functionality
+% Compile with: lualatex json_import_demo.tex
+
+\documentclass[tikz,border=10pt]{standalone}
+
+% Core packages for network diagrams
+\usepackage{tikz}
+\usepackage{ifthen}
+\usepackage{xcolor}
+\usepackage{calc}
+
+% TikZ libraries for advanced features
+\usetikzlibrary{
+    positioning,
+    shapes.geometric,
+    shapes.multipart,
+    arrows.meta,
+    decorations.pathmorphing,
+    decorations.markings,
+    backgrounds,
+    fit,
+    calc,
+    shadows.blur,
+    patterns,
+    fadings
+}
+
+% Input modular components
+\input{../styles_config}
+\input{../node_definitions}
+\input{../network_layout}
+\input{../connection_renderer}
+\input{../threat_indicators}
+\input{../data_import}
+
+\begin{document}
+    % Import network topology from JSON
+    \importJSON{example_network.json}
+
+    \begin{tikzpicture}[
+        scale=1.0,
+        transform shape,
+        font=\sffamily
+    ]
+        % Render the imported network
+        \renderNetworkNodes
+        \renderConnections
+
+        % Add legend
+        \node[legend box, anchor=south west] at (-6,-4) {
+            \small\bfseries Legend \\[2pt]
+            \begin{tabular}{ll}
+                \tikz\draw[normal conn] (0,0) -- (0.5,0); & Normal \\
+                \tikz\draw[encrypted conn] (0,0) -- (0.5,0); & Encrypted \\
+                \tikz\draw[attack conn] (0,0) -- (0.5,0); & Attack \\
+            \end{tabular}
+        };
+
+        % Add metadata
+        \node[font=\tiny, anchor=south east, text=black!60] at (8,-4) {
+            Generated from JSON \\
+            \today
+        };
+
+    \end{tikzpicture}
+\end{document}

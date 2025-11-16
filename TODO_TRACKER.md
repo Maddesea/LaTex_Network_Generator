@@ -321,17 +321,28 @@
   - ✅ Create connections based on discovered services
   - ✅ Import vulnerability scan results
 
-### Medium Priority
-- [ ] Nessus scan integration
-  - Parse .nessus files
-  - Extract vulnerabilities with CVSS
-  - Map to network topology
-  - Generate risk heatmap
+### Medium Priority ✅ PARTIALLY COMPLETE
+- [✅] Nessus scan integration
+  - ✅ Parse .nessus files
+  - ✅ Extract vulnerabilities with CVSS
+  - ✅ Map to network topology
+  - ✅ Auto-generate threat badges by severity
+  - ✅ Mark critical vulnerabilities (CVSS >= 7.0)
 
-- [ ] Export to GraphML/DOT format
-  - Enable import into Gephi, Cytoscape
-  - Export for further analysis
-  - Preserve node attributes
+- [✅] Export to GraphML/DOT format
+  - ✅ Full GraphML export implementation
+  - ✅ Complete DOT format export
+  - ✅ Preserve all node attributes
+  - ✅ Support for connection types and labels
+  - ✅ Compatible with Gephi, Cytoscape, GraphViz
+
+- [✅] Data conversion utilities
+  - ✅ Python script for format conversion
+  - ✅ Nmap XML → JSON/YAML/CSV
+  - ✅ Nessus XML → JSON/YAML/CSV
+  - ✅ Bidirectional JSON ↔ YAML ↔ CSV
+  - ✅ Automatic connection generation
+  - ✅ Batch processing support
 
 - [ ] Database connectivity
   - SQL queries to fetch network data
