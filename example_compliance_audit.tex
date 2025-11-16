@@ -1,0 +1,240 @@
+% Security Compliance Audit Dashboard Example
+% Demonstrates all compliance and security posture features
+%
+% Key Features Shown:
+% - NIST Cybersecurity Framework compliance
+% - CIS Controls v8 implementation
+% - PCI-DSS compliance status
+% - ISO 27001 scorecard
+% - SOC 2 compliance
+% - Multi-framework comparison
+% - Control effectiveness metrics
+% - Security coverage heatmap
+% - Defensive controls inventory
+% - Monitoring coverage analysis
+
+\documentclass[tikz,border=10pt]{standalone}
+\usepackage{tikz}
+\usepackage{xcolor}
+\usepackage{ifthen}
+\usepackage{colortbl}
+\usetikzlibrary{positioning,shapes.geometric,arrows.meta,shadows.blur,decorations.markings}
+
+\input{styles_config}
+\input{node_definitions}
+\input{network_layout}
+\input{connection_renderer}
+\input{threat_indicators}
+
+\begin{document}
+\begin{tikzpicture}[scale=0.9, transform shape, font=\sffamily]
+
+% ===== NETWORK INFRASTRUCTURE (PCI-DSS ENVIRONMENT) =====
+
+% Internet
+\createCloud{internet}{0}{10}{Internet}
+
+% Perimeter Security
+\createFirewall{fw_external}{0}{7}{External Firewall}
+\createServer{waf}{0}{5}{WAF}
+
+% Cardholder Data Environment (CDE)
+\createFirewall{fw_cde}{0}{3}{CDE Firewall}
+\createServer{payment_app}{-3}{0}{Payment Application}
+\createServer{card_database}{3}{0}{Cardholder Database}
+
+% Internal Management
+\createServer{siem}{-6}{0}{SIEM Server}
+\createServer{ids_sensor}{6}{0}{IDS/IPS}
+
+% Endpoints
+\createClient{admin_ws}{-3}{-3}{Admin Workstation}
+\createClient{auditor_ws}{3}{-3}{Auditor Workstation}
+
+% Backup and Recovery
+\createServer{backup}{0}{-6}{Encrypted Backup}
+
+% ===== CONNECTIONS =====
+\drawConnection{internet}{fw_external}{HTTPS}
+\drawConnection{fw_external}{waf}{Filtered}
+\drawConnection{waf}{fw_cde}{App Traffic}
+\drawEncryptedConnection{fw_cde}{payment_app}{TLS 1.3}
+\drawEncryptedConnection{payment_app}{card_database}{AES-256}
+\drawConnection{siem}{fw_external}{Log Collection}
+\drawConnection{siem}{fw_cde}{Log Collection}
+\drawConnection{ids_sensor}{fw_cde}{Monitoring}
+\drawConnection{admin_ws}{payment_app}{Management}
+\drawConnection{auditor_ws}{siem}{Audit Access}
+\drawBidirectional{card_database}{backup}{Encrypted Backup}
+
+% ===== SECURITY CONTROLS =====
+
+% Firewall Controls
+\markSecurityControl{fw_external}{Firewall}{active}
+\markSecurityControl{fw_cde}{Firewall}{active}
+
+% WAF Protection
+\markWAF{waf}{ModSecurity WAF}{1247}
+
+% IDS/IPS Monitoring
+\markIDS{ids_sensor}{Snort IDS}{8}
+
+% EDR Protection
+\markEDR{admin_ws}{CrowdStrike Falcon}{protected}
+\markEDR{auditor_ws}{CrowdStrike Falcon}{protected}
+
+% SIEM Integration
+\markSIEM{siem}{Splunk Enterprise}{12450}
+
+% Patch Management (All Current)
+\markPatchStatus{payment_app}{0}{2025-01-15}
+\markPatchStatus{card_database}{0}{2025-01-14}
+\markPatchStatus{waf}{0}{2025-01-13}
+
+% Backup Status
+\markBackupStatus{card_database}{2025-01-16}{current}
+\markBackupStatus{backup}{2025-01-16}{current}
+
+% Zero Trust Implementation
+\markZeroTrust{payment_app}{yes}
+\markZeroTrust{card_database}{yes}
+\markZeroTrust{admin_ws}{yes}
+
+% ===== NETWORK SEGMENTATION =====
+
+% Cardholder Data Environment Boundary
+\drawSegmentBoundary{-5}{-1}{9}{2}{Cardholder Data Environment (CDE)}
+
+% Management Network
+\drawSegmentBoundary{-5}{-4}{5}{-2}{Management Network}
+
+% ===== COMPLIANCE DASHBOARDS =====
+
+% NIST Cybersecurity Framework (5 Functions)
+% Parameters: x, y, Identify%, Protect%, Detect%, Respond%, Recover%
+\drawNISTCompliance{-15}{10}{92}{89}{85}{78}{88}
+
+% CIS Controls v8 Implementation
+% Parameters: x, y, IG1_implemented, IG2_implemented, IG3_implemented
+\drawCISCompliance{-15}{6}{18}{35}{15}
+
+% PCI-DSS v4.0 Compliance (12 Requirements)
+% Parameters: x, y, compliant_requirements_count
+\drawPCIDSSCompliance{-15}{2}{12}
+
+% ISO 27001 Scorecard
+\drawComplianceScorecard{-15}{-2}{ISO 27001}{95}{compliant}
+
+% SOC 2 Type II Scorecard
+\drawComplianceScorecard{-15}{-5}{SOC 2 Type II}{88}{partial}
+
+% Multi-Framework Comparison
+\drawComplianceComparison{10}{10}
+
+% Security Coverage Heatmap
+\drawCoverageHeatmap{10}{5}
+
+% ===== SECURITY METRICS =====
+
+% Security Metrics Dashboard
+% Parameters: x, y, critical_vulns, high_vulns, incidents_month, mean_time_to_detect
+\drawSecurityMetrics{10}{0}{0}{3}{2}{15}
+
+% Control Effectiveness (Individual Controls)
+\drawControlEffectiveness{10}{-4}{External Firewall}{95}
+
+% Monitoring Coverage
+\drawMonitoringCoverage{10}{-7}{98}
+
+% Defense Layers Visualization
+\drawDefenseLayers{-15}{-9}
+
+% Overall Security Posture
+\drawSecurityStatus{10}{-10}{91}
+
+% ===== AUDIT FINDINGS AND NOTES =====
+
+% Audit Header
+\node[font=\Large\bfseries, text=green!70!black] at (0,13) {COMPLIANCE AUDIT DASHBOARD - Q1 2025};
+\node[font=\small] at (0,12.3) {Demonstrating Multi-Framework Security Compliance Posture};
+
+% Findings Summary Box
+\node[draw=green!70!black, fill=green!10, rounded corners=3pt, inner sep=6pt,
+      text width=5cm, font=\tiny, anchor=north west] at (-15,-13) {
+    \textbf{AUDIT FINDINGS SUMMARY} \\
+    \textcolor{green!70!black}{\textbf{✓ STRENGTHS:}} \\
+    → PCI-DSS fully compliant (12/12) \\
+    → ISO 27001 at 95\% compliance \\
+    → Zero critical vulnerabilities \\
+    → 98\% monitoring coverage \\
+    → All systems patched current \\
+    → Zero Trust architecture \\
+    → Encrypted backups current \\
+    \\
+    \textcolor{orange}{\textbf{⚠ AREAS FOR IMPROVEMENT:}} \\
+    → SOC 2 at 88\% (needs improvement) \\
+    → Respond function at 78\% (NIST) \\
+    → 3 high-severity findings open \\
+    → MTTR should be under 1 hour \\
+    \\
+    \textcolor{blue}{\textbf{RECOMMENDATIONS:}} \\
+    → Enhance incident response playbooks \\
+    → Implement automated remediation \\
+    → Close SOC 2 control gaps \\
+    → Reduce detection/response times
+};
+
+% Compliance Status Box
+\node[draw=blue, fill=blue!10, rounded corners=3pt, inner sep=5pt,
+      text width=4.5cm, font=\tiny, anchor=north east] at (15,-13) {
+    \textbf{FRAMEWORK STATUS} \\
+    \hline
+    \\
+    \textbf{PCI-DSS v4.0:} \textcolor{green!70!black}{COMPLIANT} \\
+    Requirements: 12/12 \\
+    Last Audit: 2024-12-15 \\
+    Next Audit: 2025-12-15 \\
+    \\
+    \textbf{ISO 27001:2022:} \textcolor{green!70!black}{COMPLIANT} \\
+    Controls: 95/100 \\
+    Certification: Valid \\
+    Renewal: 2026-06-30 \\
+    \\
+    \textbf{SOC 2 Type II:} \textcolor{orange}{PARTIAL} \\
+    Trust Criteria: 88\% \\
+    Gaps: 3 controls \\
+    Remediation: In Progress \\
+    \\
+    \textbf{NIST CSF:} \textcolor{green!70!black}{MATURE} \\
+    Overall: 86.4\% \\
+    Maturity Level: 4/5 \\
+    \\
+    \textbf{CIS Controls v8:} \\
+    IG1: 18/18 \textcolor{green!70!black}{✓} \\
+    IG2: 35/35 \textcolor{green!70!black}{✓} \\
+    IG3: 15/20 \textcolor{orange}{⚠}
+};
+
+% Legend
+\node[legend box, anchor=south] at (0,-15) {
+    \begin{tabular}{ll}
+        \multicolumn{2}{c}{\textbf{Legend}} \\
+        \hline
+        \textcolor{green!70!black}{Green} & Compliant/Strong \\
+        \textcolor{orange}{Orange} & Needs Improvement \\
+        \textcolor{blue}{Blue Box} & Segmentation Boundary \\
+        \textcolor{green!70!black}{Shield} & Security Control Active \\
+    \end{tabular}
+};
+
+% Auditor Signature Block
+\node[draw=black, thick, rounded corners=2pt, inner sep=4pt,
+      font=\tiny, anchor=south east] at (15,-15.5) {
+    \textbf{Audit Date:} 2025-01-16 \\
+    \textbf{Lead Auditor:} J. Smith, CISSP \\
+    \textbf{Status:} APPROVED \\
+    \textbf{Next Review:} 2025-04-16
+};
+
+\end{tikzpicture}
+\end{document}

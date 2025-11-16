@@ -1,0 +1,221 @@
+% Ransomware Attack Scenario - WannaCry-style Outbreak
+% Demonstrates infection spread, kill chain, and incident response
+%
+% Key Features Shown:
+% - Ransomware scenario helper
+% - Infection spread visualization
+% - Multi-stage attack chain
+% - Kill chain progression
+% - Incident response status
+% - EDR protection (protected vs unprotected)
+% - Patch status (vulnerable systems)
+% - Backup status (recovery options)
+% - Risk prioritization
+% - CVSS scoring for SMB vulnerability
+
+\documentclass[tikz,border=10pt]{standalone}
+\usepackage{tikz}
+\usepackage{xcolor}
+\usepackage{ifthen}
+\usepackage{colortbl}
+\usetikzlibrary{positioning,shapes.geometric,arrows.meta,shadows.blur,decorations.markings}
+
+\input{styles_config}
+\input{node_definitions}
+\input{network_layout}
+\input{connection_renderer}
+\input{threat_indicators}
+
+\begin{document}
+\begin{tikzpicture}[scale=0.85, transform shape, font=\sffamily]
+
+% ===== NETWORK TOPOLOGY =====
+
+% Internet Gateway
+\createCloud{internet}{0}{12}{Internet}
+\createAttacker{ransomware_actor}{-6}{12}{Ransomware Gang}
+
+% Perimeter
+\createFirewall{fw1}{0}{9}{Edge Firewall}
+
+% Internal Network - Corporate
+\createRouter{router1}{0}{6}{Core Router}
+
+% Workstations - Some infected, some protected
+\createClient{pc_patient_zero}{-6}{3}{Patient Zero}
+\createClient{pc_accounting1}{-3}{3}{Accounting PC}
+\createClient{pc_hr1}{0}{3}{HR Workstation}
+\createClient{pc_it1}{3}{3}{IT Admin PC}
+\createClient{pc_exec1}{6}{3}{Executive Laptop}
+
+% Servers
+\createServer{file_server}{-4}{0}{File Server}
+\createServer{email_server}{0}{0}{Email Server}
+\createServer{database}{4}{0}{Database Server}
+
+% Backup
+\createServer{backup_server}{8}{0}{Backup Server}
+
+% ===== CONNECTIONS =====
+
+% Normal network flow
+\drawConnection{internet}{fw1}{HTTPS}
+\drawConnection{fw1}{router1}{Filtered}
+\drawConnection{router1}{pc_patient_zero}{SMB}
+\drawConnection{router1}{pc_accounting1}{SMB}
+\drawConnection{router1}{pc_hr1}{SMB}
+\drawConnection{router1}{pc_it1}{SMB}
+\drawConnection{router1}{pc_exec1}{SMB}
+\drawConnection{router1}{file_server}{SMB}
+\drawConnection{router1}{email_server}{SMTP}
+\drawConnection{router1}{database}{SQL}
+\drawBidirectional{file_server}{backup_server}{Replication}
+
+% Attack vector - email to patient zero
+\drawAttackConnection{ransomware_actor}{email_server}{Phishing Email}
+\drawAttackConnection{email_server}{pc_patient_zero}{Malicious Attachment}
+
+% Lateral movement via SMB (infection spread)
+\drawSuspiciousConnection{pc_patient_zero}{pc_accounting1}{SMB EternalBlue}
+\drawSuspiciousConnection{pc_patient_zero}{pc_hr1}{SMB EternalBlue}
+\drawSuspiciousConnection{pc_patient_zero}{file_server}{SMB EternalBlue}
+\drawAttackConnection{pc_accounting1}{database}{Credential Theft}
+
+% ===== THREAT INTELLIGENCE =====
+
+% SMB Vulnerability (EternalBlue)
+\markVulnerabilityCVSS{pc_patient_zero}{CVE-2017-0144}{9.3}{9.3}{9.5}
+\cvssBadge{pc_accounting1}{9.3}
+\cvssBadge{pc_hr1}{9.3}
+\cvssBadge{file_server}{8.5}
+
+% MITRE ATT&CK Techniques
+\attackTechnique{email_server}{initial-access}{T1566.001}{Spearphishing Attachment}
+\attackTechnique{pc_patient_zero}{execution}{T1204}{User Execution}
+\attackTechnique{pc_accounting1}{lateral-movement}{T1210}{Exploitation Remote Services}
+\attackTechnique{file_server}{impact}{T1486}{Data Encrypted for Impact}
+
+% Malware Indicators
+\visualizeMalware{pc_patient_zero}{WannaCry Ransomware}
+\visualizeMalware{pc_accounting1}{WannaCry Ransomware}
+\visualizeMalware{pc_hr1}{WannaCry Ransomware}
+\visualizeMalware{file_server}{WannaCry Ransomware}
+
+% File Hash IOCs
+\markFileHashIOC{pc_patient_zero}{SHA256}{ed01ebfbc9eb5bbea...}{WannaCry}
+
+% C2 Communication
+\markC2Server{ransomware_actor}{ransompay[.]onion}{WannaCry C2}
+
+% ===== DEFENSIVE CONTROLS =====
+
+% Protected systems (EDR deployed)
+\markEDR{pc_it1}{CrowdStrike}{protected}
+\markEDR{pc_exec1}{Sentinel One}{protected}
+
+% Unpatched systems
+\markPatchStatus{pc_patient_zero}{45}{2017-03-01}
+\markPatchStatus{pc_accounting1}{38}{2017-03-15}
+\markPatchStatus{pc_hr1}{42}{2017-03-10}
+\markPatchStatus{file_server}{25}{2017-04-01}
+
+% Current patches (protected)
+\markPatchStatus{pc_it1}{0}{2025-01-15}
+\markPatchStatus{pc_exec1}{0}{2025-01-14}
+
+% Backup status
+\markBackupStatus{file_server}{2025-01-15}{current}
+\markBackupStatus{database}{2025-01-15}{current}
+\markBackupStatus{backup_server}{2025-01-15}{current}
+
+% Firewall (not blocking SMB internally)
+\markSecurityControl{fw1}{Firewall}{active}
+
+% ===== DASHBOARDS AND SUMMARIES =====
+
+% Kill Chain - Stage 6 (Command and Control)
+\drawKillChain{-12}{-6}{6}
+
+% Ransomware Scenario Helper
+\scenarioRansomware{pc_patient_zero}{pc_accounting1,pc_hr1,file_server}{3 BTC (\$50,000)}
+
+% Incident Response Status
+\drawIncidentStatus{-12}{10}{INC-2025-WCry}{containment}{Critical}
+
+% Attack Timeline
+\drawAttackTimeline{10}{10}
+
+% Infection Spread Visualization
+\drawInfectionSpread{pc_patient_zero}{pc_accounting1,pc_hr1,file_server}
+
+% Risk Prioritization Dashboard
+% Parameters: critical, high, medium, low counts
+\drawRiskPriority{10}{6}{4}{3}{2}{1}
+
+% Security Status (compromised)
+\drawSecurityStatus{10}{2}{45}
+
+% Risk Matrix
+\drawRiskMatrix{-12}{2}
+
+% Attack Chain
+\drawAttackChain{email_server}{pc_patient_zero}{pc_accounting1}{file_server}
+
+% Threat Actor Profile
+\drawThreatActorProfile{-12}{-10}{WannaCry Gang}{75}{Global Outbreak}{Financial}
+
+% Defense Layers (partially effective)
+\drawDefenseLayers{10}{-3}
+
+% ===== NETWORK SEGMENTATION (MISSING) =====
+% Draw what SHOULD have been in place
+\node[draw=orange, dashed, very thick, rounded corners=5pt,
+      fill=orange!5, inner sep=10pt,
+      anchor=south west] at (-7,2) [minimum width=9cm, minimum height=2.5cm] {};
+\node[font=\small\bfseries, text=orange] at (-2.5,5.2) {SHOULD BE SEGMENTED};
+
+% ===== ANNOTATIONS =====
+
+% Title
+\node[font=\Large\bfseries, text=red] at (0,15) {RANSOMWARE OUTBREAK: WannaCry-Style SMB Worm};
+\node[font=\small] at (0,14.3) {Demonstrating Infection Spread, Kill Chain, and Incident Response};
+
+% Lessons Learned Box
+\node[draw=blue, fill=blue!10, rounded corners=3pt, inner sep=5pt,
+      text width=4.5cm, font=\tiny, anchor=north west] at (-12,-14) {
+    \textbf{Lessons Learned:} \\
+    ✗ Critical patch missing (MS17-010) \\
+    ✗ SMB open between workstations \\
+    ✗ No network segmentation \\
+    ✓ Backups available for recovery \\
+    ✓ EDR protected some systems \\
+    \\
+    \textbf{Recommendations:} \\
+    → Emergency patch deployment \\
+    → Network segmentation (VLANs) \\
+    → Disable SMBv1 protocol \\
+    → Universal EDR deployment
+};
+
+% Legend
+\node[legend box, anchor=south west] at (4,-14.5) {
+    \begin{tabular}{ll}
+        \multicolumn{2}{c}{\textbf{Legend}} \\
+        \hline
+        \textcolor{red}{Skull Icon} & Infected Systems \\
+        \textcolor{green!70!black}{Shield} & EDR Protected \\
+        \textcolor{orange}{Dashed Box} & Missing Segmentation \\
+        \textcolor{red}{Red Lines} & Attack Path \\
+    \end{tabular}
+};
+
+% Recovery Status
+\node[draw=green!70!black, fill=green!20, rounded corners=3pt,
+      inner sep=4pt, font=\small\bfseries, anchor=south east] at (12,-14) {
+    \textcolor{green!70!black}{RECOVERY POSSIBLE} \\
+    \tiny Backups current as of 2025-01-15 \\
+    \tiny Estimated RTO: 4-8 hours
+};
+
+\end{tikzpicture}
+\end{document}

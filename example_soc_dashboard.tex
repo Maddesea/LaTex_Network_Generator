@@ -1,0 +1,308 @@
+% SOC (Security Operations Center) Monitoring Dashboard
+% Demonstrates real-time threat detection and monitoring features
+%
+% Key Features Shown:
+% - SIEM integration and event correlation
+% - IDS/IPS alert monitoring
+% - EDR endpoint protection status
+% - IOC dashboard with threat feeds
+% - Security status and posture
+% - Incident tracking and response
+% - Attack timeline visualization
+% - Risk prioritization matrix
+% - Defense layers monitoring
+% - Monitoring coverage analysis
+% - Threat intelligence summary
+% - Control effectiveness metrics
+
+\documentclass[tikz,border=10pt]{standalone}
+\usepackage{tikz}
+\usepackage{xcolor}
+\usepackage{ifthen}
+\usepackage{colortbl}
+\usetikzlibrary{positioning,shapes.geometric,arrows.meta,shadows.blur,decorations.markings}
+
+\input{styles_config}
+\input{node_definitions}
+\input{network_layout}
+\input{connection_renderer}
+\input{threat_indicators}
+
+\begin{document}
+\begin{tikzpicture}[scale=0.8, transform shape, font=\sffamily]
+
+% ===== MONITORED INFRASTRUCTURE =====
+
+% External
+\createCloud{internet}{0}{10}{Internet}
+\createAttacker{threat1}{-8}{10}{Threat Actor 1}
+\createAttacker{threat2}{8}{10}{Threat Actor 2}
+
+% Perimeter
+\createFirewall{fw_perimeter}{0}{7}{Perimeter Firewall}
+\createServer{waf}{-4}{7}{WAF}
+\createServer{ids}{4}{7}{IDS/IPS Sensor}
+
+% DMZ
+\createServer{web1}{-4}{4}{Web Server}
+\createServer{mail1}{0}{4}{Mail Server}
+\createServer{dns1}{4}{4}{DNS Server}
+
+% Internal Network
+\createRouter{core_router}{0}{1}{Core Router}
+\createServer{app1}{-6}{-2}{Application Server}
+\createServer{db1}{-2}{-2}{Database}
+\createServer{file1}{2}{-2}{File Server}
+\createServer{dc1}{6}{-2}{Domain Controller}
+
+% Endpoints (Mixed protection status)
+\createClient{ws1}{-6}{-5}{Workstation 1}
+\createClient{ws2}{-2}{-5}{Workstation 2}
+\createClient{ws3}{2}{-5}{Workstation 3}
+\createClient{ws4}{6}{-5}{Admin Workstation}
+
+% Security Infrastructure
+\createServer{siem_server}{-10}{1}{SIEM Platform}
+\createServer{threat_intel}{10}{1}{Threat Intel Feed}
+
+% ===== CONNECTIONS =====
+
+% Internet to perimeter
+\drawConnection{internet}{fw_perimeter}{Internet Traffic}
+\drawConnection{fw_perimeter}{waf}{HTTP/HTTPS}
+\drawConnection{fw_perimeter}{mail1}{SMTP}
+\drawConnection{fw_perimeter}{dns1}{DNS}
+
+% DMZ to internal
+\drawConnection{waf}{web1}{Filtered}
+\drawConnection{web1}{core_router}{Internal API}
+\drawConnection{mail1}{core_router}{Mail Routing}
+\drawConnection{dns1}{core_router}{DNS Queries}
+\drawConnection{core_router}{app1}{App Traffic}
+\drawConnection{core_router}{db1}{Database}
+\drawConnection{core_router}{file1}{File Access}
+\drawConnection{core_router}{dc1}{Auth Traffic}
+
+% Endpoint connections
+\drawConnection{ws1}{core_router}{User Traffic}
+\drawConnection{ws2}{core_router}{User Traffic}
+\drawConnection{ws3}{core_router}{User Traffic}
+\drawConnection{ws4}{core_router}{Admin Traffic}
+
+% Attack traffic (detected)
+\drawAttackConnection{threat1}{fw_perimeter}{Port Scan}
+\drawSuspiciousConnection{threat2}{dns1}{DNS Tunneling}
+\drawSuspiciousConnection{ws2}{db1}{Unusual Query}
+
+% SIEM log collection (monitoring)
+\drawConnection{siem_server}{fw_perimeter}{Log Feed}
+\drawConnection{siem_server}{waf}{Log Feed}
+\drawConnection{siem_server}{ids}{Alert Feed}
+\drawConnection{siem_server}{web1}{Log Feed}
+\drawConnection{siem_server}{mail1}{Log Feed}
+\drawConnection{siem_server}{core_router}{NetFlow}
+\drawConnection{siem_server}{dc1}{Security Logs}
+
+% Threat intelligence feeds
+\drawEncryptedConnection{threat_intel}{siem_server}{TI Feed}
+
+% ===== SECURITY CONTROLS & STATUS =====
+
+% Perimeter Security
+\markSecurityControl{fw_perimeter}{Firewall}{active}
+\markWAF{waf}{ModSecurity}{1247}
+\markIDS{ids}{Suricata}{23}
+
+% Server Vulnerabilities (Some detected)
+\cvssBadge{web1}{7.5}
+\cvssBadge{mail1}{5.3}
+
+% EDR Protection Status
+\markEDR{ws1}{Defender ATP}{protected}
+\markEDR{ws2}{NONE}{vulnerable}
+\markEDR{ws3}{CrowdStrike}{protected}
+\markEDR{ws4}{CrowdStrike}{protected}
+\markEDR{app1}{Defender ATP}{protected}
+\markEDR{db1}{Defender ATP}{protected}
+
+% Patch Status
+\markPatchStatus{web1}{5}{2025-01-10}
+\markPatchStatus{mail1}{2}{2025-01-14}
+\markPatchStatus{ws2}{12}{2024-12-01}
+\markPatchStatus{ws4}{0}{2025-01-15}
+
+% SIEM Integration
+\markSIEM{siem_server}{Splunk Enterprise}{45890}
+
+% Backup Status
+\markBackupStatus{db1}{2025-01-16}{current}
+\markBackupStatus{file1}{2025-01-16}{current}
+
+% Zero Trust (Partial deployment)
+\markZeroTrust{ws4}{yes}
+\markZeroTrust{dc1}{yes}
+
+% Honeypot (Early warning)
+\createServer{honeypot}{-8}{4}{Honeypot}
+\markHoneypot{honeypot}{SSH Honeypot}
+\drawSuspiciousConnection{threat1}{honeypot}{Scanning}
+
+% ===== IOCs DETECTED =====
+
+% Malicious IPs detected
+\markMaliciousIP{threat1}{185.220.101.42}{Russia}{88}
+\markMaliciousIP{threat2}{192.0.2.123}{Unknown}{65}
+
+% C2 Communication attempt
+\markC2Server{threat2}{c2.malicious-domain[.]com}{Unknown APT}
+
+% File hash detected
+\markFileHashIOC{ws2}{SHA256}{d4e5f6a7b8c9...}{Suspected Trojan}
+
+% ===== MITRE ATT&CK DETECTIONS =====
+
+\attackTechnique{fw_perimeter}{reconnaissance}{T1595}{Active Scanning}
+\attackTechnique{dns1}{command-and-control}{T1071.004}{DNS C2}
+\attackTechnique{ws2}{execution}{T1059}{Command Execution}
+
+% ===== DASHBOARDS (SOC ANALYST VIEW) =====
+
+% IOC Dashboard (Top left)
+\drawIOCDashboard{-18}{10}
+
+% Security Status (Current posture)
+\drawSecurityStatus{-18}{6}{78}
+
+% Incident Tracking
+\drawIncidentStatus{-18}{2}{INC-2025-0156}{investigating}{High}
+\drawIncidentStatus{-18}{-1}{INC-2025-0157}{investigating}{Medium}
+\drawIncidentStatus{-18}{-4}{INC-2025-0158}{resolved}{Low}
+
+% Threat Intelligence Summary
+\drawThreatSummary{-18}{-8}
+
+% Risk Prioritization
+% Parameters: x, y, critical, high, medium, low
+\drawRiskPriority{14}{10}{2}{5}{12}{28}
+
+% Attack Timeline (Recent activity)
+\drawAttackTimeline{14}{6}
+
+% Risk Matrix
+\drawRiskMatrix{14}{2}
+
+% Defense Layers Status
+\drawDefenseLayers{14}{-3}
+
+% Monitoring Coverage
+\drawMonitoringCoverage{14}{-7}{92}
+
+% Security Metrics
+% Parameters: x, y, critical_vulns, high_vulns, incidents_this_month, mttr_minutes
+\drawSecurityMetrics{14}{-10}{2}{5}{18}{22}
+
+% ===== NETWORK SEGMENTATION =====
+\drawSegmentBoundary{-5}{3}{10}{5}{DMZ - Monitored Zone}
+\drawSegmentBoundary{-7}{-6}{14}{3}{Internal Network - Protected}
+
+% ===== ANNOTATIONS =====
+
+% SOC Header
+\node[font=\Large\bfseries, text=blue] at (0,13) {SOC MONITORING DASHBOARD - REAL-TIME VIEW};
+\node[font=\small] at (0,12.3) {Active Threats: 2 | Open Incidents: 2 | Events/sec: 1,247 | Last Update: 2025-01-16 14:23:15 UTC};
+
+% Alert Summary Box
+\node[draw=red, fill=red!10, rounded corners=3pt, inner sep=5pt,
+      text width=5.2cm, font=\tiny, anchor=north west] at (-18,-12) {
+    \textbf{🚨 ACTIVE ALERTS (Last 1 Hour)} \\
+    \hline
+    \\
+    \textcolor{red}{\textbf{HIGH:}} Port scan from 185.220.101.42 \\
+    Source: IDS/IPS | Time: 14:15 UTC \\
+    Action: Blocked by firewall \\
+    \\
+    \textcolor{orange}{\textbf{MEDIUM:}} DNS tunneling detected \\
+    Source: SIEM correlation | Time: 14:08 UTC \\
+    Host: DNS Server (dns1) \\
+    \\
+    \textcolor{orange}{\textbf{MEDIUM:}} Unpatched endpoint detected \\
+    Source: Vulnerability scan | Time: 13:45 UTC \\
+    Host: Workstation 2 (ws2) \\
+    \\
+    \textcolor{blue}{\textbf{INFO:}} Honeypot interaction \\
+    Source: Honeypot logs | Time: 14:02 UTC \\
+    Attacker profiling in progress
+};
+
+% Detection Coverage Box
+\node[draw=green!70!black, fill=green!10, rounded corners=3pt, inner sep=5pt,
+      text width=4.8cm, font=\tiny, anchor=north] at (0,-14.5) {
+    \textbf{✓ DETECTION COVERAGE} \\
+    \hline
+    \\
+    \textbf{Network:} 92\% monitored \\
+    → Perimeter: Full coverage \\
+    → Internal: 87\% coverage \\
+    → Endpoints: 75\% EDR deployed \\
+    \\
+    \textbf{Log Sources:} \\
+    → Firewall: ✓ (45.8K events/hr) \\
+    → IDS/IPS: ✓ (23 alerts/hr) \\
+    → SIEM: ✓ (1.2M events/hr) \\
+    → Endpoints: Partial (3/4) \\
+    → Threat Intel: ✓ (Real-time) \\
+    \\
+    \textbf{Mean Time to Detect:} 22 min \\
+    \textbf{Mean Time to Respond:} 1.5 hrs \\
+    \textbf{False Positive Rate:} 8\%
+};
+
+% Analyst Notes
+\node[draw=blue, fill=blue!10, rounded corners=3pt, inner sep=5pt,
+      text width=4.5cm, font=\tiny, anchor=north east] at (18,-12) {
+    \textbf{📋 ANALYST NOTES} \\
+    \hline
+    \\
+    \textbf{2025-01-16 14:23 - J.Smith:} \\
+    Investigating DNS tunneling on dns1. \\
+    PCAP captured for analysis. \\
+    Threat intel correlation in progress. \\
+    \\
+    \textbf{2025-01-16 14:18 - M.Jones:} \\
+    Port scan blocked automatically. \\
+    IP added to threat feed. \\
+    No further action needed. \\
+    \\
+    \textbf{2025-01-16 13:50 - A.Lee:} \\
+    ws2 critically unpatched (12 days). \\
+    Emergency patch requested. \\
+    Isolated from network. \\
+    \\
+    \textbf{NEXT ACTIONS:} \\
+    → Complete DNS tunneling investigation \\
+    → Deploy EDR to ws2 immediately \\
+    → Review firewall rule effectiveness \\
+    → Update threat intel feeds
+};
+
+% Legend
+\node[legend box, anchor=south west] at (-18,-16) {
+    \begin{tabular}{ll}
+        \multicolumn{2}{c}{\textbf{Legend}} \\
+        \hline
+        \textcolor{red}{Red Lines} & Attack Traffic \\
+        \textcolor{orange}{Orange} & Suspicious Activity \\
+        \textcolor{green!70!black}{Shield} & EDR Protected \\
+        \textcolor{blue}{Blue Box} & Monitored Segment \\
+    \end{tabular}
+};
+
+% System Status
+\node[draw=green!70!black, fill=green!20, rounded corners=2pt,
+      inner sep=3pt, font=\tiny\bfseries, anchor=south east] at (18,-16) {
+    \textcolor{green!70!black}{SOC OPERATIONAL} \\
+    \tiny Analysts: 3 active | Queue: 12 items
+};
+
+\end{tikzpicture}
+\end{document}
