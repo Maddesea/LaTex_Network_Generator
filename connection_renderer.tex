@@ -134,10 +134,145 @@
 % Connection with protocol and port information
 % Usage: \drawConnectionWithPort{from}{to}{protocol}{port}{label}
 \newcommand{\drawConnectionWithPort}[5]{
-    \draw[normal conn] (#1) -- 
-        node[above, font=\tiny\ttfamily] {#5} 
-        node[below, port label] {#3:#4} 
+    \draw[normal conn] (#1) --
+        node[above, font=\tiny\ttfamily] {#5}
+        node[below, port label] {#3:#4}
         (#2);
+}
+
+% Enhanced bandwidth visualization with log scale
+% Usage: \drawConnectionWithBandwidthLog{from}{to}{bandwidth_mbps}{label}
+\newcommand{\drawConnectionWithBandwidthLog}[4]{
+    % Log scale mapping: 1 Mbps -> 1pt, 10 Mbps -> 1.5pt, 100 Mbps -> 2pt, 1000 Mbps -> 2.5pt
+    \pgfmathsetmacro{\logbw}{1 + 0.5*log10(#3)}
+    \pgfmathsetmacro{\bwlinewidth}{max(0.5, min(4, \logbw))}
+
+    \draw[draw=connNormal, line width=\bwlinewidth pt, -{Stealth[length=3mm]}]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny] {#4}
+        node[midway, below, font=\tiny\ttfamily, fill=white, inner sep=1pt] {#3 Mbps};
+}
+
+% Bandwidth with utilization percentage and color coding
+% Usage: \drawConnectionWithUtilization{from}{to}{current_mbps}{max_mbps}{label}
+\newcommand{\drawConnectionWithUtilization}[5]{
+    % Calculate utilization percentage
+    \pgfmathsetmacro{\utilpercent}{(#3/#4) * 100}
+
+    % Color code by utilization: green < 50%, yellow < 80%, red >= 80%
+    \pgfmathsetmacro{\utilizcolor}{ifthenelse(\utilpercent<50,0,ifthenelse(\utilpercent<80,1,2))}
+
+    \ifnum\utilizcolor=0
+        \def\bwcolor{clientGreen}
+    \else\ifnum\utilizcolor=1
+        \def\bwcolor{threatMedium}
+    \else
+        \def\bwcolor{threatCritical}
+    \fi\fi
+
+    % Line width based on current bandwidth
+    \pgfmathsetmacro{\utillinewidth}{1 + (#3/1000)}
+
+    \draw[draw=\bwcolor, line width=\utillinewidth pt, -{Stealth[length=3mm]}]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny] {#4}
+        node[midway, below, font=\tiny\ttfamily, fill=white, inner sep=1pt] {
+            \pgfmathprintnumber[precision=1]{\utilpercent}\% (#3/#4 Mbps)
+        };
+}
+
+% Connection with congestion indicator
+% Usage: \drawConnectionWithCongestion{from}{to}{congestion_level}{label}
+% Congestion levels: none, low, medium, high, critical
+\newcommand{\drawConnectionWithCongestion}[4]{
+    \ifthenelse{\equal{#3}{none}}{
+        \def\congcolor{clientGreen}
+        \def\conglabel{Normal}
+        \def\congwidth{1pt}
+    }{
+    \ifthenelse{\equal{#3}{low}}{
+        \def\congcolor{threatLow}
+        \def\conglabel{Low Congestion}
+        \def\congwidth{1.5pt}
+    }{
+    \ifthenelse{\equal{#3}{medium}}{
+        \def\congcolor{threatMedium}
+        \def\conglabel{Congestion}
+        \def\congwidth{2pt}
+    }{
+    \ifthenelse{\equal{#3}{high}}{
+        \def\congcolor{threatHigh}
+        \def\conglabel{High Congestion}
+        \def\congwidth{2.5pt}
+    }{
+        \def\congcolor{threatCritical}
+        \def\conglabel{SEVERE}
+        \def\congwidth{3pt}
+    }}}}
+
+    \draw[draw=\congcolor, line width=\congwidth, -{Stealth[length=3mm]}]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny] {#4}
+        node[midway, below, font=\tiny\bfseries, fill=\congcolor!20, inner sep=2pt] {\conglabel};
+}
+
+% Multi-protocol connection with stacked labels
+% Usage: \drawMultiProtocolConnection{from}{to}{protocol_list}{label}
+% Example: \drawMultiProtocolConnection{srv1}{pc1}{HTTP,HTTPS,SSH}{Web Services}
+\newcommand{\drawMultiProtocolConnection}[4]{
+    \draw[normal conn, line width=1.5pt] (#1) -- (#2)
+        node[midway, above, font=\tiny] {#4}
+        node[midway, below, font=\tiny\ttfamily, fill=white, inner sep=2pt, align=center] {#3};
+}
+
+% Protocol-specific styled connections
+% Usage: \drawHTTPConnection{from}{to}{label}
+\newcommand{\drawHTTPConnection}[3]{
+    \draw[draw=serverBlue, line width=1pt, -{Stealth[length=3mm]}]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny] {#3}
+        node[midway, below, font=\tiny\ttfamily, fill=serverBlue!20, inner sep=1pt] {HTTP:80};
+}
+
+% Usage: \drawHTTPSConnection{from}{to}{label}
+\newcommand{\drawHTTPSConnection}[3]{
+    \draw[draw=connEncrypted, line width=1.5pt, -{Stealth[length=3mm]}]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny] {#3}
+        node[midway, below, font=\tiny\ttfamily, fill=connEncrypted!20, inner sep=1pt] {HTTPS:443};
+}
+
+% Usage: \drawSSHConnection{from}{to}{label}
+\newcommand{\drawSSHConnection}[3]{
+    \draw[draw=connEncrypted, line width=1.5pt, dashed, -{Stealth[length=3mm]}]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny] {#3}
+        node[midway, below, font=\tiny\ttfamily, fill=connEncrypted!20, inner sep=1pt] {SSH:22};
+}
+
+% Usage: \drawDNSConnection{from}{to}{label}
+\newcommand{\drawDNSConnection}[3]{
+    \draw[draw=dnsBlue, line width=1pt, -{Stealth[length=3mm]}]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny] {#3}
+        node[midway, below, font=\tiny\ttfamily, fill=dnsBlue!20, inner sep=1pt] {DNS:53};
+}
+
+% Usage: \drawSQLConnection{from}{to}{label}
+\newcommand{\drawSQLConnection}[3]{
+    \draw[draw=databaseTeal, line width=1.5pt, -{Stealth[length=3mm]}]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny] {#3}
+        node[midway, below, font=\tiny\ttfamily, fill=databaseTeal!20, inner sep=1pt] {SQL:3306};
+}
+
+% Connection with custom port and protocol
+% Usage: \drawCustomProtocolConnection{from}{to}{protocol}{port}{color}{label}
+\newcommand{\drawCustomProtocolConnection}[6]{
+    \draw[draw=#5, line width=1.5pt, -{Stealth[length=3mm]}]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny] {#6}
+        node[midway, below, font=\tiny\ttfamily, fill=#5!20, inner sep=1pt] {#3:#4};
 }
 
 % Curved connection (for avoiding overlaps)
@@ -147,12 +282,110 @@
         node[above, font=\tiny] {#4} (#2);
 }
 
-% TODO: Advanced rendering features
-% - Automatic path finding to avoid node overlaps
-% - Bezier curve connections for organic look
-% - Multi-segment paths through waypoints
-% - Connection bundling for high-density areas
-% - Edge routing algorithms (orthogonal, polyline)
+% ============================================================================
+% ADVANCED CONNECTION ROUTING
+% ============================================================================
+
+% Bezier curve connection (smooth curves)
+% Usage: \drawBezierConnection{from}{to}{control1_x}{control1_y}{control2_x}{control2_y}{label}
+\newcommand{\drawBezierConnection}[7]{
+    \draw[normal conn] (#1) .. controls (#3,#4) and (#5,#6) .. (#2)
+        node[midway, above, font=\tiny] {#7};
+}
+
+% Auto-curved connection (avoids obstacles)
+% Usage: \drawSmartConnection{from}{to}{avoid_node}{label}
+\newcommand{\drawSmartConnection}[4]{
+    % Calculate midpoint offset away from obstacle
+    \path (#1) -- (#2) coordinate[midway] (connmid);
+    \path (connmid) -- (#3) coordinate[pos=1.5] (offset);
+
+    \draw[normal conn] (#1) .. controls (offset) .. (#2)
+        node[midway, above, font=\tiny] {#4};
+}
+
+% Orthogonal connection (right angles only)
+% Usage: \drawOrthogonalConnection{from}{to}{via_point}{label}
+\newcommand{\drawOrthogonalConnection}[4]{
+    \draw[normal conn] (#1) |- (#3) -| (#2)
+        node[near end, above, font=\tiny] {#4};
+}
+
+% Alternative orthogonal routing
+% Usage: \drawOrthogonalHV{from}{to}{label}
+\newcommand{\drawOrthogonalHV}[3]{
+    \draw[normal conn] (#1) -| (#2)
+        node[near end, above, font=\tiny] {#3};
+}
+
+% Alternative orthogonal routing (vertical first)
+% Usage: \drawOrthogonalVH{from}{to}{label}
+\newcommand{\drawOrthogonalVH}[3]{
+    \draw[normal conn] (#1) |- (#2)
+        node[near end, above, font=\tiny] {#3};
+}
+
+% Multi-segment path through waypoints
+% Usage: \drawPathThroughWaypoints{from}{waypoint_list}{to}{label}
+% Example: \drawPathThroughWaypoints{srv1}{(2,3) (4,5) (6,4)}{pc1}{Route}
+\newcommand{\drawPathThroughWaypoints}[4]{
+    \draw[normal conn] (#1) -- #2 -- (#3)
+        node[near end, above, font=\tiny] {#4};
+}
+
+% Connection with explicit routing points
+% Usage: \drawRoutedConnection{from}{to}{mid_x}{mid_y}{label}
+\newcommand{\drawRoutedConnection}[5]{
+    \draw[normal conn] (#1) -- (#3,#4) -- (#2)
+        node[near end, above, font=\tiny] {#5};
+}
+
+% S-curve connection (smooth transition)
+% Usage: \drawSCurveConnection{from}{to}{bend_amount}{label}
+\newcommand{\drawSCurveConnection}[4]{
+    \draw[normal conn] (#1) to[out=0, in=180, distance=#3cm] (#2)
+        node[midway, above, font=\tiny] {#4};
+}
+
+% Loop connection (node to itself)
+% Usage: \drawLoopConnection{node}{angle}{size}{label}
+\newcommand{\drawLoopConnection}[4]{
+    \draw[normal conn] (#1) to[out=#2, in=#2+60, distance=#3cm] (#1)
+        node[midway, above, font=\tiny] {#4};
+}
+
+% Connection bundling (show multiple as one thick line)
+% Usage: \drawBundledConnection{from}{to}{connection_count}{label}
+\newcommand{\drawBundledConnection}[4]{
+    % Line thickness increases with connection count
+    \pgfmathsetmacro{\bundlewidth}{min(5, 1 + #3/5)}
+
+    \draw[draw=connNormal, line width=\bundlewidth pt, -{Stealth[length=3mm]}]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny, fill=white, inner sep=2pt] {#4}
+        node[midway, below, font=\tiny, fill=white, inner sep=1pt] {#3 connections};
+}
+
+% Path finding with Manhattan distance (simple obstacle avoidance)
+% Usage: \drawManhattanPath{from}{to}{offset_dir}{label}
+% offset_dir: up, down, left, right
+\newcommand{\drawManhattanPath}[4]{
+    \ifthenelse{\equal{#3}{up}}{
+        \draw[normal conn] (#1) |- ++(0,2) -| (#2)
+            node[near end, above, font=\tiny] {#4};
+    }{
+    \ifthenelse{\equal{#3}{down}}{
+        \draw[normal conn] (#1) |- ++(0,-2) -| (#2)
+            node[near end, above, font=\tiny] {#4};
+    }{
+    \ifthenelse{\equal{#3}{left}}{
+        \draw[normal conn] (#1) -| ++(-2,0) |- (#2)
+            node[near end, above, font=\tiny] {#4};
+    }{
+        \draw[normal conn] (#1) -| ++(2,0) |- (#2)
+            node[near end, above, font=\tiny] {#4};
+    }}}
+}
 
 % ============================================================================
 % CONNECTION FLOW VISUALIZATION

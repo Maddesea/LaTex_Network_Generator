@@ -245,6 +245,8 @@ In `network_diagram_generator.tex`:
 
 ## Available Connection Types
 
+### Basic Connections
+
 | Command | Description | Visual Style |
 |---------|-------------|--------------|
 | `\drawConnection` | Normal connection | Solid line with arrow |
@@ -252,6 +254,125 @@ In `network_diagram_generator.tex`:
 | `\drawSuspiciousConnection` | Suspicious traffic | Orange dashed |
 | `\drawAttackConnection` | Active attack | Red thick line |
 | `\drawBidirectional` | Two-way traffic | Arrows on both ends |
+
+### Advanced Routing (NEW!)
+
+**Bezier & Curved Paths:**
+```latex
+% Bezier curve with control points
+\drawBezierConnection{srv1}{pc1}{2}{4}{6}{3}{Custom Route}
+
+% Smart curved connection (avoids obstacles)
+\drawSmartConnection{srv1}{pc1}{obstacle_node}{Routed}
+
+% S-curve (smooth transition)
+\drawSCurveConnection{srv1}{pc1}{3}{Data Flow}
+
+% Loop connection (node to itself)
+\drawLoopConnection{router1}{90}{2}{Loopback}
+```
+
+**Orthogonal Routing (Right Angles):**
+```latex
+% Orthogonal via point
+\drawOrthogonalConnection{srv1}{pc1}{(4,2)}{Route}
+
+% Horizontal then vertical
+\drawOrthogonalHV{srv1}{pc1}{Connection}
+
+% Vertical then horizontal
+\drawOrthogonalVH{srv1}{pc1}{Connection}
+
+% Manhattan routing with obstacle avoidance
+\drawManhattanPath{srv1}{pc1}{up}{Route}  % Options: up, down, left, right
+```
+
+**Multi-Segment Paths:**
+```latex
+% Path through multiple waypoints
+\drawPathThroughWaypoints{srv1}{(2,3) (4,5) (6,4)}{pc1}{Complex Route}
+
+% Routed connection with midpoint
+\drawRoutedConnection{srv1}{pc1}{5}{3}{Mid-Route}
+```
+
+### Bandwidth Visualization (NEW!)
+
+```latex
+% Log-scale bandwidth visualization
+\drawConnectionWithBandwidthLog{srv1}{pc1}{100}{High BW}
+
+% Bandwidth with utilization percentage (color-coded)
+\drawConnectionWithUtilization{srv1}{pc1}{450}{1000}{Link}
+% Green < 50%, yellow < 80%, red >= 80%
+
+% Congestion indicators
+\drawConnectionWithCongestion{srv1}{pc1}{high}{Congested Link}
+% Levels: none, low, medium, high, critical
+
+% Bundled connections (multiple connections shown as one)
+\drawBundledConnection{srv1}{pc1}{15}{Aggregate}  % Shows "15 connections"
+```
+
+### Protocol-Specific Connections (NEW!)
+
+```latex
+% Protocol shortcuts with auto-styling
+\drawHTTPConnection{web1}{client1}{Web Traffic}
+\drawHTTPSConnection{web1}{client1}{Secure Web}
+\drawSSHConnection{srv1}{admin1}{Remote Access}
+\drawDNSConnection{dns1}{client1}{Lookup}
+\drawSQLConnection{app1}{db1}{Database Query}
+
+% Multi-protocol connection
+\drawMultiProtocolConnection{srv1}{pc1}{HTTP,HTTPS,SSH}{Multi-Service}
+
+% Custom protocol with color
+\drawCustomProtocolConnection{srv1}{pc1}{RDP}{3389}{firewallRed}{Remote Desktop}
+```
+
+### Advanced Connection Features (NEW!)
+
+**Specialized Connection Types:**
+```latex
+% VPN tunnel
+\drawVPNTunnel{office1}{office2}{IPSec}
+
+% Wireless connection
+\drawWirelessConnection{ap1}{mobile1}{Corp-WiFi}
+
+% Fiber optic (with light effect)
+\drawFiberConnection{dc1}{dc2}{10Gbps}
+
+% Serial/legacy connection
+\drawSerialConnection{plc1}{scada1}{9600}
+
+% Satellite link
+\drawSatelliteLink{ship1}{base1}{500}  % 500ms latency
+
+% Cross-connect/direct
+\drawCrossConnect{srv1}{srv2}{Direct Link}
+```
+
+**Connection Health & QoS:**
+```latex
+% Health-based coloring
+\drawConnectionHealth{srv1}{pc1}{good}{Link}      % Green
+\drawConnectionHealth{srv1}{pc1}{degraded}{Link}  % Yellow
+\drawConnectionHealth{srv1}{pc1}{poor}{Link}      % Orange
+\drawConnectionHealth{srv1}{pc1}{down}{Link}      % Red
+
+% QoS priority indicators
+\drawConnectionWithQoS{srv1}{pc1}{critical}{Priority Traffic}
+% Levels: critical, high, normal, low
+
+% SLA monitoring
+\drawConnectionWithSLA{srv1}{pc1}{99.95}{99.9}{Uplink}  % Uptime vs target
+
+% Multi-metric labels
+\drawConnectionMetrics{srv1}{pc1}{100}{5}{0.1}{2}
+% Bandwidth, latency, packet loss, jitter
+```
 
 ## Threat Visualization
 
@@ -618,14 +739,27 @@ This system is designed for **multiple agents/developers** to work simultaneousl
 - [ ] Grid layout for data center visualization
 
 ### Agent 4: Connections (`connection_renderer.tex`)
-**Priority TODOs:**
-- [ ] Automatic path finding to avoid node overlaps
-- [ ] Bandwidth indicators (line thickness based on traffic)
-- [ ] Animated flow direction indicators
-- [ ] Connection bundling for high-density areas
-- [ ] Edge routing algorithms (orthogonal, polyline)
-- [ ] Protocol/port labels on connections
-- [ ] Connection aggregation (show "10 connections" vs 10 lines)
+**Completed:**
+- [x] Advanced connection routing (Bezier, smart curved, S-curves, loops)
+- [x] Orthogonal routing (right angles, Manhattan paths)
+- [x] Multi-segment paths through waypoints
+- [x] Connection bundling for high-density areas
+- [x] Bandwidth visualization with log-scale line thickness
+- [x] Bandwidth utilization percentage with color coding
+- [x] Congestion indicators (5 levels)
+- [x] Protocol-specific connections (HTTP, HTTPS, SSH, DNS, SQL)
+- [x] Multi-protocol connection labels
+- [x] Custom protocol connections with colors
+- [x] Connection health indicators (good/degraded/poor/down)
+- [x] QoS priority visualization
+- [x] SLA monitoring displays
+- [x] Multi-metric connection labels
+- [x] Specialized connections (VPN, wireless, fiber, serial, satellite)
+
+**Remaining TODOs:**
+- [ ] Animated flow direction indicators (requires animation package)
+- [ ] A* or Dijkstra pathfinding for complex obstacle avoidance
+- [ ] Interactive connection highlighting
 
 ### Agent 5: Threat Intelligence (`threat_indicators.tex`)
 **Priority TODOs:**
