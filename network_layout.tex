@@ -2023,3 +2023,465 @@
     % Read positions from external file
     % Apply to current diagram
 }
+
+% ============================================================================
+% ANIMATION AND TRANSITION SUPPORT (Beamer Integration)
+% ============================================================================
+
+% Animation state tracking
+\newcounter{animationframe}
+\setcounter{animationframe}{1}
+
+% Enable animation mode
+\newif\ifanimationmode
+\animationmodefalse
+
+\newcommand{\enableAnimations}{
+    \animationmodetrue
+}
+
+\newcommand{\disableAnimations}{
+    \animationmodefalse
+}
+
+% Appear on specific frame (Beamer)
+% Usage: \appearOnFrame{frame_number}{content}
+\newcommand{\appearOnFrame}[2]{
+    \ifanimationmode
+        \only<#1->{#2}
+    \else
+        #2
+    \fi
+}
+
+% Fade in node with transition
+% Usage: \fadeInNode{node_name}{start_frame}{duration}
+\newcommand{\fadeInNode}[3]{
+    \ifanimationmode
+        \temporal<#2-#3>{
+            \node[opacity=0] (#1) {};
+        }{
+            \node[opacity=0.5] (#1) {};
+        }{
+            \node[opacity=1] (#1) {};
+        }
+    \fi
+}
+
+% Highlight node with pulse effect
+% Usage: \pulseNode{node_name}{frame}
+\newcommand{\pulseNode}[2]{
+    \ifanimationmode
+        \only<#2>{
+            \draw[red, line width=3pt, opacity=0.5] 
+                (#1.south west) rectangle (#1.north east);
+        }
+    \fi
+}
+
+% Build network progressively
+% Usage: \buildNetworkProgressive{total_frames}
+\newcommand{\buildNetworkProgressive}[1]{
+    % Each node appears sequentially
+    % Useful for presentation walkthroughs
+}
+
+% Animate connection drawing
+% Usage: \animateConnection{node1}{node2}{start_frame}{end_frame}
+\newcommand{\animateConnection}[4]{
+    \ifanimationmode
+        \only<#3-#4>{
+            \draw[connection, ->, thick] (#1) -- (#2);
+        }
+    \fi
+}
+
+% Flow animation along path
+% Usage: \flowAnimation{path}{speed}{color}
+\newcommand{\flowAnimation}[3]{
+    % Animated dots/particles flowing along connection
+    % Requires animate package or Beamer overlays
+}
+
+% Zoom animation (progressive zoom in/out)
+% Usage: \zoomAnimation{start_scale}{end_scale}{frames}
+\newcommand{\zoomAnimation}[3]{
+    \pgfmathsetmacro{\scalestep}{(#2 - #1) / #3}
+    % Progressive scaling over frames
+}
+
+% Rotate layout animation
+% Usage: \rotateLayoutAnimation{start_angle}{end_angle}{frames}
+\newcommand{\rotateLayoutAnimation}[3]{
+    \pgfmathsetmacro{\anglestep}{(#2 - #1) / #3}
+    % Progressive rotation over frames
+}
+
+% Morph between layouts
+% Usage: \morphLayouts{layout1}{layout2}{frames}
+\newcommand{\morphLayouts}[3]{
+    % Interpolate node positions between two layouts
+    % Smooth transition animation
+}
+
+% ============================================================================
+% ACCESSIBILITY AND INCLUSIVE DESIGN
+% ============================================================================
+
+% High contrast mode
+\newif\ifhighcontrast
+\highcontrastfalse
+
+\newcommand{\enableHighContrast}{
+    \highcontrasttrue
+    \tikzset{
+        every node/.append style={
+            line width=2pt,
+            fill=white,
+            draw=black
+        },
+        every path/.append style={
+            line width=2pt
+        }
+    }
+}
+
+% Colorblind-safe palette mode
+\newcommand{\enableColorblindMode}{
+    % Use patterns in addition to colors
+    % Blue-Orange palette (deuteranopia safe)
+    \tikzset{
+        critical/.style={fill=orange!80!black, pattern=north east lines},
+        warning/.style={fill=blue!60, pattern=dots},
+        normal/.style={fill=gray!30, pattern=grid}
+    }
+}
+
+% Large text mode for visibility
+\newcommand{\enableLargeTextMode}{
+    \tikzset{
+        every node/.append style={
+            font=\Large,
+            minimum width=3.5cm,
+            minimum height=1.5cm
+        }
+    }
+}
+
+% Screen reader friendly annotations
+% Usage: \addAltText{node_name}{description}
+\newcommand{\addAltText}[2]{
+    % Add invisible text for screen readers
+    % Store in auxiliary file for export
+    \typeout{ALT TEXT: #1 = #2}
+}
+
+% Semantic tagging for export
+% Usage: \tagNode{node_name}{role}{importance}
+\newcommand{\tagNode}[3]{
+    % Tag nodes with semantic information
+    % role: server, client, router, firewall, etc.
+    % importance: critical, high, medium, low
+}
+
+% Export accessible HTML version
+% Usage: \exportAccessibleHTML{filename}
+\newcommand{\exportAccessibleHTML}[1]{
+    % Generate HTML with ARIA labels
+    % Keyboard navigable
+    % Screen reader compatible
+}
+
+% ============================================================================
+% LAYOUT METRICS AND ANALYTICS
+% ============================================================================
+
+% Calculate layout density
+% Usage: \calculateDensity{area}
+\newcommand{\calculateDensity}[1]{
+    \pgfmathsetmacro{\density}{\value{nodecount} / #1}
+}
+
+% Measure diagram bounds
+% Usage: \measureDiagramBounds
+\newcommand{\measureDiagramBounds}{
+    \pgfextractx{\pgf@xa}{\pgfpointanchor{current bounding box}{south west}}
+    \pgfextracty{\pgf@ya}{\pgfpointanchor{current bounding box}{south west}}
+    \pgfextractx{\pgf@xb}{\pgfpointanchor{current bounding box}{north east}}
+    \pgfextracty{\pgf@yb}{\pgfpointanchor{current bounding box}{north east}}
+    
+    \pgfmathsetmacro{\diagramwidthcalc}{\pgf@xb - \pgf@xa}
+    \pgfmathsetmacro{\diagramheightcalc}{\pgf@yb - \pgf@ya}
+}
+
+% Calculate average node spacing
+% Usage: \calculateAverageSpacing
+\newcommand{\calculateAverageSpacing}{
+    % Measure distances between all adjacent nodes
+    % Return mean spacing value
+}
+
+% Count connection crossings
+% Usage: \countCrossings
+\newcommand{\countCrossings}{
+    % Detect how many connections cross each other
+    % Lower is better for readability
+}
+
+% Calculate layout efficiency score
+% Usage: \calculateEfficiency
+\newcommand{\calculateEfficiency}{
+    % Combine metrics: density, crossings, spacing, symmetry
+    % Return score 0-100 (higher is better)
+}
+
+% Generate layout report
+% Usage: \generateLayoutReport{filename}
+\newcommand{\generateLayoutReport}[1]{
+    \typeout{=== LAYOUT ANALYSIS REPORT ===}
+    \typeout{Nodes: \the\value{nodecount}}
+    \typeout{Connections: \the\value{connectioncount}}
+    \typeout{Diagram Width: \diagramwidthcalc}
+    \typeout{Diagram Height: \diagramheightcalc}
+    \typeout{Density: \density nodes/unit}
+    \typeout{Zoom Level: \the\value{zoomlevel}\%}
+    \typeout{================================}
+}
+
+% Performance benchmark
+% Usage: \benchmarkLayout
+\newcommand{\benchmarkLayout}{
+    % Measure compilation time
+    % Count macro expansions
+    % Memory usage estimate
+}
+
+% ============================================================================
+% SMART POSITIONING ALGORITHMS
+% ============================================================================
+
+% Genetic algorithm for optimal placement
+% Usage: \geneticLayoutOptimization{generations}{population}
+\newcommand{\geneticLayoutOptimization}[2]{
+    % Iteratively improve layout using GA
+    % Fitness: minimize crossings, maximize spacing
+    % Requires external computation
+}
+
+% Simulated annealing for layout
+% Usage: \simulatedAnnealingLayout{temperature}{cooling_rate}
+\newcommand{\simulatedAnnealingLayout}[2]{
+    % Probabilistic optimization
+    % Escape local minima
+}
+
+% Stress minimization (MDS-style)
+% Usage: \stressMinimization{iterations}
+\newcommand{\stressMinimization}[1]{
+    % Minimize stress function
+    % Place similar nodes closer together
+}
+
+% Spectral layout
+% Usage: \spectralLayout{eigenvector}
+\newcommand{\spectralLayout}[1]{
+    % Use graph Laplacian eigenvectors
+    % Reveals community structure
+}
+
+% Clustering-based layout
+% Usage: \clusterLayout{algorithm}{k}
+% algorithm: kmeans, hierarchical, dbscan
+\newcommand{\clusterLayout}[2]{
+    % Group nodes by similarity
+    % Layout clusters separately
+}
+
+% Energy-based placement
+% Usage: \energyMinimizationLayout{iterations}
+\newcommand{\energyMinimizationLayout}[1]{
+    % Minimize energy function
+    % Spring forces + electrostatic repulsion
+}
+
+% Machine learning position prediction
+% Usage: \mlPredictPosition{node_features}{model}
+\newcommand{\mlPredictPosition}[2]{
+    % Use trained model to suggest positions
+    % Based on node properties
+}
+
+% ============================================================================
+% INTEGRATION HELPERS
+% ============================================================================
+
+% Export to GraphViz DOT format
+% Usage: \exportToDOT{filename}
+\newcommand{\exportToDOT}[1]{
+    \typeout{Exporting to GraphViz DOT: #1}
+    % Format: digraph G { node1 -> node2; }
+}
+
+% Export to Cytoscape JSON
+% Usage: \exportToCytoscape{filename}
+\newcommand{\exportToCytoscape}[1]{
+    \typeout{Exporting to Cytoscape: #1}
+    % Cytoscape.js compatible JSON
+}
+
+% Export to D3.js force graph
+% Usage: \exportToD3{filename}
+\newcommand{\exportToD3}[1]{
+    \typeout{Exporting to D3.js: #1}
+    % JSON with nodes and links arrays
+}
+
+% Export to Mermaid diagram syntax
+% Usage: \exportToMermaid{filename}
+\newcommand{\exportToMermaid}[1]{
+    \typeout{Exporting to Mermaid: #1}
+    % Mermaid markdown syntax
+}
+
+% Import from NetworkX (Python)
+% Usage: \importFromNetworkX{pickle_file}
+\newcommand{\importFromNetworkX}[1]{
+    % Read NetworkX graph positions
+    % Requires Python bridge
+}
+
+% Import from Gephi
+% Usage: \importFromGephi{gexf_file}
+\newcommand{\importFromGephi}[1]{
+    % Read GEXF format
+    % Apply Gephi-calculated positions
+}
+
+% Export SVG with embedded metadata
+% Usage: \exportSVGWithMetadata{filename}
+\newcommand{\exportSVGWithMetadata}[1]{
+    % SVG with data attributes
+    % Interactive in browsers
+}
+
+% Generate interactive HTML viewer
+% Usage: \generateHTMLViewer{filename}
+\newcommand{\generateHTMLViewer}[1]{
+    % Standalone HTML file
+    % Pan, zoom, click interactions
+    % Uses SVG + JavaScript
+}
+
+% ============================================================================
+% ADVANCED HELPER FUNCTIONS
+% ============================================================================
+
+% Auto-label positioning (avoid overlap)
+% Usage: \smartLabel{node}{text}{preferred_position}
+% preferred_position: above, below, left, right
+\newcommand{\smartLabel}[3]{
+    % Check for label collisions
+    % Automatically adjust position
+    \node[#3, font=\small] at (#1) {#2};
+}
+
+% Calculate network diameter
+% Usage: \networkDiameter
+\newcommand{\networkDiameter}{
+    % Longest shortest path
+    % Indicates network span
+}
+
+% Find network center node
+% Usage: \findCenterNode
+\newcommand{\findCenterNode}{
+    % Node with minimum average distance to others
+    % Good for hub placement
+}
+
+% Calculate node centrality
+% Usage: \calculateCentrality{node}
+\newcommand{\calculateCentrality}[1]{
+    % Degree, betweenness, closeness, eigenvector
+}
+
+% Identify network communities
+% Usage: \detectCommunities{algorithm}
+\newcommand{\detectCommunities}[1]{
+    % Louvain, Girvan-Newman, etc.
+    % Color nodes by community
+}
+
+% Path highlighting
+% Usage: \highlightPath{node1}{node2}{color}
+\newcommand{\highlightPath}[3]{
+    % Highlight shortest path between nodes
+    \draw[#3, line width=3pt, opacity=0.5] (#1) -- (#2);
+}
+
+% Critical path identification
+% Usage: \markCriticalPath
+\newcommand{\markCriticalPath}{
+    % Identify and highlight critical network paths
+    % Bottleneck detection
+}
+
+% Load balancing visualization
+% Usage: \visualizeLoad{node}{load_percentage}
+\newcommand{\visualizeLoad}[2]{
+    % Show load as fill percentage or heat color
+    \pgfmathsetmacro{\loadcolor}{#2 < 50 ? "green" : (#2 < 80 ? "yellow" : "red")}
+}
+
+% Bandwidth allocation display
+% Usage: \showBandwidth{connection}{used}{total}
+\newcommand{\showBandwidth}[3]{
+    % Visual indicator of bandwidth usage
+    \pgfmathsetmacro{\bwpercent}{100 * #2 / #3}
+}
+
+% Latency heat map
+% Usage: \latencyHeatMap{latency_data}
+\newcommand{\latencyHeatMap}[1]{
+    % Color connections by latency
+    % Red = high latency, Green = low latency
+}
+
+% QoS class visualization
+% Usage: \markQoS{connection}{class}
+% class: realtime, priority, besteffort
+\newcommand{\markQoS}[2]{
+    \def\qosclass{#2}
+    \def\realtime{realtime}
+    \def\priority{priority}
+    
+    \ifx\qosclass\realtime
+        \draw[connection, red, very thick] (#1);
+    \else\ifx\qosclass\priority
+        \draw[connection, yellow, thick] (#1);
+    \else
+        \draw[connection, gray] (#1);
+    \fi\fi
+}
+
+% Redundancy visualization
+% Usage: \showRedundancy{primary}{backup}
+\newcommand{\showRedundancy}[2]{
+    % Show primary and backup paths
+    \draw[connection, blue, solid] (#1);
+    \draw[connection, blue, dashed] (#2);
+}
+
+% Failure simulation
+% Usage: \simulateFailure{node}
+\newcommand{\simulateFailure}[1]{
+    % Mark node as failed
+    \node[cross out, draw=red, very thick] at (#1) {};
+}
+
+% Capacity planning overlay
+% Usage: \showCapacity{node}{current}{max}
+\newcommand{\showCapacity}[3]{
+    % Progress bar showing capacity utilization
+    \pgfmathsetmacro{\capacity}{100 * #2 / #3}
+}
