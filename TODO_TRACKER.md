@@ -275,23 +275,42 @@
   - Commands: `\drawKillChain`, `\drawKillChainCompact`, `\drawAttackTimeline`, `\drawAttackPath`, `\drawInfectionSpread`, `\drawKillChainDetails`
 
 ### Medium Priority
-- [ ] Threat actor attribution
-  - Display attribution with confidence level
-  - Link to threat actor profiles
-  - Show TTP overlap
-  - Campaign tracking
+- [x] **Threat actor attribution - COMPLETED**
+  - ✅ Display attribution with confidence level
+  - ✅ Detailed threat actor profiles
+  - ✅ Actor comparison/attribution analysis
+  - ✅ Campaign tracking with timelines
+  - ✅ State-sponsored indicators
+  - ✅ Multi-victim linking
+  - ✅ Threat intelligence source citations
+  - Commands: `\drawThreatActorProfile`, `\drawActorComparison`, `\drawCampaignTracker`, `\markThreatActorOrigin`, `\linkToThreatActor`, `\citeThreatIntel`
+
+- [x] **Security compliance dashboard - COMPLETED**
+  - ✅ NIST CSF assessment (5 functions scoring)
+  - ✅ CIS Controls v8 coverage (IG1/IG2/IG3)
+  - ✅ PCI-DSS v4.0 compliance status
+  - ✅ General framework scorecards (ISO 27001, SOC 2, etc.)
+  - ✅ Security metrics dashboard (MTTD, MTTR, incident tracking)
+  - ✅ Control effectiveness meters
+  - ✅ Multi-framework comparison tables
+  - ✅ Security coverage heatmaps
+  - Commands: `\drawNISTCompliance`, `\drawCISCompliance`, `\drawPCIDSSCompliance`, `\drawComplianceScorecard`, `\drawSecurityMetrics`, `\drawControlEffectiveness`, `\drawComplianceComparison`, `\drawCoverageHeatmap`
+
+- [x] **Advanced threat correlation & helpers - COMPLETED**
+  - ✅ Vulnerability-exploit correlation
+  - ✅ Quick threat scenarios (Ransomware, APT, DDoS)
+  - ✅ Multi-stage attack chain visualization
+  - ✅ Risk-based prioritization indicators
+  - ✅ Threat intelligence summary panels
+  - ✅ Comprehensive security status dashboard
+  - ✅ Incident response status tracking
+  - Commands: `\correlateVulnExploit`, `\scenarioRansomware`, `\scenarioAPT`, `\scenarioDDoS`, `\drawAttackChain`, `\drawRiskPriority`, `\drawThreatSummary`, `\drawSecurityStatus`, `\drawIncidentStatus`
 
 - [ ] Real-time threat feed integration
   - Pull from: MISP, OpenCTI, STIX/TAXII
   - Auto-update diagram with new IOCs
   - Alert on new threats matching network
   - Historical threat timeline
-
-- [ ] Security compliance dashboard
-  - NIST CSF assessment
-  - CIS Controls coverage
-  - PCI-DSS compliance status
-  - HIPAA/SOC2 requirements
 
 - [ ] Vulnerability database integration
   - Pull from NVD, VulnDB

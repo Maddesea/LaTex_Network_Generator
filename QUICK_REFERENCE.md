@@ -45,11 +45,17 @@
 
 ### Threats & Vulnerabilities
 ```latex
-% Mark vulnerability
+% Basic vulnerability
 \markVulnerability{server1}{CVE-2024-1234}{9.8}
 
-% Add threat badge
-\addThreatBadge{server1}{critical}  % critical, high, medium, low, info
+% CVSS vulnerability with detailed scoring
+\markVulnerabilityCVSS{server1}{CVE-2024-1234}{9.8}{9.5}{8.7}
+
+% CVSS score meter
+\drawCVSSMeter{0}{0}{9.8}{Critical Vuln}
+
+% Compact CVSS badge
+\cvssBadge{server1}{9.8}
 
 % DDoS attack
 \visualizeDDoS{attacker1,attacker2}{target}{critical}
@@ -62,6 +68,129 @@
 
 % Data exfiltration
 \visualizeExfiltration{server1}{attacker1}{500MB}
+
+% Active exploit correlation
+\correlateVulnExploit{srv1}{CVE-2024-1234}{9.8}{yes}{Metasploit}
+```
+
+### MITRE ATT&CK & Kill Chain
+```latex
+% ATT&CK technique badge
+\attackTechnique{node}{credential-access}{T1110}{Brute Force}
+
+% Kill chain progression
+\drawKillChain{-8}{-5}{3}  % Stage 3 of 7
+
+% Compact kill chain bar
+\drawKillChainCompact{0}{0}{5}
+
+% ATT&CK matrix legend
+\drawAttackMatrix{12}{8}
+
+% TTP profile
+\drawTTPProfile{0}{0}{APT29}
+
+% Attack timeline
+\drawAttackTimeline{-5}{3}
+
+% Multi-stage attack chain
+\drawAttackChain{stage1}{stage2}{stage3}{stage4}
+```
+
+### IOC & Threat Intelligence
+```latex
+% Enhanced IOC marker
+\markIOCEnhanced{node}{malicious-ip}{192.0.2.1}{85}{3}
+
+% Malicious IP with geolocation
+\markMaliciousIP{node}{192.0.2.1}{Russia}{92}
+
+% File hash IOC
+\markFileHashIOC{node}{SHA256}{a1b2c3d4...}{WannaCry}
+
+% C2 server marker
+\markC2Server{node}{evil.badguys.com}{APT28}
+
+% IOC dashboard
+\drawIOCDashboard{10}{5}
+
+% Threat intelligence summary
+\drawThreatSummary{-8}{8}
+```
+
+### Threat Actor Attribution
+```latex
+% Detailed threat actor profile
+\drawThreatActorProfile{0}{5}{APT28}{87}{Operation Ghost}{Espionage}
+
+% Actor comparison
+\drawActorComparison{10}{5}
+
+% Campaign tracking
+\drawCampaignTracker{0}{0}{SolarStorm}{2025-01-01}{Fortune 500}
+
+% Actor origin marker
+\markThreatActorOrigin{node}{APT29}{Russia}{yes}
+
+% Link victims to actor
+\linkToThreatActor{attacker}{srv1,srv2,srv3}
+```
+
+### Quick Threat Scenarios
+```latex
+% Ransomware attack
+\scenarioRansomware{pc1}{pc2,pc3,srv1}{$50,000 BTC}
+
+% APT infiltration
+\scenarioAPT{srv1}{attacker1}{database1}{APT29}{SolarStorm}
+
+% DDoS attack
+\scenarioDDoS{attacker1,attacker2,attacker3}{webserver}
+
+% Infection spread
+\drawInfectionSpread{patient_zero}{srv1,srv2,srv3}
+```
+
+### Security Compliance
+```latex
+% NIST CSF
+\drawNISTCompliance{0}{5}{85}{90}{78}{82}{75}
+
+% CIS Controls v8
+\drawCISCompliance{8}{5}{14}{28}{12}
+
+% PCI-DSS
+\drawPCIDSSCompliance{0}{0}{12}
+
+% General framework
+\drawComplianceScorecard{0}{3}{ISO 27001}{78}{partial}
+
+% Security metrics
+\drawSecurityMetrics{10}{8}{12}{24}{15}{8}
+
+% Control effectiveness
+\drawControlEffectiveness{0}{0}{Firewall}{92}
+
+% Multi-framework comparison
+\drawComplianceComparison{12}{8}
+
+% Security coverage
+\drawCoverageHeatmap{0}{5}
+```
+
+### Security Status & Dashboards
+```latex
+% Overall security status
+\drawSecurityStatus{0}{8}{75}
+
+% Risk prioritization
+\drawRiskPriority{10}{8}{3}{12}{25}{8}
+
+% Incident response status
+\drawIncidentStatus{10}{5}{INC-2025-001}{investigating}{Critical}
+
+% Security posture dashboard
+\drawSecurityDashboard{10}{8}
 ```
 
 ### Security Zones

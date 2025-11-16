@@ -217,6 +217,84 @@ In `network_diagram_generator.tex`:
 \drawKillChainDetails{0}{5}{3}  % Details for stage 3
 ```
 
+#### Enhanced Threat Actor Attribution
+```latex
+% Detailed threat actor profile
+\drawThreatActorProfile{0}{5}{APT28}{87}{Operation Ghost}{Espionage}
+
+% Actor comparison analysis
+\drawActorComparison{10}{5}
+
+% Campaign tracking
+\drawCampaignTracker{0}{0}{SolarStorm}{2025-01-01}{Fortune 500}
+
+% Threat actor with origin
+\markThreatActorOrigin{node}{APT29}{Russia}{yes}
+
+% Link multiple victims to actor
+\linkToThreatActor{attacker}{srv1,srv2,srv3}
+
+% Threat intelligence citation
+\citeThreatIntel{0}{-8}{MISP}{2025-01-16}
+```
+
+#### Security Compliance Dashboards
+```latex
+% NIST Cybersecurity Framework
+\drawNISTCompliance{0}{5}{85}{90}{78}{82}{75}
+
+% CIS Controls v8
+\drawCISCompliance{8}{5}{14}{28}{12}
+
+% PCI-DSS Compliance
+\drawPCIDSSCompliance{0}{0}{12}
+
+% General framework scorecard
+\drawComplianceScorecard{0}{3}{ISO 27001}{78}{partial}
+
+% Security metrics
+\drawSecurityMetrics{10}{8}{12}{24}{15}{8}
+
+% Control effectiveness
+\drawControlEffectiveness{0}{0}{Firewall}{92}
+
+% Multi-framework comparison
+\drawComplianceComparison{12}{8}
+
+% Security coverage heatmap
+\drawCoverageHeatmap{0}{5}
+```
+
+#### Quick Threat Scenarios & Helper Functions
+```latex
+% Ransomware attack scenario
+\scenarioRansomware{pc1}{pc2,pc3,srv1}{$50,000 BTC}
+
+% APT infiltration scenario
+\scenarioAPT{srv1}{attacker1}{database1}{APT29}{SolarStorm}
+
+% DDoS attack scenario
+\scenarioDDoS{attacker1,attacker2,attacker3}{webserver}
+
+% Multi-stage attack chain
+\drawAttackChain{stage1}{stage2}{stage3}{stage4}
+
+% Vulnerability with active exploit
+\correlateVulnExploit{srv1}{CVE-2024-1234}{9.8}{yes}{Metasploit}
+
+% Risk prioritization dashboard
+\drawRiskPriority{10}{8}{3}{12}{25}{8}
+
+% Threat intelligence summary
+\drawThreatSummary{-8}{8}
+
+% Security status dashboard
+\drawSecurityStatus{0}{8}{75}
+
+% Incident response status
+\drawIncidentStatus{10}{5}{INC-2025-001}{investigating}{Critical}
+```
+
 ## Security Zones
 
 ```latex
@@ -297,14 +375,18 @@ This system is designed for **multiple agents/developers** to work simultaneousl
 - [ ] Connection aggregation (show "10 connections" vs 10 lines)
 
 ### Agent 5: Threat Intelligence (`threat_indicators.tex`)
-**Priority TODOs:**
+**High Priority TODOs:**
 - [x] CVSS score integration and visualization - **COMPLETED**
 - [x] MITRE ATT&CK framework mapping - **COMPLETED**
 - [x] IOC (Indicators of Compromise) visualization - **COMPLETED**
 - [x] Attack kill chain progression display - **COMPLETED**
-- [ ] Threat actor attribution with confidence levels
+
+**Medium Priority TODOs:**
+- [x] Threat actor attribution with confidence levels - **COMPLETED**
+- [x] Security compliance dashboard (NIST, CIS, PCI-DSS) - **COMPLETED**
+- [x] Advanced threat correlation features - **COMPLETED**
+- [x] Quick threat scenario helpers - **COMPLETED**
 - [ ] Real-time threat feed integration
-- [ ] Security compliance dashboard (NIST, CIS, PCI-DSS)
 
 ### Agent 6: Data Import/Export
 **Priority TODOs:**
