@@ -1,0 +1,56 @@
+% TEMPLATE: Basic Network Diagram
+% Simple 3-tier architecture with internet connection
+%
+% QUICK START:
+% 1. Copy this file to your working directory
+% 2. Rename it to your project name
+% 3. Modify the node names, IPs, and labels
+% 4. Compile: pdflatex your_diagram.tex
+
+\documentclass[tikz,border=10pt]{standalone}
+\usepackage{tikz}
+\usepackage{xcolor}
+\usepackage{ifthen}
+\usetikzlibrary{positioning,shapes.geometric,arrows.meta,shadows.blur}
+
+% Import required modules (must be in same directory)
+\input{styles_config}
+% Optional: Uncomment to use a different theme
+% \loadColorScheme{dark}
+
+\input{node_definitions}
+\input{network_layout}
+\input{connection_renderer}
+\input{threat_indicators}
+
+\begin{document}
+\begin{tikzpicture}[scale=1.0, transform shape, font=\sffamily]
+
+% ===== INTERNET =====
+\createCloud{internet}{0}{8}{Internet}
+
+% ===== PERIMETER =====
+\createFirewall{firewall}{0}{5}{Edge Firewall}
+
+% ===== DMZ / WEB TIER =====
+\createServer{webserver}{0}{2}{Web Server}
+
+% ===== APPLICATION TIER =====
+\createRouter{router}{0}{-1}{Core Router}
+\createServer{appserver}{0}{-4}{Application Server}
+
+% ===== DATABASE TIER =====
+\createServer{database}{0}{-7}{Database Server}
+
+% ===== CONNECTIONS =====
+\drawConnection{internet}{firewall}{Internet Traffic}
+\drawConnection{firewall}{webserver}{HTTPS}
+\drawEncryptedConnection{webserver}{router}{Internal API}
+\drawConnection{router}{appserver}{Application}
+\drawEncryptedConnection{appserver}{database}{SQL/TLS}
+
+% ===== TITLE =====
+\node[font=\Large\bfseries] at (0,10.5) {Basic Network Diagram};
+
+\end{tikzpicture}
+\end{document}

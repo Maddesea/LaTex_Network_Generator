@@ -1,0 +1,76 @@
+% TEMPLATE: Attack Scenario Diagram
+% Shows network under attack with threat indicators
+%
+% QUICK START:
+% 1. Copy this template
+% 2. Modify attacker tactics and targets
+% 3. Update vulnerability CVEs and MITRE ATT&CK techniques
+% 4. Adjust network topology as needed
+
+\documentclass[tikz,border=10pt]{standalone}
+\usepackage{tikz}
+\usepackage{xcolor}
+\usepackage{ifthen}
+\usepackage{colortbl}
+\usetikzlibrary{positioning,shapes.geometric,arrows.meta,shadows.blur,decorations.markings}
+
+\input{styles_config}
+\input{node_definitions}
+\input{network_layout}
+\input{connection_renderer}
+\input{threat_indicators}
+
+\begin{document}
+\begin{tikzpicture}[scale=0.9, transform shape, font=\sffamily]
+
+% ===== NETWORK NODES =====
+\createCloud{internet}{0}{10}{Internet}
+\createAttacker{attacker}{-6}{10}{Threat Actor}
+
+\createFirewall{firewall}{0}{7}{Firewall}
+\createServer{webserver}{0}{4}{Web Server}
+
+\createRouter{router}{0}{1}{Core Router}
+\createServer{database}{-3}{-2}{Database}
+\createClient{workstation}{3}{-2}{Workstation}
+
+% ===== CONNECTIONS =====
+% Normal traffic
+\drawConnection{internet}{firewall}{HTTPS}
+\drawConnection{firewall}{webserver}{Filtered}
+\drawConnection{webserver}{router}{Internal}
+\drawConnection{router}{database}{SQL}
+\drawConnection{router}{workstation}{User}
+
+% Attack traffic (CUSTOMIZE THESE)
+\drawAttackConnection{attacker}{webserver}{SQL Injection}
+\drawSuspiciousConnection{webserver}{database}{Credential Theft}
+
+% ===== THREAT INTELLIGENCE (CUSTOMIZE) =====
+
+% Vulnerabilities
+\markVulnerabilityCVSS{webserver}{CVE-YYYY-XXXX}{9.8}{9.5}{9.2}
+
+% MITRE ATT&CK Techniques
+\attackTechnique{webserver}{initial-access}{T1190}{Exploit Public-Facing Application}
+\attackTechnique{database}{credential-access}{T1078}{Valid Accounts}
+
+% IOCs
+\markMaliciousIP{attacker}{XXX.XXX.XXX.XXX}{Country}{95}
+
+% Security Controls
+\markSecurityControl{firewall}{Firewall}{active}
+
+% ===== DASHBOARDS =====
+% Kill chain (update stage number 0-6)
+\drawKillChain{-10}{-6}{3}
+
+% Incident tracking
+\drawIncidentStatus{-10}{10}{INC-YYYY-XXX}{investigating}{Critical}
+
+% ===== TITLE =====
+\node[font=\Large\bfseries, text=red] at (0}{13} {Attack Scenario: [ATTACK TYPE]};
+\node[font=\small] at (0,12.3) {[Brief description of attack]};
+
+\end{tikzpicture}
+\end{document}

@@ -1,0 +1,110 @@
+% TEMPLATE: Compliance Report Diagram
+% Network with compliance dashboards and security controls
+%
+% QUICK START:
+% 1. Copy this template
+% 2. Update compliance scores in the dashboard commands
+% 3. Modify security controls to match your environment
+% 4. Add/remove nodes as needed
+
+\documentclass[tikz,border=10pt]{standalone}
+\usepackage{tikz}
+\usepackage{xcolor}
+\usepackage{ifthen}
+\usepackage{colortbl}
+\usetikzlibrary{positioning,shapes.geometric,arrows.meta,shadows.blur}
+
+\input{styles_config}
+\input{node_definitions}
+\input{network_layout}
+\input{connection_renderer}
+\input{threat_indicators}
+
+\begin{document}
+\begin{tikzpicture}[scale=0.85, transform shape, font=\sffamily]
+
+% ===== NETWORK INFRASTRUCTURE =====
+\createCloud{internet}{0}{8}{Internet}
+\createFirewall{firewall}{0}{5}{Firewall}
+
+% Segmented environments
+\createServer{webserver}{-4}{2}{Web Server}
+\createServer{appserver}{0}{2}{App Server}
+\createServer{database}{4}{2}{Database}
+
+\createClient{admin}{-2}{-1}{Admin Workstation}
+\createClient{user}{2}{-1}{User Workstation}
+
+% ===== CONNECTIONS =====
+\drawConnection{internet}{firewall}{HTTPS}
+\drawEncryptedConnection{firewall}{webserver}{TLS 1.3}
+\drawConnection{webserver}{appserver}{Internal}
+\drawEncryptedConnection{appserver}{database}{Encrypted}
+\drawConnection{admin}{appserver}{Management}
+\drawConnection{user}{webserver}{User Access}
+
+% ===== SECURITY CONTROLS (CUSTOMIZE) =====
+\markSecurityControl{firewall}{Firewall}{active}
+\markWAF{webserver}{WAF}{50}
+\markEDR{admin}{EDR Solution}{protected}
+\markEDR{user}{EDR Solution}{protected}
+
+\markPatchStatus{webserver}{0}{2025-01-15}
+\markPatchStatus{appserver}{0}{2025-01-14}
+\markPatchStatus{database}{0}{2025-01-15}
+
+\markBackupStatus{database}{2025-01-16}{current}
+\markZeroTrust{admin}{yes}
+
+% ===== NETWORK SEGMENTATION =====
+\drawSegmentBoundary{-5}{1}{10}{3}{Production Environment}
+\drawSegmentBoundary{-3}{-2}{6}{0}{End User Network}
+
+% ===== COMPLIANCE DASHBOARDS (CUSTOMIZE SCORES) =====
+
+% NIST Cybersecurity Framework
+% Parameters: x, y, Identify%, Protect%, Detect%, Respond%, Recover%
+\drawNISTCompliance{-14}{8}{85}{90}{78}{82}{75}
+
+% CIS Controls v8
+% Parameters: x, y, IG1_count, IG2_count, IG3_count
+\drawCISCompliance{-14}{4}{18}{35}{15}
+
+% Security Status
+% Parameters: x, y, overall_score%
+\drawSecurityStatus{-14}{0}{85}
+
+% Multi-framework comparison
+\drawComplianceComparison{10}{8}
+
+% Security coverage heatmap
+\drawCoverageHeatmap{10}{3}
+
+% Defense layers
+\drawDefenseLayers{10}{-2}
+
+% ===== TITLE =====
+\node[font=\Large\bfseries, text=green!70!black] at (0,11) {Compliance Report: [FRAMEWORK NAME]};
+\node[font=\small] at (0,10.3) {Audit Date: [DATE] | Status: [STATUS]};
+
+% Compliance summary box
+\node[draw=green!70!black, fill=green!10, rounded corners=3pt,
+      inner sep=5pt, text width=4.5cm, font=\tiny, anchor=south west] at (-14,-8) {
+    \textbf{COMPLIANCE SUMMARY} \\
+    \hline \\
+    \textbf{Framework:} [NAME] \\
+    \textbf{Score:} XX\% \\
+    \textbf{Status:} Compliant/Partial \\
+    \textbf{Last Audit:} YYYY-MM-DD \\
+    \\
+    \textbf{Strengths:} \\
+    → [Item 1] \\
+    → [Item 2] \\
+    \\
+    \textbf{Improvements Needed:} \\
+    → [Item 1] \\
+    → [Item 2]
+};
+
+\end{tikzpicture}
+\end{document}
