@@ -295,7 +295,111 @@ class NetworkDataValidator:
             else:
                 self.warnings.append("JSON file missing 'nodes' or 'network' key")
 
-            # TODO: Add more detailed JSON validation
+            # Extract nodes from different possible structures
+            nodes = []
+            if 'nodes' in data:
+                nodes = data['nodes']
+            elif 'network' in data and 'nodes' in data['network']:
+                nodes = data['network']['nodes']
+
+            # Validate nodes if present
+            if nodes:
+                for idx, node in enumerate(nodes):
+                    if not isinstance(node, dict):
+                        self.errors.append(f"Node {idx}: Not a valid object")
+                        continue
+
+                    # Check required fields
+                    node_id = node.get('id', '').strip() if isinstance(node.get('id'), str) else ''
+                    if not node_id:
+                        self.errors.append(f"Node {idx}: Missing or empty 'id' field")
+                    elif node_id in self.node_ids:
+                        self.errors.append(f"Node {idx}: Duplicate node ID '{node_id}'")
+                    else:
+                        self.node_ids.add(node_id)
+
+                    # Check node type
+                    node_type = node.get('type', '').strip() if isinstance(node.get('type'), str) else ''
+                    if node_type and not self.validate_node_type(node_type):
+                        self.errors.append(f"Node {idx} ({node_id}): Invalid node type '{node_type}'")
+
+                    # Check IP if present
+                    ip = node.get('ip', '').strip() if isinstance(node.get('ip'), str) else ''
+                    if ip and not self.validate_ipv4(ip):
+                        self.errors.append(f"Node {idx} ({node_id}): Invalid IP address '{ip}'")
+
+                    # Check position if present
+                    if 'position' in node:
+                        pos = node['position']
+                        if not isinstance(pos, dict):
+                            self.warnings.append(f"Node {idx} ({node_id}): Invalid position format")
+                        elif 'x' not in pos or 'y' not in pos:
+                            self.warnings.append(f"Node {idx} ({node_id}): Position missing x or y coordinate")
+
+                print(f"{GREEN}✓ Validated {len(nodes)} nodes{NC}")
+
+            # Extract and validate connections if present
+            connections = []
+            if 'connections' in data:
+                connections = data['connections']
+            elif 'network' in data and 'connections' in data['network']:
+                connections = data['network']['connections']
+
+            if connections:
+                for idx, conn in enumerate(connections):
+                    if not isinstance(conn, dict):
+                        self.errors.append(f"Connection {idx}: Not a valid object")
+                        continue
+
+                    source = conn.get('source', '').strip() if isinstance(conn.get('source'), str) else ''
+                    dest = conn.get('destination', '').strip() if isinstance(conn.get('destination'), str) else ''
+
+                    if not source:
+                        self.errors.append(f"Connection {idx}: Missing or empty 'source' field")
+                    if not dest:
+                        self.errors.append(f"Connection {idx}: Missing or empty 'destination' field")
+
+                    # Warn if nodes not found
+                    if self.node_ids:
+                        if source and source not in self.node_ids:
+                            self.warnings.append(f"Connection {idx}: Source '{source}' not found in nodes")
+                        if dest and dest not in self.node_ids:
+                            self.warnings.append(f"Connection {idx}: Destination '{dest}' not found in nodes")
+
+                    # Check connection type if present
+                    conn_type = conn.get('type', '').strip() if isinstance(conn.get('type'), str) else ''
+                    if conn_type and not self.validate_connection_type(conn_type):
+                        self.errors.append(f"Connection {idx}: Invalid connection type '{conn_type}'")
+
+                print(f"{GREEN}✓ Validated {len(connections)} connections{NC}")
+
+            # Extract and validate threats if present
+            threats = []
+            if 'threats' in data:
+                threats = data['threats']
+            elif 'network' in data and 'threats' in data['network']:
+                threats = data['network']['threats']
+
+            if threats:
+                for idx, threat in enumerate(threats):
+                    if not isinstance(threat, dict):
+                        self.errors.append(f"Threat {idx}: Not a valid object")
+                        continue
+
+                    target = threat.get('target', '').strip() if isinstance(threat.get('target'), str) else ''
+                    if not target:
+                        self.errors.append(f"Threat {idx}: Missing or empty 'target' field")
+                    elif self.node_ids and target not in self.node_ids:
+                        self.warnings.append(f"Threat {idx}: Target '{target}' not found in nodes")
+
+                    # Check severity if present
+                    if 'severity' in threat:
+                        severity = threat['severity']
+                        if isinstance(severity, (int, float)):
+                            if severity < 0 or severity > 10:
+                                self.warnings.append(f"Threat {idx}: Severity {severity} outside CVSS range (0-10)")
+
+                print(f"{GREEN}✓ Validated {len(threats)} threats{NC}")
 
             return len(self.errors) == 0
 
