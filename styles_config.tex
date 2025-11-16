@@ -791,12 +791,185 @@
     }
 }
 
-% TODO: Advanced connection rendering
-% - Add bandwidth indicators (line thickness based on traffic volume)
-% - Implement animated flow direction indicators
-% - Add connection labels for protocol/port information
-% - Create curved/bezier connection options for complex topologies
-% - Add connection aggregation for high-density diagrams
+% ============================================================================
+% ADVANCED CONNECTION STYLES
+% ============================================================================
+
+% Bandwidth-based connection styles (line thickness indicates capacity)
+\tikzset{
+    % Low bandwidth (1-10 Mbps)
+    bw low/.style={
+        draw=connNormal,
+        line width=0.5pt,
+        -{Stealth[length=2mm]}
+    },
+
+    % Medium bandwidth (10-100 Mbps)
+    bw medium/.style={
+        draw=connNormal,
+        line width=1pt,
+        -{Stealth[length=3mm]}
+    },
+
+    % High bandwidth (100-1000 Mbps)
+    bw high/.style={
+        draw=connNormal,
+        line width=2pt,
+        -{Stealth[length=4mm]}
+    },
+
+    % Very high bandwidth (1+ Gbps)
+    bw very high/.style={
+        draw=connNormal,
+        line width=3pt,
+        -{Stealth[length=5mm]}
+    },
+
+    % Congested connection (red, thick)
+    bw congested/.style={
+        draw=red!70,
+        line width=2.5pt,
+        dashed,
+        dash pattern=on 3pt off 2pt,
+        -{Stealth[length=4mm]}
+    }
+}
+
+% Special connection types
+\tikzset{
+    % VPN tunnel (dashed tube effect)
+    vpn tunnel/.style={
+        draw=connEncrypted,
+        line width=2pt,
+        dashed,
+        dash pattern=on 6pt off 3pt,
+        double distance=2pt,
+        -{Stealth[length=4mm]}
+    },
+
+    % Wireless connection (wave pattern)
+    wireless/.style={
+        draw=blue!60,
+        line width=1pt,
+        decorate,
+        decoration={snake, amplitude=1mm, segment length=5mm},
+        -{Stealth[length=3mm]}
+    },
+
+    % Fiber optic (light beam effect)
+    fiber optic/.style={
+        draw=yellow!80,
+        line width=2pt,
+        -{Stealth[length=4mm]},
+        postaction={
+            draw=yellow!40,
+            line width=3pt,
+            shorten >=2pt,
+            shorten <=2pt
+        }
+    },
+
+    % Satellite link
+    satellite link/.style={
+        draw=purple!60,
+        line width=1pt,
+        dashed,
+        dash pattern=on 2pt off 2pt,
+        -{Stealth[length=3mm]}
+    },
+
+    % Blocked/firewall connection
+    blocked conn/.style={
+        draw=red,
+        line width=2pt,
+        {Bar[length=3mm]}-{Bar[length=3mm]}
+    },
+
+    % Load balanced connection
+    load balanced/.style={
+        draw=connNormal,
+        line width=1.5pt,
+        double distance=1pt,
+        -{Stealth[length=3mm]}
+    }
+}
+
+% Bezier curve connections for complex topologies
+\tikzset{
+    % Smooth curve connection
+    curve conn/.style={
+        draw=connNormal,
+        line width=1pt,
+        -{Stealth[length=3mm]},
+        bend left=15
+    },
+
+    % Sharp curve
+    curve sharp/.style={
+        draw=connNormal,
+        line width=1pt,
+        -{Stealth[length=3mm]},
+        bend left=45
+    },
+
+    % Reverse curve
+    curve reverse/.style={
+        draw=connNormal,
+        line width=1pt,
+        -{Stealth[length=3mm]},
+        bend right=15
+    }
+}
+
+% Connection aggregation (for high-density diagrams)
+\newcommand{\aggregatedConn}[3]{
+    % #1 = number of connections
+    % #2 = from node
+    % #3 = to node
+    \draw[draw=connNormal, line width=2pt, -{Stealth[length=4mm]}] (#2) -- (#3)
+        node[midway, fill=white, inner sep=2pt, font=\tiny] {×#1};
+}
+
+% Protocol/port label helpers
+\newcommand{\connLabel}[3]{
+    % #1 = protocol name
+    % #2 = port number
+    % #3 = position (above/below/left/right)
+    \node[port label, #3] {#1:#2};
+}
+
+% Connection with inline protocol label
+\tikzset{
+    labeled conn/.style 2 args={
+        draw=connNormal,
+        line width=1pt,
+        -{Stealth[length=3mm]},
+        postaction={
+            decoration={
+                markings,
+                mark=at position 0.5 with {
+                    \node[fill=white, inner sep=2pt, font=\tiny] {#1:#2};
+                }
+            },
+            decorate
+        }
+    }
+}
+
+% Bandwidth utilization indicator
+\newcommand{\bwIndicator}[2]{
+    % #1 = percentage (0-100)
+    % #2 = connection path
+    \ifnum#1<50
+        \def\bwcolor{green!70}
+    \else\ifnum#1<80
+        \def\bwcolor{orange!70}
+    \else
+        \def\bwcolor{red!70}
+    \fi\fi
+    \draw[\bwcolor, line width=1.5pt] #2
+        node[midway, fill=white, inner sep=1pt, font=\tiny] {#1\%};
+}
 
 % ============================================================================
 % TEXT LABEL STYLES
@@ -1010,6 +1183,245 @@
     }{
         \renewcommand{\diagramScale}{1.0}
     }}}}}}
+}
+
+% ============================================================================
+% DIAGRAM ANNOTATIONS AND METADATA
+% ============================================================================
+
+% Annotation callout styles
+\tikzset{
+    % Info callout (blue)
+    info callout/.style={
+        rectangle,
+        rounded corners=2pt,
+        draw=blue!70,
+        fill=blue!10,
+        inner sep=4pt,
+        font=\small,
+        text width=3cm
+    },
+
+    % Warning callout (orange)
+    warning callout/.style={
+        rectangle,
+        rounded corners=2pt,
+        draw=orange!70,
+        fill=orange!10,
+        inner sep=4pt,
+        font=\small,
+        text width=3cm
+    },
+
+    % Critical callout (red)
+    critical callout/.style={
+        rectangle,
+        rounded corners=2pt,
+        draw=red!70,
+        fill=red!10,
+        inner sep=4pt,
+        font=\small,
+        text width=3cm
+    },
+
+    % Success callout (green)
+    success callout/.style={
+        rectangle,
+        rounded corners=2pt,
+        draw=green!70,
+        fill=green!10,
+        inner sep=4pt,
+        font=\small,
+        text width=3cm
+    },
+
+    % Note box
+    note box/.style={
+        rectangle,
+        rounded corners=3pt,
+        draw=gray!50,
+        fill=yellow!10,
+        inner sep=5pt,
+        font=\footnotesize,
+        align=left
+    }
+}
+
+% Network zone/subnet boundary styles
+\tikzset{
+    % DMZ zone
+    dmz zone/.style={
+        rectangle,
+        rounded corners=5pt,
+        draw=red!50,
+        fill=red!5,
+        dashed,
+        line width=1.5pt,
+        inner sep=10pt
+    },
+
+    % Internal zone
+    internal zone/.style={
+        rectangle,
+        rounded corners=5pt,
+        draw=green!50,
+        fill=green!5,
+        dashed,
+        line width=1.5pt,
+        inner sep=10pt
+    },
+
+    % Trusted zone
+    trusted zone/.style={
+        rectangle,
+        rounded corners=5pt,
+        draw=blue!50,
+        fill=blue!5,
+        dashed,
+        line width=1.5pt,
+        inner sep=10pt
+    },
+
+    % Cloud/external zone
+    external zone/.style={
+        rectangle,
+        rounded corners=5pt,
+        draw=orange!50,
+        fill=orange!5,
+        dashed,
+        line width=1.5pt,
+        inner sep=10pt
+    }
+}
+
+% Diagram metadata box
+\newcommand{\diagramMetadata}[5]{
+    % #1 = title
+    % #2 = author
+    % #3 = date
+    % #4 = version
+    % #5 = position
+    \node[rectangle, draw=black!30, fill=white, rounded corners,
+          inner sep=5pt, font=\small, anchor=#5] {
+        \begin{tabular}{ll}
+            \textbf{Diagram:} & #1 \\
+            \textbf{Author:} & #2 \\
+            \textbf{Date:} & #3 \\
+            \textbf{Version:} & #4 \\
+        \end{tabular}
+    };
+}
+
+% Network statistics box
+\newcommand{\networkStats}[6]{
+    % #1 = total nodes
+    % #2 = servers
+    % #3 = clients
+    % #4 = connections
+    % #5 = threats
+    % #6 = position
+    \node[rectangle, draw=blue!30, fill=blue!5, rounded corners,
+          inner sep=5pt, font=\small, anchor=#6] {
+        \begin{tabular}{ll}
+            \textbf{Network Statistics} \\[2pt]
+            Total Nodes: & #1 \\
+            Servers: & #2 \\
+            Clients: & #3 \\
+            Connections: & #4 \\
+            Active Threats: & \textcolor{red}{#5} \\
+        \end{tabular}
+    };
+}
+
+% IP range annotation
+\newcommand{\ipRange}[2]{
+    % #1 = IP range (e.g., 192.168.1.0/24)
+    % #2 = description
+    \node[font=\tiny\ttfamily, fill=white, inner sep=2pt] {#1};
+    \node[font=\tiny, text=gray, below] {#2};
+}
+
+% Timestamp annotation
+\newcommand{\timestamp}{
+    \node[font=\tiny, text=gray] at (current page.south east)
+        [anchor=south east, xshift=-5mm, yshift=5mm]
+        {Generated: \today\ at \currenttime};
+}
+
+% ============================================================================
+% NETWORK TOPOLOGY TEMPLATES
+% ============================================================================
+
+% Helper to create a standard 3-tier architecture
+\newcommand{\threeTierTemplate}[9]{
+    % #1-3 = web tier nodes (names)
+    % #4-6 = app tier nodes (names)
+    % #7-9 = data tier nodes (names)
+
+    % Web Tier
+    \node[gradient server] (#1) at (0,6) {Web\\#1};
+    \node[gradient server] (#2) at (3,6) {Web\\#2};
+    \node[gradient server] (#3) at (6,6) {Web\\#3};
+
+    % App Tier
+    \node[gradient server] (#4) at (0,3) {App\\#4};
+    \node[gradient server] (#5) at (3,3) {App\\#5};
+    \node[gradient server] (#6) at (6,3) {App\\#6};
+
+    % Data Tier
+    \node[radial server] (#7) at (0,0) {DB\\#7};
+    \node[radial server] (#8) at (3,0) {DB\\#8};
+    \node[radial server] (#9) at (6,0) {DB\\#9};
+
+    % Standard connections
+    \foreach \w in {#1,#2,#3} {
+        \foreach \a in {#4,#5,#6} {
+            \draw[normal conn] (\w) -- (\a);
+        }
+    }
+    \foreach \a in {#4,#5,#6} {
+        \foreach \d in {#7,#8,#9} {
+            \draw[encrypted conn] (\a) -- (\d);
+        }
+    }
+}
+
+% Hub and spoke topology helper
+\newcommand{\hubSpokeTemplate}[5]{
+    % #1 = hub node name
+    % #2 = number of spokes
+    % #3 = radius
+    % #4 = hub style
+    % #5 = spoke style
+
+    \node[#4] (#1) at (0,0) {Hub\\#1};
+
+    \foreach \i in {1,...,#2} {
+        \pgfmathsetmacro{\angle}{360/#2 * (\i - 1)}
+        \node[#5] (spoke\i) at (\angle:#3) {Spoke\\\i};
+        \draw[normal conn] (#1) -- (spoke\i);
+    }
+}
+
+% Mesh topology helper
+\newcommand{\meshTemplate}[3]{
+    % #1 = number of nodes
+    % #2 = radius
+    % #3 = node style
+
+    \foreach \i in {1,...,#1} {
+        \pgfmathsetmacro{\angle}{360/#1 * (\i - 1)}
+        \node[#3] (mesh\i) at (\angle:#2) {Node\\\i};
+    }
+
+    % Full mesh connections
+    \foreach \i in {1,...,#1} {
+        \foreach \j in {1,...,#1} {
+            \ifnum\i<\j
+                \draw[normal conn] (mesh\i) -- (mesh\j);
+            \fi
+        }
+    }
 }
 
 % TODO: Page size optimization

@@ -2,6 +2,19 @@
 
 This directory contains example files demonstrating all the styling features of the Network Diagram Generator.
 
+## Quick Start
+
+```bash
+# Linux/Mac
+./compile_all.sh
+
+# Windows
+compile_all.bat
+
+# Single file
+pdflatex 01_basic_network_colorschemes.tex
+```
+
 ## Example Files
 
 ### 01_basic_network_colorschemes.tex
@@ -107,6 +120,73 @@ This directory contains example files demonstrating all the styling features of 
 - Data flow animations
 - Security dashboard
 - Layer-based network architecture
+
+---
+
+### 08_advanced_features_demo.tex
+**Demonstrates:** Advanced connection styles and annotations
+- All new connection types from v2.0
+- Network zone boundaries
+- Topology templates
+
+**Features:**
+- 10+ connection styles (VPN, wireless, fiber, satellite, etc.)
+- Bandwidth indicators (low, medium, high, congested)
+- Network zones (DMZ, internal, trusted, external)
+- Callout annotations (info, warning, critical, success)
+- Hub-and-spoke and mesh topology templates
+- Metadata and statistics boxes
+- Comprehensive legend with new connection types
+
+---
+
+### 99_feature_validation.tex
+**Demonstrates:** Complete feature test suite
+- Validation of all 60+ features
+- Ensures compilation compatibility
+
+**Features:**
+- Tests all color schemes (5 types)
+- Tests all node styles (15+ variants)
+- Tests all connection types (15+ styles)
+- Tests all icons and badges
+- Tests annotations and zones
+- Comprehensive checklist
+- Auto-validation report
+
+**Purpose:** Use this file to verify your LaTeX environment supports all features.
+
+---
+
+## Compilation Scripts
+
+### compile_all.sh (Linux/Mac)
+Automated compilation script for all examples.
+
+**Usage:**
+```bash
+chmod +x compile_all.sh
+./compile_all.sh           # Uses pdflatex
+./compile_all.sh lualatex  # Uses lualatex
+```
+
+**Features:**
+- Compiles all examples automatically
+- Two-pass compilation for references
+- Error reporting with log files
+- Success/failure summary
+- Auto-cleanup of auxiliary files
+
+### compile_all.bat (Windows)
+Windows batch version of compilation script.
+
+**Usage:**
+```cmd
+compile_all.bat           REM Uses pdflatex
+compile_all.bat lualatex  REM Uses lualatex
+```
+
+---
 
 ## Compiling Examples
 
