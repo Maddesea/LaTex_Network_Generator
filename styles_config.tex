@@ -22,6 +22,13 @@
 \definecolor{awsOrange}{RGB}{255, 153, 0}
 \definecolor{azureBlue}{RGB}{0, 120, 212}
 \definecolor{gcpBlue}{RGB}{66, 133, 244}
+\definecolor{statusOnline}{RGB}{46, 204, 113}
+\definecolor{statusOffline}{RGB}{189, 195, 199}
+\definecolor{statusDegraded}{RGB}{230, 126, 34}
+\definecolor{statusMaintenance}{RGB}{52, 152, 219}
+\definecolor{proxyPurple}{RGB}{155, 89, 182}
+\definecolor{vpnGreen}{RGB}{26, 188, 156}
+\definecolor{dnsBlue}{RGB}{41, 128, 185}
 
 % Threat indicator colors
 \definecolor{threatCritical}{RGB}{192, 57, 43}
@@ -362,6 +369,63 @@
         fill=gcpBlue!15,
         draw=gcpBlue!80,
         line width=1.5pt
+    },
+
+    % Proxy server style
+    proxy/.style={
+        base node,
+        rectangle,
+        rounded corners=3pt,
+        fill=proxyPurple!20,
+        draw=proxyPurple!80,
+        line width=1.5pt
+    },
+
+    % VPN endpoint style
+    vpn/.style={
+        base node,
+        trapezium,
+        trapezium left angle=75,
+        trapezium right angle=105,
+        fill=vpnGreen!20,
+        draw=vpnGreen!80,
+        line width=2pt
+    },
+
+    % DNS server style
+    dns/.style={
+        base node,
+        ellipse,
+        fill=dnsBlue!20,
+        draw=dnsBlue!80,
+        line width=1.5pt,
+        minimum width=2.5cm,
+        minimum height=1.8cm
+    },
+
+    % Status indicator styles
+    status online/.style={
+        circle,
+        fill=statusOnline,
+        inner sep=3pt
+    },
+
+    status offline/.style={
+        circle,
+        fill=statusOffline,
+        inner sep=3pt
+    },
+
+    status degraded/.style={
+        circle,
+        fill=statusDegraded,
+        inner sep=3pt
+    },
+
+    status maintenance/.style={
+        circle,
+        fill=statusMaintenance,
+        inner sep=3pt
     }
 }
 
@@ -470,6 +534,30 @@
         text=black!60,
         fill=white,
         inner sep=1pt
+    },
+
+    % Status badge label
+    status badge/.style={
+        font=\tiny\sffamily\bfseries,
+        text=white,
+        inner sep=2pt,
+        rounded corners=2pt
+    },
+
+    % OS badge label
+    os badge/.style={
+        font=\tiny\ttfamily\bfseries,
+        text=white,
+        inner sep=2pt,
+        rounded corners=2pt
+    },
+
+    % Service badge label
+    service badge/.style={
+        font=\tiny\sffamily,
+        text=white,
+        inner sep=2pt,
+        rounded corners=1pt
     }
 }
 

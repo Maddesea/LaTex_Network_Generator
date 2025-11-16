@@ -189,6 +189,60 @@ In `network_diagram_generator.tex`:
 | `\drawServerRack` | Server rack | Visual rack container |
 | `\addClusterLabel` | Cluster label | Adds label with node count |
 
+### Specialized Network Appliances (NEW!)
+
+| Command | Description | Visual |
+|---------|-------------|--------|
+| `\createProxy` | Proxy server | Purple rectangle |
+| `\createProxyWithType` | Proxy with type | Shows forward/reverse |
+| `\createVPN` | VPN endpoint | Trapezium shape in green |
+| `\createVPNWithProtocol` | VPN with protocol | Shows IPSec/OpenVPN/etc. |
+| `\createDNS` | DNS server | Ellipse shape |
+| `\createDNSWithZone` | DNS with zone info | Shows domain zones |
+
+### Node Status System (NEW!)
+
+| Command | Description | Status Types |
+|---------|-------------|--------------|
+| `\addNodeStatus` | Add status indicator | online, offline, degraded, maintenance |
+| `\addNodeStatusWithLabel` | Status with label | Colored badge with text |
+| `\createServerWithStatus` | Server with status | Combined creation command |
+
+**Status Colors:**
+- **Online**: Green dot (operational)
+- **Offline**: Gray dot (unavailable)
+- **Degraded**: Orange dot (performance issues)
+- **Maintenance**: Blue dot (scheduled downtime)
+
+### OS Badge System (NEW!)
+
+| Command | Description | Supported OS |
+|---------|-------------|--------------|
+| `\addOSBadge` | Add OS badge | windows, linux, macos, unix, bsd |
+| `\createServerWithOS` | Server with OS | Creates server + OS badge |
+| `\createServerWithStatusAndOS` | Server with status & OS | All-in-one command |
+
+**Example:**
+```latex
+\createServerWithStatusAndOS{web1}{192.168.1.10}{0}{0}{Web Server}{online}{linux}
+```
+
+### Service/Port Badge System (NEW!)
+
+| Command | Description | Supported Services |
+|---------|-------------|-------------------|
+| `\addServiceBadge` | Add service badge | http, https, ssh, rdp, ftp, smtp, dns, sql |
+
+**Common Services with Ports:**
+- HTTP:80, HTTPS:443, SSH:22, RDP:3389, FTP:21, SMTP:25, DNS:53, SQL:3306
+
+### Security & Compliance (NEW!)
+
+| Command | Description | Options |
+|---------|-------------|---------|
+| `\addSecurityPosture` | Security level | high, medium, low, critical |
+| `\addComplianceBadge` | Compliance standard | pci, hipaa, sox, iso27001, gdpr |
+
 ## Available Connection Types
 
 | Command | Description | Visual Style |
