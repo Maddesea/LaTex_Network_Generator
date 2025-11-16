@@ -1,0 +1,210 @@
+% node_definitions.tex - Network node rendering and management
+% This module defines how to create and render individual network assets
+
+% ============================================================================
+% NODE DATA STRUCTURES
+% ============================================================================
+
+% Node counter for auto-indexing
+\newcounter{nodecount}
+
+% TODO: Data structure improvements
+% - Implement hash map for O(1) node lookup by IP
+% - Add node grouping/clustering support
+% - Create hierarchical node relationships (parent-child)
+% - Support for virtual/container nodes
+
+% ============================================================================
+% BASIC NODE CREATION COMMANDS
+% ============================================================================
+
+% Create a server node
+% Usage: \createServer{name}{ip}{x}{y}{label}
+\newcommand{\createServer}[5]{
+    \node[server] (#1) at (#3,#4) {
+        \textbf{#5} \\[2pt]
+        \tikz\node[ip label]{#2};
+    };
+}
+
+% Create a client node
+% Usage: \createClient{name}{ip}{x}{y}{label}
+\newcommand{\createClient}[5]{
+    \node[client] (#1) at (#3,#4) {
+        \textbf{#5} \\[2pt]
+        \tikz\node[ip label]{#2};
+    };
+}
+
+% Create a router node
+% Usage: \createRouter{name}{ip}{x}{y}{label}
+\newcommand{\createRouter}[5]{
+    \node[router] (#1) at (#3,#4) {
+        \textbf{#5} \\[2pt]
+        \tikz\node[ip label]{#2};
+    };
+}
+
+% Create a firewall node
+% Usage: \createFirewall{name}{ip}{x}{y}{label}
+\newcommand{\createFirewall}[5]{
+    \node[firewall] (#1) at (#3,#4) {
+        \textbf{#5} \\[2pt]
+        \tikz\node[ip label]{#2};
+    };
+}
+
+% Create a switch node
+% Usage: \createSwitch{name}{ip}{x}{y}{label}
+\newcommand{\createSwitch}[5]{
+    \node[switch] (#1) at (#3,#4) {
+        \textbf{#5} \\[2pt]
+        \tikz\node[ip label]{#2};
+    };
+}
+
+% Create a cloud/internet node
+% Usage: \createCloud{name}{x}{y}{label}
+\newcommand{\createCloud}[4]{
+    \node[cloud] (#1) at (#2,#3) {
+        \textbf{#4}
+    };
+}
+
+% Create an attacker node
+% Usage: \createAttacker{name}{ip}{x}{y}{label}
+\newcommand{\createAttacker}[5]{
+    \node[attacker] (#1) at (#3,#4) {
+        \textbf{#5} \\[2pt]
+        \tikz\node[ip label, fill=threatCritical!20]{#2};
+    };
+}
+
+% TODO: Advanced node creation
+% - Add support for custom node shapes via parameters
+% - Implement node templates for common device types
+% - Add automatic IP validation and formatting
+% - Create composite nodes (e.g., server rack with multiple servers)
+% - Support for node status indicators (up/down/warning)
+
+% ============================================================================
+% ENHANCED NODE VARIANTS
+% ============================================================================
+
+% Create a server with port information
+% Usage: \createServerWithPorts{name}{ip}{x}{y}{label}{ports}
+\newcommand{\createServerWithPorts}[6]{
+    \node[server, minimum height=2cm] (#1) at (#3,#4) {
+        \textbf{#5} \\[2pt]
+        \tikz\node[ip label]{#2}; \\[3pt]
+        \tikz\node[port label]{#6};
+    };
+}
+
+% Create a node with security status indicator
+% Usage: \createSecureNode{type}{name}{ip}{x}{y}{label}{status}
+% Status: secure, warning, compromised
+\newcommand{\createSecureNode}[7]{
+    \ifthenelse{\equal{#7}{secure}}{
+        \def\statuscolor{clientGreen}
+    }{
+    \ifthenelse{\equal{#7}{warning}}{
+        \def\statuscolor{threatMedium}
+    }{
+        \def\statuscolor{threatCritical}
+    }}
+    
+    \ifthenelse{\equal{#1}{server}}{
+        \createServer{#2}{#3}{#4}{#5}{#6}
+    }{
+    \ifthenelse{\equal{#1}{client}}{
+        \createClient{#2}{#3}{#4}{#5}{#6}
+    }{
+        \createServer{#2}{#3}{#4}{#5}{#6}
+    }}
+    
+    \node[circle, fill=\statuscolor, inner sep=2pt, 
+          anchor=north east] at (#2.north east) {};
+}
+
+% TODO: Enhanced node variants
+% - Database server nodes with cylinder shape
+% - Load balancer nodes with special indicators
+% - Virtual machine nodes with nested appearance
+% - Container/Docker nodes with stacked appearance
+% - Mobile device nodes with phone/tablet shapes
+% - IoT device nodes with specialized icons
+
+% ============================================================================
+% NODE RENDERING ENGINE
+% ============================================================================
+
+% Main command to render all nodes from data structure
+\newcommand{\renderNetworkNodes}{
+    % This will be populated by network_data.tex
+    % Example structure:
+    % \createServer{srv1}{192.168.1.10}{0}{0}{Web Server}
+    % \createClient{pc1}{192.168.1.100}{-5}{-3}{Workstation 1}
+}
+
+% TODO: Intelligent rendering
+% - Auto-layout algorithm to prevent overlapping nodes
+% - Force-directed graph layout for organic appearance
+% - Hierarchical layout for structured networks
+% - Subnet-based clustering and grouping
+% - Zoom levels for large networks (overview vs detail)
+% - LOD (Level of Detail) rendering for performance
+
+% ============================================================================
+% NODE METADATA AND ANNOTATIONS
+% ============================================================================
+
+% Add annotation to existing node
+% Usage: \annotateNode{nodename}{annotation}{position}
+% Position: above, below, left, right, above right, etc.
+\newcommand{\annotateNode}[3]{
+    \node[font=\tiny\sffamily\itshape, text=black!60] at (#1.#3) {#2};
+}
+
+% Add threat indicator badge to node
+% Usage: \addThreatBadge{nodename}{level}
+% Level: critical, high, medium, low, info
+\newcommand{\addThreatBadge}[2]{
+    \ifthenelse{\equal{#2}{critical}}{
+        \def\badgecolor{threatCritical}
+        \def\badgetext{CRIT}
+    }{
+    \ifthenelse{\equal{#2}{high}}{
+        \def\badgecolor{threatHigh}
+        \def\badgetext{HIGH}
+    }{
+    \ifthenelse{\equal{#2}{medium}}{
+        \def\badgecolor{threatMedium}
+        \def\badgetext{MED}
+    }{
+    \ifthenelse{\equal{#2}{low}}{
+        \def\badgecolor{threatLow}
+        \def\badgetext{LOW}
+    }{
+        \def\badgecolor{threatInfo}
+        \def\badgetext{INFO}
+    }}}}
+    
+    \node[threat label, fill=\badgecolor, anchor=north west] 
+        at (#1.north west) {\badgetext};
+}
+
+% Add service/OS label to node
+% Usage: \addNodeMetadata{nodename}{metadata}
+\newcommand{\addNodeMetadata}[2]{
+    \node[font=\tiny\ttfamily, text=black!50, anchor=south] 
+        at (#1.south) [below=1pt] {#2};
+}
+
+% TODO: Metadata enhancements
+% - CVE vulnerability badges with scoring
+% - Compliance status indicators (PCI, HIPAA, etc.)
+% - Performance metrics (CPU, memory, network utilization)
+% - Last scan timestamp and security posture
+% - Asset criticality indicators (business impact)
+% - Custom metadata fields via configuration

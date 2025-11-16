@@ -1,0 +1,267 @@
+% connection_renderer.tex - Network connection rendering and visualization
+% This module handles all connection types, paths, and flow visualization
+
+% ============================================================================
+% CONNECTION DATA STRUCTURES
+% ============================================================================
+
+% Connection counter
+\newcounter{conncount}
+
+% TODO: Connection management
+% - Hash map for connection lookup
+% - Bidirectional connection deduplication
+% - Connection grouping by protocol/type
+% - Connection state tracking (active/inactive)
+
+% ============================================================================
+% BASIC CONNECTION COMMANDS
+% ============================================================================
+
+% Draw a normal connection
+% Usage: \drawConnection{from}{to}{label}
+\newcommand{\drawConnection}[3]{
+    \draw[normal conn] (#1) -- node[above, font=\tiny] {#3} (#2);
+}
+
+% Draw an encrypted connection
+% Usage: \drawEncryptedConnection{from}{to}{protocol}
+\newcommand{\drawEncryptedConnection}[3]{
+    \draw[encrypted conn] (#1) -- node[above, font=\tiny\ttfamily] {#3} (#2);
+}
+
+% Draw a suspicious connection
+% Usage: \drawSuspiciousConnection{from}{to}{reason}
+\newcommand{\drawSuspiciousConnection}[3]{
+    \draw[suspicious conn] (#1) -- node[above, font=\tiny, fill=yellow!30] {#3} (#2);
+}
+
+% Draw an attack connection
+% Usage: \drawAttackConnection{from}{to}{attack_type}
+\newcommand{\drawAttackConnection}[3]{
+    \draw[attack conn] (#1) -- node[midway, above, threat label] {#3} (#2);
+}
+
+% Bidirectional connection
+% Usage: \drawBidirectional{from}{to}{label}
+\newcommand{\drawBidirectional}[3]{
+    \draw[normal conn, bidirectional] (#1) -- node[above, font=\tiny] {#3} (#2);
+}
+
+% TODO: Enhanced connection types
+% - VPN tunnel connections with special styling
+% - Wireless connections with wave pattern
+% - Fiber optic connections with light effects
+% - Serial/legacy connections with different line style
+% - Satellite links with orbital arc paths
+
+% ============================================================================
+% ADVANCED CONNECTION RENDERING
+% ============================================================================
+
+% Connection with bandwidth indicator
+% Usage: \drawConnectionWithBandwidth{from}{to}{bandwidth}{label}
+\newcommand{\drawConnectionWithBandwidth}[4]{
+    % Line width based on bandwidth
+    \pgfmathsetmacro{\linewidth}{1 + (#3/1000)}
+    \draw[draw=connNormal, line width=\linewidth pt, -{Stealth[length=3mm]}] 
+        (#1) -- node[above, font=\tiny] {#4: #3 Mbps} (#2);
+}
+
+% Connection with protocol and port information
+% Usage: \drawConnectionWithPort{from}{to}{protocol}{port}{label}
+\newcommand{\drawConnectionWithPort}[5]{
+    \draw[normal conn] (#1) -- 
+        node[above, font=\tiny\ttfamily] {#5} 
+        node[below, port label] {#3:#4} 
+        (#2);
+}
+
+% Curved connection (for avoiding overlaps)
+% Usage: \drawCurvedConnection{from}{to}{bend}{label}
+\newcommand{\drawCurvedConnection}[4]{
+    \draw[normal conn] (#1) to[bend left=#3] 
+        node[above, font=\tiny] {#4} (#2);
+}
+
+% TODO: Advanced rendering features
+% - Automatic path finding to avoid node overlaps
+% - Bezier curve connections for organic look
+% - Multi-segment paths through waypoints
+% - Connection bundling for high-density areas
+% - Edge routing algorithms (orthogonal, polyline)
+
+% ============================================================================
+% CONNECTION FLOW VISUALIZATION
+% ============================================================================
+
+% Animated flow indicators (requires animation package)
+% Usage: \drawFlowConnection{from}{to}{direction}{speed}
+\newcommand{\drawFlowConnection}[4]{
+    \draw[draw=connNormal, line width=1.5pt, -{Stealth[length=3mm]}] (#1) -- (#2)
+        [postaction={
+            decorate,
+            decoration={
+                markings,
+                mark=between positions 0.1 and 0.9 step 0.2 with {
+                    \ifthenelse{\equal{#3}{forward}}{
+                        \arrow{Stealth[length=2mm, fill=connNormal]}
+                    }{
+                        \arrow{Stealth[reversed, length=2mm, fill=connNormal]}
+                    }
+                }
+            }
+        }];
+}
+
+% Traffic flow with volume indicator
+% Usage: \drawTrafficFlow{from}{to}{packets_per_sec}{label}
+\newcommand{\drawTrafficFlow}[4]{
+    \pgfmathsetmacro{\density}{min(10, #3/100)}
+    \draw[draw=connNormal, line width=1.5pt, -{Stealth[length=3mm]}] 
+        (#1) -- node[above, font=\tiny] {#4: #3 pps} (#2)
+        [postaction={
+            decorate,
+            decoration={
+                markings,
+                mark=between positions 0.1 and 0.9 step {0.1/\density} with {
+                    \node[circle, fill=connNormal, inner sep=0.5pt] {};
+                }
+            }
+        }];
+}
+
+% TODO: Flow visualization enhancements
+% - Real-time traffic animation (if rendering to animated format)
+% - Packet visualization with different colors per protocol
+% - Congestion indicators (red/yellow traffic markers)
+% - Flow direction with multiple arrows
+% - Throughput heatmap coloring
+
+% ============================================================================
+% CONNECTION RENDERING ENGINE
+% ============================================================================
+
+% Main command to render all connections
+\newcommand{\renderConnections}{
+    % This will be populated by network_data.tex
+    % Example structure:
+    % \drawConnection{srv1}{pc1}{HTTP}
+    % \drawAttackConnection{attacker1}{srv1}{SQL Injection}
+}
+
+% TODO: Intelligent connection rendering
+% - Layer-based rendering (background to foreground)
+% - Z-order management for overlapping connections
+% - Automatic connection routing to minimize crossings
+% - Connection aggregation (show "10 connections" instead of 10 lines)
+% - Highlight selected connection paths
+
+% ============================================================================
+% CONNECTION LABELS AND ANNOTATIONS
+% ============================================================================
+
+% Add inline statistics to connection
+% Usage: \labelConnectionStats{from}{to}{latency}{packet_loss}{jitter}
+\newcommand{\labelConnectionStats}[5]{
+    \draw[normal conn] (#1) -- (#2)
+        node[midway, below, font=\tiny\ttfamily, fill=white, inner sep=2pt] {
+            L:#3ms | PL:#4\% | J:#5ms
+        };
+}
+
+% Add threat score to connection
+% Usage: \labelConnectionThreat{from}{to}{score}{details}
+\newcommand{\labelConnectionThreat}[4]{
+    \draw[suspicious conn] (#1) -- (#2)
+        node[midway, threat label] {
+            \textbf{#3/10} #4
+        };
+}
+
+% TODO: Label improvements
+% - Auto-positioning to avoid overlaps
+% - Expandable detail boxes on hover
+% - Time-series data for connection metrics
+% - Alert indicators for anomalous connections
+
+% ============================================================================
+% CONNECTION FILTERING AND LAYERS
+% ============================================================================
+
+% Only show connections of specific type
+% Usage: \filterConnectionsByType{type}
+% Types: all, encrypted, suspicious, attacks, normal
+\newcommand{\filterConnectionsByType}[1]{
+    % Implementation would use conditional rendering
+}
+
+% Show connections only for specific protocol
+% Usage: \filterConnectionsByProtocol{protocol}
+\newcommand{\filterConnectionsByProtocol}[1]{
+    % Implementation would filter by protocol name
+}
+
+% TODO: Advanced filtering
+% - Port-based filtering (show only port 80, 443, etc.)
+% - Time-based filtering (show connections in time range)
+% - Threshold filtering (show only high-bandwidth connections)
+% - Interactive layer toggles for different connection types
+% - Subnet-based filtering (show only intra/inter-subnet)
+
+% ============================================================================
+% CONNECTION PATTERNS AND ANALYSIS
+% ============================================================================
+
+% Highlight attack pattern (multiple sources to one target)
+% Usage: \highlightAttackPattern{target}{sources}
+\newcommand{\highlightAttackPattern}[2]{
+    \begin{scope}[on background layer]
+        \foreach \source in {#2} {
+            \draw[attack conn, line width=2pt] (\source) -- (#1);
+        }
+        % Draw highlight around target
+        \node[draw=threatCritical, line width=3pt, 
+              rounded corners=5pt, inner sep=8pt, 
+              fill=threatCritical!10] at (#1) {};
+    \end{scope}
+}
+
+% Show connection path through network
+% Usage: \showConnectionPath{node_list}
+\newcommand{\showConnectionPath}[1]{
+    % Draw path through multiple hops
+    % Highlight the route taken by traffic
+}
+
+% TODO: Pattern detection visualization
+% - DDoS pattern (many-to-one)
+% - Data exfiltration pattern (one-to-many external)
+% - Lateral movement pattern (peer-to-peer internal)
+% - Command & Control pattern (periodic beaconing)
+% - Port scanning pattern (one-to-many same port)
+
+% ============================================================================
+% CONNECTION STATISTICS AND METRICS
+% ============================================================================
+
+% Draw connection statistics summary
+% Usage: \drawConnectionSummary{x}{y}
+\newcommand{\drawConnectionSummary}[2]{
+    \node[legend box, anchor=north west] at (#1,#2) {
+        \begin{tabular}{lr}
+            \textbf{Connections} & \\
+            Normal & \theconncount \\
+            Encrypted & 0 \\
+            Suspicious & 0 \\
+            Attacks & 0 \\
+        \end{tabular}
+    };
+}
+
+% TODO: Statistics enhancements
+% - Real-time connection counts
+% - Bandwidth utilization graphs
+% - Protocol distribution pie chart
+% - Top talkers list
+% - Connection timeline visualization

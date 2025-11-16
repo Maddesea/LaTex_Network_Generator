@@ -1,0 +1,307 @@
+% threat_indicators.tex - Security threat visualization and indicators
+% This module handles threat detection, attack visualization, and security status
+
+% ============================================================================
+% THREAT LEVEL DEFINITIONS
+% ============================================================================
+
+\newcommand{\threatCriticalLevel}{5}
+\newcommand{\threatHighLevel}{4}
+\newcommand{\threatMediumLevel}{3}
+\newcommand{\threatLowLevel}{2}
+\newcommand{\threatInfoLevel}{1}
+
+% TODO: Threat scoring system
+% - CVSS score integration
+% - Custom threat scoring algorithms
+% - Risk = Likelihood × Impact calculations
+% - Temporal scoring (degrading over time)
+% - Environmental scoring based on context
+
+% ============================================================================
+% THREAT INDICATOR VISUALIZATION
+% ============================================================================
+
+% Draw threat indicator icon
+% Usage: \drawThreatIndicator{x}{y}{level}{type}
+\newcommand{\drawThreatIndicator}[4]{
+    \ifthenelse{\equal{#3}{critical}}{
+        \def\threatcolor{threatCritical}
+        \def\threatsize{0.5}
+    }{
+    \ifthenelse{\equal{#3}{high}}{
+        \def\threatcolor{threatHigh}
+        \def\threatsize{0.4}
+    }{
+    \ifthenelse{\equal{#3}{medium}}{
+        \def\threatcolor{threatMedium}
+        \def\threatsize{0.35}
+    }{
+    \ifthenelse{\equal{#3}{low}}{
+        \def\threatcolor{threatLow}
+        \def\threatsize}{0.3}
+    }{
+        \def\threatcolor{threatInfo}
+        \def\threatsize{0.25}
+    }}}}
+    
+    \node[
+        regular polygon,
+        regular polygon sides=3,
+        fill=\threatcolor,
+        draw=\threatcolor!80,
+        minimum size=\threatsize cm,
+        inner sep=0pt
+    ] at (#1,#2) {};
+    
+    \node[font=\tiny\bfseries\sffamily, text=white] at (#1,#2) {!};
+    
+    \node[below, font=\tiny\sffamily] at (#1,#2-0.15) {#4};
+}
+
+% TODO: Enhanced threat indicators
+% - Animated pulsing for active threats
+% - Different icon shapes for different threat types
+% - Severity gradient visualization
+% - Threat trend arrows (increasing/decreasing)
+% - Time-to-remediation countdown
+
+% ============================================================================
+% ATTACK VISUALIZATION
+% ============================================================================
+
+% Visualize specific attack types
+% Usage: \visualizeAttack{attacker}{target}{attack_type}{severity}
+
+% DDoS Attack visualization
+\newcommand{\visualizeDDoS}[3]{
+    % #1 = attacker list (comma-separated)
+    % #2 = target
+    % #3 = severity
+    \foreach \attacker in {#1} {
+        \draw[attack conn, line width=2pt] (\attacker) -- (#2);
+    }
+    \node[draw=threatCritical, line width=3pt, circle, 
+          minimum size=1.5cm, fill=threatCritical!20] at (#2) {};
+    \node[above, font=\small\bfseries, text=threatCritical] 
+        at (#2.north) [yshift=0.8cm] {DDoS ATTACK};
+}
+
+% SQL Injection visualization
+\newcommand{\visualizeSQLi}[2]{
+    % #1 = attacker
+    % #2 = database server
+    \draw[attack conn, line width=2pt] (#1) -- (#2)
+        node[midway, threat label] {SQL Injection};
+    \node[draw=threatHigh, star, star points=8, 
+          minimum size=0.8cm, fill=threatHigh!30] at (#2.north east) {};
+}
+
+% Malware/Ransomware visualization
+\newcommand{\visualizeMalware}[2]{
+    % #1 = infected node
+    % #2 = malware type
+    \node[draw=threatCritical, line width=3pt, 
+          rounded corners=3pt, inner sep=8pt,
+          fill=threatCritical!15, dashed] at (#1) {};
+    \node[above, font=\tiny\bfseries, text=threatCritical, 
+          fill=white, inner sep=2pt] at (#1.north) {#2};
+}
+
+% Data exfiltration visualization
+\newcommand{\visualizeExfiltration}[3]{
+    % #1 = source (compromised node)
+    % #2 = destination (attacker)
+    % #3 = data amount
+    \draw[attack conn, line width=3pt] (#1) -- (#2)
+        node[midway, above, threat label] {Exfil: #3};
+    \draw[draw=threatCritical, line width=2pt, dashed, 
+          -{Stealth[length=5mm]}] (#1) -- (#2);
+}
+
+% TODO: Additional attack visualizations
+% - Phishing attack chain
+% - Privilege escalation path
+% - Lateral movement tracking
+% - Command & Control beaconing
+% - Brute force attempts (with attempt counter)
+% - Zero-day exploitation indicators
+% - Supply chain attack visualization
+
+% ============================================================================
+% THREAT TIMELINE AND PROGRESSION
+% ============================================================================
+
+% Show attack kill chain progression
+% Usage: \drawKillChain{stages}{current_stage}
+\newcommand{\drawKillChain}[2]{
+    % Reconnaissance, Weaponization, Delivery, Exploitation, 
+    % Installation, Command & Control, Actions on Objectives
+    % Draw progression with current stage highlighted
+}
+
+% TODO: Attack progression visualization
+% - MITRE ATT&CK framework mapping
+% - Kill chain stage indicators
+% - Time-based attack timeline
+% - Infection spread animation
+% - Attack vector tree visualization
+
+% ============================================================================
+% SECURITY ZONES AND BOUNDARIES
+% ============================================================================
+
+% Mark security boundary breach
+% Usage: \markBoundaryBreach{zone1}{zone2}{breach_point}
+\newcommand{\markBoundaryBreach}[3]{
+    \draw[draw=threatCritical, line width=3pt, 
+          decoration={zigzag, segment length=4pt, amplitude=2pt},
+          decorate] (#1) -- (#2);
+    \node[circle, fill=threatCritical, minimum size=0.4cm] at (#3) {};
+    \node[above, font=\tiny\bfseries, text=white] at (#3) {BREACH};
+}
+
+% Draw firewall bypass indicator
+\newcommand{\showFirewallBypass}[2]{
+    % #1 = firewall node
+    % #2 = bypass method
+    \node[draw=threatHigh, cross out, line width=2pt, 
+          minimum size=1cm, inner sep=0pt] at (#1) {};
+    \node[below, font=\tiny, text=threatHigh] at (#1.south) {Bypassed: #2};
+}
+
+% TODO: Security control visualization
+% - IDS/IPS alert indicators
+% - Failed authentication attempts
+% - Access control violations
+% - Encryption status (enabled/disabled/weak)
+% - Patch status indicators
+
+% ============================================================================
+% VULNERABILITY INDICATORS
+% ============================================================================
+
+% Mark vulnerable node with CVE
+% Usage: \markVulnerability{node}{cve}{cvss_score}
+\newcommand{\markVulnerability}[3]{
+    \pgfmathsetmacro{\severity}{#3/10}
+    \ifthenelse{\lengthtest{\severity pt > 0.7 pt}}{
+        \def\vulncolor{threatCritical}
+    }{
+    \ifthenelse{\lengthtest{\severity pt > 0.4 pt}}{
+        \def\vulncolor{threatMedium}
+    }{
+        \def\vulncolor{threatLow}
+    }}
+    
+    \node[draw=\vulncolor, line width=2pt, rectangle,
+          rounded corners=2pt, inner sep=3pt, fill=\vulncolor!20,
+          anchor=south west] at (#1.south west) {
+        \tiny\ttfamily #2: #3
+    };
+}
+
+% Show exploitable service
+% Usage: \markExploitableService{node}{service}{port}
+\newcommand{\markExploitableService}[3]{
+    \node[draw=threatHigh, fill=threatHigh!20, 
+          font=\tiny\ttfamily, anchor=north east] 
+        at (#1.north east) {#2:#3};
+}
+
+% TODO: Vulnerability management
+% - CVE database integration
+% - CVSS scoring visualization
+% - Exploit availability indicators
+% - Patch availability status
+% - Vulnerability age indicators
+% - Risk prioritization markers
+
+% ============================================================================
+% THREAT ACTOR VISUALIZATION
+% ============================================================================
+
+% Mark threat actor with attribution
+% Usage: \markThreatActor{node}{actor_name}{confidence}
+\newcommand{\markThreatActor}[3]{
+    \node[above, font=\small\bfseries, text=threatCritical,
+          fill=white, draw=threatCritical, rounded corners=2pt,
+          inner sep=3pt] at (#1.north) [yshift=0.5cm] {
+        #2 (Confidence: #3\%)
+    };
+}
+
+% Show threat intelligence indicators
+% Usage: \markIOC{node}{ioc_type}{value}
+\newcommand{\markIOC}[3]{
+    % IOC = Indicator of Compromise
+    \node[font=\tiny\ttfamily, fill=yellow!30, 
+          draw=orange, inner sep=2pt, anchor=south] 
+        at (#1.south) [yshift=-0.3cm] {
+        #2: #3
+    };
+}
+
+% TODO: Threat intelligence integration
+% - IOC (Indicators of Compromise) visualization
+% - TTP (Tactics, Techniques, Procedures) mapping
+% - Threat actor attribution with confidence levels
+% - Threat feed integration
+% - Reputation scoring for IPs/domains
+
+% ============================================================================
+% SECURITY POSTURE OVERVIEW
+% ============================================================================
+
+% Draw security posture dashboard
+% Usage: \drawSecurityDashboard{x}{y}
+\newcommand{\drawSecurityDashboard}[2]{
+    \node[legend box, anchor=north east, minimum width=4cm] at (#1,#2) {
+        \begin{tabular}{ll}
+            \multicolumn{2}{c}{\textbf{Security Posture}} \\
+            \hline
+            \textcolor{threatCritical}{● Critical} & 0 \\
+            \textcolor{threatHigh}{● High} & 0 \\
+            \textcolor{threatMedium}{● Medium} & 0 \\
+            \textcolor{threatLow}{● Low} & 0 \\
+            \hline
+            \textbf{Risk Score} & \textbf{0/100} \\
+        \end{tabular}
+    };
+}
+
+% Show compliance status
+% Usage: \drawComplianceStatus{x}{y}{framework}
+\newcommand{\drawComplianceStatus}[3]{
+    \node[legend box, anchor=north east] at (#1,#2) {
+        \small\bfseries #3 Compliance \\
+        \tiny Status: Checking...
+    };
+}
+
+% TODO: Security dashboards
+% - Overall network security score
+% - Compliance framework status (NIST, CIS, PCI-DSS, etc.)
+% - Security control effectiveness metrics
+% - Mean time to detect (MTTD)
+% - Mean time to respond (MTTR)
+% - Security coverage heatmap
+
+% ============================================================================
+% MAIN THREAT RENDERING ENGINE
+% ============================================================================
+
+\newcommand{\renderThreats}{
+    % This will be populated by network_data.tex
+    % Example structure:
+    % \visualizeDDoS{attacker1,attacker2}{srv1}{critical}
+    % \markVulnerability{srv2}{CVE-2024-1234}{9.8}
+}
+
+% TODO: Intelligent threat rendering
+% - Threat prioritization based on risk
+% - Auto-layout threat indicators to avoid overlap
+% - Threat correlation and grouping
+% - Attack path visualization
+% - Threat timeline with incident markers
+% - Real-time threat feed updates

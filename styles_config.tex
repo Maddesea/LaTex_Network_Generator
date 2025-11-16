@@ -1,0 +1,297 @@
+% styles_config.tex - Visual styling and color schemes
+% This module handles all visual styling, colors, and aesthetic configurations
+
+% ============================================================================
+% COLOR PALETTE DEFINITIONS
+% ============================================================================
+
+% Network asset colors
+\definecolor{serverBlue}{RGB}{52, 152, 219}
+\definecolor{clientGreen}{RGB}{46, 204, 113}
+\definecolor{routerOrange}{RGB}{230, 126, 34}
+\definecolor{firewallRed}{RGB}{231, 76, 60}
+\definecolor{switchPurple}{RGB}{155, 89, 182}
+\definecolor{cloudGray}{RGB}{149, 165, 166}
+
+% Threat indicator colors
+\definecolor{threatCritical}{RGB}{192, 57, 43}
+\definecolor{threatHigh}{RGB}{211, 84, 0}
+\definecolor{threatMedium}{RGB}{243, 156, 18}
+\definecolor{threatLow}{RGB}{241, 196, 15}
+\definecolor{threatInfo}{RGB}{52, 152, 219}
+
+% Connection colors
+\definecolor{connNormal}{RGB}{127, 140, 141}
+\definecolor{connEncrypted}{RGB}{39, 174, 96}
+\definecolor{connSuspicious}{RGB}{230, 126, 34}
+\definecolor{connMalicious}{RGB}{192, 57, 43}
+
+% Background colors
+\definecolor{bgLight}{RGB}{236, 240, 241}
+\definecolor{bgDark}{RGB}{44, 62, 80}
+
+% TODO: Add custom color scheme support
+% - Allow users to define custom palettes via config file
+% - Implement colorblind-friendly alternative palettes
+% - Add dark mode theme support
+
+% ============================================================================
+% NODE STYLES
+% ============================================================================
+
+\tikzset{
+    % Base node style
+    base node/.style={
+        draw,
+        thick,
+        minimum width=2.5cm,
+        minimum height=1.5cm,
+        align=center,
+        font=\small\sffamily,
+        blur shadow={shadow blur steps=5, shadow xshift=0pt, shadow yshift=-2pt}
+    },
+    
+    % Server style
+    server/.style={
+        base node,
+        rectangle,
+        rounded corners=3pt,
+        fill=serverBlue!20,
+        draw=serverBlue!80,
+        line width=1.5pt
+    },
+    
+    % Client/Workstation style
+    client/.style={
+        base node,
+        rectangle,
+        rounded corners=2pt,
+        fill=clientGreen!15,
+        draw=clientGreen!70,
+        line width=1pt
+    },
+    
+    % Router style
+    router/.style={
+        base node,
+        trapezium,
+        trapezium left angle=70,
+        trapezium right angle=110,
+        fill=routerOrange!20,
+        draw=routerOrange!80,
+        line width=1.5pt
+    },
+    
+    % Firewall style
+    firewall/.style={
+        base node,
+        rectangle,
+        fill=firewallRed!15,
+        draw=firewallRed!80,
+        line width=2pt,
+        pattern=north east lines,
+        pattern color=firewallRed!30
+    },
+    
+    % Switch style
+    switch/.style={
+        base node,
+        rectangle,
+        rounded corners=1pt,
+        fill=switchPurple!15,
+        draw=switchPurple!70,
+        minimum height=1cm
+    },
+    
+    % Cloud/Internet style
+    cloud/.style={
+        base node,
+        shape=cloud,
+        cloud puffs=10,
+        cloud puff arc=120,
+        aspect=2,
+        fill=cloudGray!20,
+        draw=cloudGray!70
+    },
+    
+    % Attacker node style
+    attacker/.style={
+        base node,
+        shape=star,
+        star points=5,
+        fill=threatCritical!30,
+        draw=threatCritical!90,
+        line width=2pt,
+        minimum width=2cm,
+        minimum height=2cm
+    }
+}
+
+% TODO: Enhanced node styling
+% - Add icon/image support inside nodes (server icons, laptop icons, etc.)
+% - Implement multi-part nodes for showing port information
+% - Add gradient fills for premium look
+% - Create animated pulse effect for active connections
+% - Add badge/label support for OS type, status indicators
+
+% ============================================================================
+% CONNECTION STYLES
+% ============================================================================
+
+\tikzset{
+    % Normal connection
+    normal conn/.style={
+        draw=connNormal,
+        line width=1pt,
+        -{Stealth[length=3mm]}
+    },
+    
+    % Encrypted connection
+    encrypted conn/.style={
+        draw=connEncrypted,
+        line width=1.5pt,
+        -{Stealth[length=3mm]},
+        postaction={
+            decorate,
+            decoration={
+                markings,
+                mark=between positions 0.1 and 1 step 0.1 with {
+                    \node[fill=connEncrypted!30, circle, inner sep=1pt] {};
+                }
+            }
+        }
+    },
+    
+    % Suspicious connection
+    suspicious conn/.style={
+        draw=connSuspicious,
+        line width=1.5pt,
+        dashed,
+        dash pattern=on 4pt off 2pt,
+        -{Stealth[length=3mm]}
+    },
+    
+    % Malicious/attack connection
+    attack conn/.style={
+        draw=connMalicious,
+        line width=2pt,
+        -{Stealth[length=4mm]},
+        postaction={
+            draw=connMalicious!30,
+            line width=3pt,
+            shorten >=2pt,
+            shorten <=2pt
+        }
+    },
+    
+    % Bidirectional connection
+    bidirectional/.style={
+        {Stealth[length=3mm]}-{Stealth[length=3mm]}
+    }
+}
+
+% TODO: Advanced connection rendering
+% - Add bandwidth indicators (line thickness based on traffic volume)
+% - Implement animated flow direction indicators
+% - Add connection labels for protocol/port information
+% - Create curved/bezier connection options for complex topologies
+% - Add connection aggregation for high-density diagrams
+
+% ============================================================================
+% TEXT LABEL STYLES
+% ============================================================================
+
+\tikzset{
+    % IP address label
+    ip label/.style={
+        font=\scriptsize\ttfamily,
+        text=black!70,
+        fill=white,
+        inner sep=2pt,
+        rounded corners=1pt
+    },
+    
+    % Asset name label
+    asset label/.style={
+        font=\small\bfseries\sffamily,
+        text=black!90
+    },
+    
+    % Threat level label
+    threat label/.style={
+        font=\tiny\sffamily\bfseries,
+        text=white,
+        fill=threatCritical,
+        inner sep=3pt,
+        rounded corners=2pt
+    },
+    
+    % Port/service label
+    port label/.style={
+        font=\tiny\ttfamily,
+        text=black!60,
+        fill=white,
+        inner sep=1pt
+    }
+}
+
+% TODO: Label enhancements
+% - Auto-positioning to avoid overlap
+% - Automatic truncation for long labels
+% - Hover-style detailed info boxes
+% - Multi-line label support with proper formatting
+
+% ============================================================================
+% LEGEND AND METADATA STYLES
+% ============================================================================
+
+\tikzset{
+    legend box/.style={
+        rectangle,
+        draw=black!50,
+        fill=white,
+        inner sep=5pt,
+        rounded corners=2pt,
+        blur shadow={shadow blur steps=3}
+    }
+}
+
+% TODO: Legend improvements
+% - Auto-generate legend based on diagram content
+% - Collapsible/expandable legend sections
+% - Position customization (corner placement options)
+% - Size scaling based on diagram complexity
+
+% ============================================================================
+% PAGE SIZE CONFIGURATIONS
+% ============================================================================
+
+\newcommand{\setPageSize}[1]{
+    \ifthenelse{\equal{#1}{a4}}{
+        \renewcommand{\diagramScale}{1.0}
+    }{
+    \ifthenelse{\equal{#1}{a3}}{
+        \renewcommand{\diagramScale}{1.4}
+    }{
+    \ifthenelse{\equal{#1}{a2}}{
+        \renewcommand{\diagramScale}{2.0}
+    }{
+    \ifthenelse{\equal{#1}{a1}}{
+        \renewcommand{\diagramScale}{2.8}
+    }{
+    \ifthenelse{\equal{#1}{a0}}{
+        \renewcommand{\diagramScale}{4.0}
+    }{
+    \ifthenelse{\equal{#1}{letter}}{
+        \renewcommand{\diagramScale}{1.0}
+    }{
+        \renewcommand{\diagramScale}{1.0}
+    }}}}}}
+}
+
+% TODO: Page size optimization
+% - Auto-scaling based on node count
+% - Maintain aspect ratio across different sizes
+% - Add support for custom dimensions
+% - Portrait vs landscape orientation support
+% - Multi-page diagram support for very large networks

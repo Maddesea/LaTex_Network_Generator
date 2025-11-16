@@ -1,0 +1,185 @@
+% network_data.tex - Example network diagram data
+% This file contains the actual network topology to visualize
+
+% ============================================================================
+% EXAMPLE: Corporate Network Under Attack
+% ============================================================================
+
+% This example demonstrates:
+% - Multi-tier network architecture
+% - Security zones (Internet, DMZ, Internal, Database)
+% - Various attack scenarios
+% - Threat visualization
+
+% Define all network nodes
+\renewcommand{\renderNetworkNodes}{
+    
+    % ========================================================================
+    % INTERNET / EXTERNAL ZONE
+    % ========================================================================
+    
+    \createCloud{internet}{0}{8}{Internet}
+    
+    % Attackers
+    \createAttacker{attacker1}{203.0.113.45}{-6}{8}{Attacker 1}
+    \createAttacker{attacker2}{198.51.100.78}{6}{8}{Attacker 2}
+    
+    % ========================================================================
+    % PERIMETER / DMZ ZONE
+    % ========================================================================
+    
+    \createFirewall{firewall1}{192.168.1.1}{0}{5}{Edge Firewall}
+    \createRouter{router1}{192.168.1.2}{-3}{3}{Core Router}
+    
+    % DMZ Servers
+    \createServerWithPorts{webserver1}{192.168.10.10}{-3}{1}{Web Server 1}{80,443}
+    \createServerWithPorts{mailserver}{192.168.10.20}{3}{1}{Mail Server}{25,587,993}
+    
+    % ========================================================================
+    % INTERNAL ZONE
+    % ========================================================================
+    
+    \createFirewall{firewall2}{192.168.1.3}{0}{-1}{Internal Firewall}
+    \createSwitch{switch1}{192.168.100.1}{0}{-3}{Core Switch}
+    
+    % Internal Servers
+    \createServer{appserver1}{192.168.100.10}{-4}{-5}{App Server 1}
+    \createServer{appserver2}{192.168.100.11}{0}{-5}{App Server 2}
+    
+    % Client Workstations
+    \createClient{workstation1}{192.168.100.50}{-6}{-7}{WS-001}
+    \createClient{workstation2}{192.168.100.51}{-3}{-7}{WS-002}
+    \createClient{workstation3}{192.168.100.52}{0}{-7}{WS-003}
+    
+    % ========================================================================
+    % DATABASE ZONE
+    % ========================================================================
+    
+    \createServer{dbserver1}{192.168.200.10}{4}{-5}{DB Primary}
+    \createServer{dbserver2}{192.168.200.11}{4}{-7}{DB Replica}
+}
+
+% ============================================================================
+% DEFINE NETWORK CONNECTIONS
+% ============================================================================
+
+\renewcommand{\renderConnections}{
+    
+    % Internet to Firewall
+    \drawConnection{internet}{firewall1}{}
+    \drawAttackConnection{attacker1}{firewall1}{Port Scan}
+    \drawAttackConnection{attacker2}{webserver1}{SQL Injection}
+    
+    % Perimeter connections
+    \drawConnection{firewall1}{router1}{}
+    \drawConnection{router1}{webserver1}{}
+    \drawConnection{router1}{mailserver}{}
+    
+    % DMZ to Internal
+    \drawEncryptedConnection{webserver1}{firewall2}{HTTPS}
+    \drawConnection{mailserver}{firewall2}{}
+    \drawConnection{firewall2}{switch1}{}
+    
+    % Internal network connections
+    \drawConnection{switch1}{appserver1}{}
+    \drawConnection{switch1}{appserver2}{}
+    \drawBidirectional{switch1}{workstation1}{}
+    \drawBidirectional{switch1}{workstation2}{}
+    \drawBidirectional{switch1}{workstation3}{}
+    
+    % Application to Database
+    \drawEncryptedConnection{appserver1}{dbserver1}{TLS 1.3}
+    \drawEncryptedConnection{appserver2}{dbserver1}{TLS 1.3}
+    \drawConnection{dbserver1}{dbserver2}{Replication}
+    
+    % Suspicious internal connection (lateral movement)
+    \drawSuspiciousConnection{workstation2}{dbserver1}{Unauthorized Access}
+}
+
+% ============================================================================
+% DEFINE SECURITY ZONES
+% ============================================================================
+
+\begin{scope}[on background layer]
+    % Internet Zone
+    \drawSecurityZone{internet}{cloudGray}
+        {(attacker1) (attacker2) (internet)}
+        {Internet}{Untrusted}
+    
+    % DMZ Zone
+    \drawSecurityZone{dmz}{routerOrange}
+        {(firewall1) (router1) (webserver1) (mailserver)}
+        {DMZ}{Low Trust}
+    
+    % Internal Zone
+    \drawSecurityZone{internal}{clientGreen}
+        {(firewall2) (switch1) (appserver1) (appserver2) 
+         (workstation1) (workstation2) (workstation3)}
+        {Internal Network}{Medium Trust}
+    
+    % Database Zone
+    \drawSecurityZone{database}{serverBlue}
+        {(dbserver1) (dbserver2)}
+        {Database Tier}{High Trust}
+\end{scope}
+
+% ============================================================================
+% DEFINE THREATS AND ATTACKS
+% ============================================================================
+
+\renewcommand{\renderThreats}{
+    
+    % Mark web server vulnerability
+    \markVulnerability{webserver1}{CVE-2024-1234}{9.8}
+    
+    % Show SQL injection attack
+    \node[above right, threat label, anchor=south west] 
+        at (webserver1.north east) {Active SQLi};
+    
+    % Mark compromised workstation
+    \visualizeMalware{workstation2}{Ransomware}
+    
+    % Show threat badges
+    \addThreatBadge{webserver1}{critical}
+    \addThreatBadge{workstation2}{critical}
+    \addThreatBadge{firewall1}{medium}
+    
+    % Draw security posture dashboard
+    \drawSecurityDashboard{10}{8}
+}
+
+% ============================================================================
+% DRAW LEGEND
+% ============================================================================
+
+\newcommand{\drawLegend}{
+    \node[legend box, anchor=south west] at (-10,-9) {
+        \small\bfseries Legend \\[2pt]
+        \begin{tabular}{ll}
+            \tikz\draw[normal conn] (0,0) -- (0.5,0); & Normal \\
+            \tikz\draw[encrypted conn] (0,0) -- (0.5,0); & Encrypted \\
+            \tikz\draw[suspicious conn] (0,0) -- (0.5,0); & Suspicious \\
+            \tikz\draw[attack conn] (0,0) -- (0.5,0); & Attack \\
+        \end{tabular}
+    };
+}
+
+% ============================================================================
+% DRAW METADATA
+% ============================================================================
+
+\newcommand{\drawMetadata}{
+    \node[font=\tiny, anchor=south east, text=black!60] at (10,-9) {
+        Generated: \today \\
+        Network Diagram v1.0 \\
+        Scale: \diagramScale x
+    };
+}
+
+% TODO: Network data enhancements
+% - JSON/YAML input parsing for dynamic data
+% - CSV import for bulk node/connection creation
+% - Database connectivity for live network data
+% - Integration with network scanning tools (Nmap, Nessus)
+% - Version control for network topology changes
+% - Diff visualization between network states

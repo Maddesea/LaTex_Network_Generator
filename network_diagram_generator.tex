@@ -1,0 +1,74 @@
+% Network Diagram Generator - Main File
+% Compatible with TeXLive 2024/2025
+% Author: Sean's Automated Network Visualization System
+% Version: 1.0 Foundation
+
+\documentclass[tikz,border=10pt]{standalone}
+
+% Core packages for network diagrams
+\usepackage{tikz}
+\usepackage{ifthen}
+\usepackage{xcolor}
+\usepackage{calc}
+
+% TikZ libraries for advanced features
+\usetikzlibrary{
+    positioning,
+    shapes.geometric,
+    shapes.multipart,
+    arrows.meta,
+    decorations.pathmorphing,
+    decorations.markings,
+    backgrounds,
+    fit,
+    calc,
+    shadows.blur,
+    patterns,
+    fadings
+}
+
+% Input modular components
+\input{styles_config}
+\input{node_definitions}
+\input{network_layout}
+\input{connection_renderer}
+\input{threat_indicators}
+
+% Document configuration
+\newcommand{\diagramScale}{1.0}
+\newcommand{\pageSize}{a4} % Options: a4, letter, a3, a2, a1, a0
+
+% Main diagram generation command
+\newcommand{\generateNetworkDiagram}[1]{%
+    \begin{tikzpicture}[
+        scale=\diagramScale,
+        transform shape,
+        font=\sffamily
+    ]
+        % Include network data
+        \input{#1}
+        
+        % Render background grid (optional)
+        \drawBackgroundGrid
+        
+        % Render all network nodes
+        \renderNetworkNodes
+        
+        % Render all connections
+        \renderConnections
+        
+        % Render threat indicators
+        \renderThreats
+        
+        % Add legend
+        \drawLegend
+        
+        % Add metadata (timestamp, scale, etc)
+        \drawMetadata
+    \end{tikzpicture}
+}
+
+\begin{document}
+    % Example usage - replace with your network data file
+    \generateNetworkDiagram{network_data}
+\end{document}
