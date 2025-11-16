@@ -1865,6 +1865,388 @@
         };
 }
 
+% ============================================================================
+% IOT AND EDGE COMPUTING CONNECTIONS
+% ============================================================================
+
+% IoT device connection (low-power, constrained)
+% Usage: \drawIoTConnection{from}{to}{protocol}{power}{label}
+% protocol: MQTT, CoAP, LoRaWAN, Zigbee, BLE
+\newcommand{\drawIoTConnection}[5]{
+    \ifthenelse{\equal{#3}{MQTT}}{
+        \def\iotColor{teal}
+    }{}
+    \ifthenelse{\equal{#3}{CoAP}}{
+        \def\iotColor{cyan}
+    }{}
+    \ifthenelse{\equal{#3}{LoRaWAN}}{
+        \def\iotColor{green}
+    }{}
+    \ifthenelse{\equal{#3}{Zigbee}}{
+        \def\iotColor{orange}
+    }{}
+    \ifthenelse{\equal{#3}{BLE}}{
+        \def\iotColor{blue}
+    }{}
+    \draw[draw=\iotColor!70!black, line width=0.6pt, densely dotted, -{Stealth[length=2mm]}]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny, fill=\iotColor!15, rounded corners=2pt, inner sep=1.5pt] {
+            IoT: #3 | #4 | #5
+        };
+}
+
+% Edge computing gateway connection
+% Usage: \drawEdgeGatewayConnection{from}{to}{processing_power}{label}
+\newcommand{\drawEdgeGatewayConnection}[4]{
+    \draw[draw=purple!70!black, line width=1.5pt, -{Stealth[length=3mm]}, double distance=1pt]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny\bfseries, fill=purple!20, rounded corners=2pt, inner sep=2pt] {
+            Edge Gateway: #3 | #4
+        };
+}
+
+% Fog computing layer connection
+% Usage: \drawFogComputingConnection{from}{to}{latency}{label}
+\newcommand{\drawFogComputingConnection}[4]{
+    \draw[draw=gray!70!black, line width=1.2pt, -{Stealth[length=3mm]}, densely dashed]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny, fill=gray!20, rounded corners=2pt, inner sep=2pt] {
+            Fog Layer: #3ms | #4
+        };
+}
+
+% Sensor network mesh connection
+% Usage: \drawSensorMeshConnection{from}{to}{sensor_type}{label}
+\newcommand{\drawSensorMeshConnection}[4]{
+    \draw[draw=green!60!black, line width=0.5pt, decorate,
+          decoration={snake, amplitude=0.3mm, segment length=2mm}, -{Stealth[length=2mm]}]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny, fill=green!15, rounded corners=1pt, inner sep=1pt] {
+            Sensor: #3 | #4
+        };
+}
+
+% ============================================================================
+% 5G AND CELLULAR NETWORK CONNECTIONS
+% ============================================================================
+
+% 5G NR connection
+% Usage: \draw5GConnection{from}{to}{slice_id}{bandwidth}{label}
+\newcommand{\draw5GConnection}[5]{
+    \draw[draw=red!70!black, line width=2pt, -{Stealth[length=4mm]}, double distance=1.5pt]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny\bfseries, fill=red!15, rounded corners=3pt, inner sep=3pt] {
+            \textcolor{red!80!black}{5G} Slice:#3 | #4 | #5
+        };
+}
+
+% LTE/4G connection
+% Usage: \drawLTEConnection{from}{to}{band}{label}
+\newcommand{\drawLTEConnection}[4]{
+    \draw[draw=blue!70!black, line width=1.5pt, -{Stealth[length=3mm]}, double]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny, fill=blue!15, rounded corners=2pt, inner sep=2pt] {
+            LTE Band #3: #4
+        };
+}
+
+% Network slicing visualization
+% Usage: \drawNetworkSlice{from}{to}{slice_type}{priority}{label}
+% slice_type: eMBB, URLLC, mMTC
+\newcommand{\drawNetworkSlice}[5]{
+    \ifthenelse{\equal{#3}{eMBB}}{
+        \def\sliceColor{blue}
+        \def\sliceLabel{Enhanced Mobile Broadband}
+    }{}
+    \ifthenelse{\equal{#3}{URLLC}}{
+        \def\sliceColor{red}
+        \def\sliceLabel{Ultra-Reliable Low-Latency}
+    }{}
+    \ifthenelse{\equal{#3}{mMTC}}{
+        \def\sliceColor{green}
+        \def\sliceLabel{Massive Machine Type Comms}
+    }{}
+    \draw[draw=\sliceColor!70!black, line width=1.8pt, -{Stealth[length=4mm]}, densely dashed]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny, fill=\sliceColor!20, rounded corners=2pt, inner sep=2pt, align=center] {
+            #3 Slice \\
+            P#4: #5
+        };
+}
+
+% ============================================================================
+% BLOCKCHAIN AND DISTRIBUTED LEDGER CONNECTIONS
+% ============================================================================
+
+% Blockchain consensus connection
+% Usage: \drawBlockchainConsensus{from}{to}{consensus_type}{label}
+% consensus_type: PoW, PoS, PBFT, Raft
+\newcommand{\drawBlockchainConsensus}[4]{
+    \ifthenelse{\equal{#3}{PoW}}{
+        \def\chainColor{yellow!80!orange}
+    }{}
+    \ifthenelse{\equal{#3}{PoS}}{
+        \def\chainColor{green!70!black}
+    }{}
+    \ifthenelse{\equal{#3}{PBFT}}{
+        \def\chainColor{blue!70!black}
+    }{}
+    \ifthenelse{\equal{#3}{Raft}}{
+        \def\chainColor{purple!70!black}
+    }{}
+    \draw[draw=\chainColor, line width=1.5pt, <->, densely dashed]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny, fill=\chainColor!20, rounded corners=2pt, inner sep=2pt] {
+            Consensus: #3 | #4
+        };
+}
+
+% Smart contract execution
+% Usage: \drawSmartContractConnection{from}{to}{contract_id}{gas}{label}
+\newcommand{\drawSmartContractConnection}[5]{
+    \draw[draw=orange!70!black, line width=1.2pt, -{Stealth[length=3mm]}, decorate,
+          decoration={zigzag, amplitude=0.5mm, segment length=3mm}]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny, fill=orange!20, rounded corners=2pt, inner sep=2pt] {
+            Contract #3: Gas #4 | #5
+        };
+}
+
+% Distributed ledger replication
+% Usage: \drawLedgerReplication{from}{to}{block_height}{label}
+\newcommand{\drawLedgerReplication}[4]{
+    \draw[draw=teal!70!black, line width=1pt, <->, densely dotted]
+        (#1) -- (#2)
+        [postaction={
+            decorate,
+            decoration={
+                markings,
+                mark=between positions 0.2 and 0.8 step 0.2 with {
+                    \node[rectangle, fill=teal!60!black, inner sep=1pt] {};
+                }
+            }
+        }]
+        node[midway, above, font=\tiny, fill=teal!15, rounded corners=2pt, inner sep=2pt] {
+            Ledger Sync: Block #3 | #4
+        };
+}
+
+% ============================================================================
+% INDUSTRIAL/SCADA/OT NETWORK CONNECTIONS
+% ============================================================================
+
+% Modbus TCP/RTU connection
+% Usage: \drawModbusConnection{from}{to}{variant}{register}{label}
+\newcommand{\drawModbusConnection}[5]{
+    \draw[draw=brown!70!black, line width=1.2pt, -{Stealth[length=3mm]}]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny\ttfamily, fill=brown!20, rounded corners=2pt, inner sep=2pt] {
+            Modbus #3: Reg #4 | #5
+        };
+}
+
+% DNP3 SCADA protocol
+% Usage: \drawDNP3Connection{from}{to}{master_slave}{label}
+\newcommand{\drawDNP3Connection}[4]{
+    \draw[draw=red!60!black, line width=1.2pt, -{Stealth[length=3mm]}, densely dashed]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny\ttfamily, fill=red!20, rounded corners=2pt, inner sep=2pt] {
+            DNP3: #3 | #4
+        };
+}
+
+% Industrial Ethernet (Profinet, EtherNet/IP)
+% Usage: \drawIndustrialEthernet{from}{to}{protocol}{cycle_time}{label}
+\newcommand{\drawIndustrialEthernet}[5]{
+    \draw[draw=blue!60!black, line width=1.5pt, -{Stealth[length=3mm]}, double]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny, fill=blue!20, rounded corners=2pt, inner sep=2pt] {
+            #3: Cycle #4ms | #5
+        };
+}
+
+% OPC UA connection
+% Usage: \drawOPCUAConnection{from}{to}{security_mode}{label}
+\newcommand{\drawOPCUAConnection}[4]{
+    \draw[draw=green!70!black, line width=1.2pt, -{Stealth[length=3mm]}]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny, fill=green!20, rounded corners=2pt, inner sep=2pt] {
+            OPC UA: #3 | #4
+        };
+}
+
+% Safety instrumented system (SIS) connection
+% Usage: \drawSISConnection{from}{to}{sil_level}{label}
+\newcommand{\drawSISConnection}[4]{
+    \draw[draw=red!80!black, line width=2pt, -{Stealth[length=4mm]}, double distance=2pt]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny\bfseries, fill=red!25, rounded corners=3pt, inner sep=3pt] {
+            \textcolor{red!90!black}{⚠} SIS: SIL #3 | #4
+        };
+}
+
+% ============================================================================
+% ADVANCED SECURITY APPLIANCE CONNECTIONS
+% ============================================================================
+
+% Web Application Firewall (WAF)
+% Usage: \drawWAFConnection{from}{to}{rule_count}{blocked}{label}
+\newcommand{\drawWAFConnection}[5]{
+    \draw[draw=orange!70!black, line width=1.5pt, -{Stealth[length=3mm]}, double distance=1pt]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny, fill=orange!20, rounded corners=2pt, inner sep=2pt] {
+            WAF: Rules:#3 | Blocked:#4 | #5
+        };
+}
+
+% IDS/IPS connection
+% Usage: \drawIDSIPSConnection{from}{to}{mode}{alerts}{label}
+% mode: IDS, IPS
+\newcommand{\drawIDSIPSConnection}[5]{
+    \ifthenelse{\equal{#3}{IDS}}{
+        \def\idsColor{yellow}
+        \def\idsStyle{dashed}
+    }{
+        \def\idsColor{red}
+        \def\idsStyle{solid}
+    }
+    \draw[draw=\idsColor!70!black, line width=1.5pt, \idsStyle, -{Stealth[length=3mm]}]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny, fill=\idsColor!20, rounded corners=2pt, inner sep=2pt] {
+            #3: Alerts #4 | #5
+        };
+}
+
+% Honeypot/Honeynet connection
+% Usage: \drawHoneypotConnection{from}{to}{trap_type}{label}
+\newcommand{\drawHoneypotConnection}[4]{
+    \draw[draw=yellow!80!orange, line width=1pt, -{Stealth[length=3mm]}, densely dotted]
+        (#1) -- (#2)
+        [postaction={
+            decorate,
+            decoration={
+                markings,
+                mark=at position 0.5 with {
+                    \node[star, star points=5, fill=yellow!80!black, inner sep=2pt] {};
+                }
+            }
+        }]
+        node[midway, above, font=\tiny, fill=yellow!25, rounded corners=2pt, inner sep=2pt] {
+            Honeypot: #3 | #4
+        };
+}
+
+% DLP (Data Loss Prevention) connection
+% Usage: \drawDLPConnection{from}{to}{policy}{violations}{label}
+\newcommand{\drawDLPConnection}[5]{
+    \draw[draw=purple!70!black, line width=1.3pt, -{Stealth[length=3mm]}]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny, fill=purple!20, rounded corners=2pt, inner sep=2pt] {
+            DLP: Policy #3 | Violations:#4 | #5
+        };
+}
+
+% ============================================================================
+% DISASTER RECOVERY AND REPLICATION CONNECTIONS
+% ============================================================================
+
+% Database replication connection
+% Usage: \drawDBReplication{from}{to}{replication_mode}{lag}{label}
+% replication_mode: sync, async, semi-sync
+\newcommand{\drawDBReplication}[5]{
+    \ifthenelse{\equal{#3}{sync}}{
+        \def\replColor{green}
+        \def\replStyle{solid}
+        \def\replWidth{1.5pt}
+    }{}
+    \ifthenelse{\equal{#3}{async}}{
+        \def\replColor{yellow}
+        \def\replStyle{dashed}
+        \def\replWidth{1pt}
+    }{}
+    \ifthenelse{\equal{#3}{semi-sync}}{
+        \def\replColor{orange}
+        \def\replStyle{densely dashed}
+        \def\replWidth{1.2pt}
+    }{}
+    \draw[draw=\replColor!70!black, line width=\replWidth, \replStyle, -{Stealth[length=3mm]}]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny, fill=\replColor!20, rounded corners=2pt, inner sep=2pt] {
+            DB Repl: #3 | Lag:#4 | #5
+        };
+}
+
+% Backup connection with schedule
+% Usage: \drawBackupConnection{from}{to}{backup_type}{schedule}{label}
+\newcommand{\drawBackupConnection}[5]{
+    \draw[draw=blue!60!black, line width=1pt, -{Stealth[length=3mm]}, densely dotted]
+        (#1) -- (#2)
+        [postaction={
+            decorate,
+            decoration={
+                markings,
+                mark=between positions 0.2 and 0.8 step 0.3 with {
+                    \node[rectangle, fill=blue!60!black, inner sep=1pt] {};
+                }
+            }
+        }]
+        node[midway, above, font=\tiny, fill=blue!15, rounded corners=2pt, inner sep=2pt] {
+            Backup: #3 | #4 | #5
+        };
+}
+
+% Disaster recovery site connection
+% Usage: \drawDRConnection{from}{to}{rpo}{rto}{label}
+\newcommand{\drawDRConnection}[5]{
+    \draw[draw=red!60!black, line width=2pt, <->, double distance=2pt]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny\bfseries, fill=red!20, rounded corners=3pt, inner sep=3pt] {
+            DR Site: RPO:#3 RTO:#4 | #5
+        };
+}
+
+% Storage replication (SAN/NAS)
+% Usage: \drawStorageReplication{from}{to}{protocol}{throughput}{label}
+\newcommand{\drawStorageReplication}[5]{
+    \draw[draw=teal!70!black, line width=1.8pt, <->, double]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny, fill=teal!20, rounded corners=2pt, inner sep=2pt] {
+            Storage: #3 | #4 | #5
+        };
+}
+
+% ============================================================================
+% PERFORMANCE OPTIMIZATION CONNECTIONS
+% ============================================================================
+
+% Content caching connection
+% Usage: \drawCacheConnection{from}{to}{cache_hit_rate}{label}
+\newcommand{\drawCacheConnection}[4]{
+    \pgfmathsetmacro{\hitrate}{#3}
+    \ifnum\hitrate>80
+        \def\cacheColor{green}
+    \else\ifnum\hitrate>50
+        \def\cacheColor{yellow}
+    \else
+        \def\cacheColor{red}
+    \fi\fi
+    \draw[draw=\cacheColor!70!black, line width=1.2pt, -{Stealth[length=3mm]}]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny, fill=\cacheColor!20, rounded corners=2pt, inner sep=2pt] {
+            Cache: Hit Rate #3\% | #4
+        };
+}
+
+% Content delivery acceleration
+% Usage: \drawAcceleratorConnection{from}{to}{acceleration_factor}{label}
+\newcommand{\drawAcceleratorConnection}[4]{
+    \draw[draw=cyan!70!black, line width=1.5pt, -{Stealth[length=4mm]}, double]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny\bfseries, fill=cyan!20, rounded corners=2pt, inner sep=2pt] {
+            Accelerator: #3x | #4
+        };
+}
+
 % TODO: Advanced statistics features
 % - Real-time connection counts with live updates
 % - Bandwidth utilization graphs embedded in diagram
