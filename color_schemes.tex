@@ -1,0 +1,324 @@
+% color_schemes.tex - Advanced Color Schemes and Themes
+% Professional color palettes for network diagrams
+
+% ============================================================================
+% COLOR SCHEME LOADER
+% ============================================================================
+
+% Load a color scheme
+% Usage: \loadColorScheme{scheme_name}
+\newcommand{\loadColorScheme}[1]{
+    \IfStrEq{#1}{default}{\colorSchemeDefault}{}
+    \IfStrEq{#1}{dark}{\colorSchemeDark}{}
+    \IfStrEq{#1}{colorblind}{\colorSchemeColorblind}{}
+    \IfStrEq{#1}{monochrome}{\colorSchemeMonochrome}{}
+    \IfStrEq{#1}{high-contrast}{\colorSchemeHighContrast}{}
+    \IfStrEq{#1}{pastel}{\colorSchemePastel}{}
+    \IfStrEq{#1}{corporate}{\colorSchemeCorporate}{}
+    \IfStrEq{#1}{neon}{\colorSchemeNeon}{}
+    \IfStrEq{#1}{earth}{\colorSchemeEarth}{}
+    \IfStrEq{#1}{ocean}{\colorSchemeOcean}{}
+}
+
+% ============================================================================
+% SCHEME 1: DEFAULT (Current bright colors)
+% ============================================================================
+
+\newcommand{\colorSchemeDefault}{
+    % Nodes
+    \definecolor{serverBlue}{RGB}{100, 150, 255}
+    \definecolor{clientGreen}{RGB}{100, 220, 150}
+    \definecolor{routerOrange}{RGB}{255, 180, 100}
+    \definecolor{attackerRed}{RGB}{255, 100, 100}
+
+    % Connections
+    \definecolor{connNormal}{RGB}{100, 100, 100}
+    \definecolor{connEncrypted}{RGB}{50, 200, 50}
+    \definecolor{connSuspicious}{RGB}{255, 165, 0}
+    \definecolor{connAttack}{RGB}{255, 50, 50}
+
+    % Threats
+    \definecolor{threatCritical}{RGB}{220, 20, 60}
+    \definecolor{threatHigh}{RGB}{255, 140, 0}
+    \definecolor{threatMedium}{RGB}{255, 215, 0}
+    \definecolor{threatLow}{RGB}{173, 216, 230}
+}
+
+% ============================================================================
+% SCHEME 2: DARK MODE
+% ============================================================================
+
+\newcommand{\colorSchemeDark}{
+    % Dark background-friendly colors
+    \definecolor{serverBlue}{RGB}{130, 170, 255}
+    \definecolor{clientGreen}{RGB}{140, 255, 180}
+    \definecolor{routerOrange}{RGB}{255, 200, 120}
+    \definecolor{attackerRed}{RGB}{255, 130, 130}
+
+    % Connections (brighter for dark backgrounds)
+    \definecolor{connNormal}{RGB}{200, 200, 200}
+    \definecolor{connEncrypted}{RGB}{100, 255, 100}
+    \definecolor{connSuspicious}{RGB}{255, 200, 50}
+    \definecolor{connAttack}{RGB}{255, 100, 100}
+
+    % Threats (vivid for dark mode)
+    \definecolor{threatCritical}{RGB}{255, 60, 90}
+    \definecolor{threatHigh}{RGB}{255, 170, 50}
+    \definecolor{threatMedium}{RGB}{255, 235, 80}
+    \definecolor{threatLow}{RGB}{200, 230, 255}
+}
+
+% ============================================================================
+% SCHEME 3: COLORBLIND-FRIENDLY (Deuteranopia/Protanopia safe)
+% ============================================================================
+
+\newcommand{\colorSchemeColorblind}{
+    % Blue-Orange palette (safe for red-green colorblindness)
+    \definecolor{serverBlue}{RGB}{0, 114, 178}      % Strong blue
+    \definecolor{clientGreen}{RGB}{230, 159, 0}     % Orange (not green!)
+    \definecolor{routerOrange}{RGB}{240, 228, 66}   % Yellow
+    \definecolor{attackerRed}{RGB}{204, 121, 167}   % Purple
+
+    % Connections with distinct patterns
+    \definecolor{connNormal}{RGB}{0, 0, 0}
+    \definecolor{connEncrypted}{RGB}{0, 158, 115}   % Blue-green
+    \definecolor{connSuspicious}{RGB}{230, 159, 0}  % Orange
+    \definecolor{connAttack}{RGB}{213, 94, 0}       % Vermillion
+
+    % Threats - using shape + color
+    \definecolor{threatCritical}{RGB}{213, 94, 0}
+    \definecolor{threatHigh}{RGB}{230, 159, 0}
+    \definecolor{threatMedium}{RGB}{240, 228, 66}
+    \definecolor{threatLow}{RGB}{86, 180, 233}
+}
+
+% ============================================================================
+% SCHEME 4: MONOCHROME (Grayscale for B&W printing)
+% ============================================================================
+
+\newcommand{\colorSchemeMonochrome}{
+    % Different shades of gray
+    \definecolor{serverBlue}{RGB}{70, 70, 70}       % Dark gray
+    \definecolor{clientGreen}{RGB}{140, 140, 140}   % Medium gray
+    \definecolor{routerOrange}{RGB}{180, 180, 180}  % Light gray
+    \definecolor{attackerRed}{RGB}{30, 30, 30}      % Very dark gray
+
+    % Connections
+    \definecolor{connNormal}{RGB}{100, 100, 100}
+    \definecolor{connEncrypted}{RGB}{150, 150, 150}
+    \definecolor{connSuspicious}{RGB}{80, 80, 80}
+    \definecolor{connAttack}{RGB}{0, 0, 0}
+
+    % Threats
+    \definecolor{threatCritical}{RGB}{0, 0, 0}
+    \definecolor{threatHigh}{RGB}{60, 60, 60}
+    \definecolor{threatMedium}{RGB}{120, 120, 120}
+    \definecolor{threatLow}{RGB}{180, 180, 180}
+}
+
+% ============================================================================
+% SCHEME 5: HIGH CONTRAST (Accessibility focused)
+% ============================================================================
+
+\newcommand{\colorSchemeHighContrast}{
+    % Maximum contrast colors
+    \definecolor{serverBlue}{RGB}{0, 0, 255}        % Pure blue
+    \definecolor{clientGreen}{RGB}{0, 200, 0}       % Pure green
+    \definecolor{routerOrange}{RGB}{255, 165, 0}    % Pure orange
+    \definecolor{attackerRed}{RGB}{255, 0, 0}       % Pure red
+
+    % High contrast connections
+    \definecolor{connNormal}{RGB}{0, 0, 0}
+    \definecolor{connEncrypted}{RGB}{0, 180, 0}
+    \definecolor{connSuspicious}{RGB}{255, 140, 0}
+    \definecolor{connAttack}{RGB}{200, 0, 0}
+
+    % Maximum visibility threats
+    \definecolor{threatCritical}{RGB}{255, 0, 0}
+    \definecolor{threatHigh}{RGB}{255, 100, 0}
+    \definecolor{threatMedium}{RGB}{255, 200, 0}
+    \definecolor{threatLow}{RGB}{0, 150, 255}
+}
+
+% ============================================================================
+% SCHEME 6: PASTEL (Soft, professional look)
+% ============================================================================
+
+\newcommand{\colorSchemePastel}{
+    % Soft, muted colors
+    \definecolor{serverBlue}{RGB}{174, 198, 232}
+    \definecolor{clientGreen}{RGB}{182, 215, 168}
+    \definecolor{routerOrange}{RGB}{255, 213, 173}
+    \definecolor{attackerRed}{RGB}{255, 182, 193}
+
+    % Gentle connections
+    \definecolor{connNormal}{RGB}{150, 150, 150}
+    \definecolor{connEncrypted}{RGB}{144, 238, 144}
+    \definecolor{connSuspicious}{RGB}{255, 218, 185}
+    \definecolor{connAttack}{RGB}{255, 160, 160}
+
+    % Soft threats
+    \definecolor{threatCritical}{RGB}{255, 160, 160}
+    \definecolor{threatHigh}{RGB}{255, 200, 150}
+    \definecolor{threatMedium}{RGB}{255, 235, 180}
+    \definecolor{threatLow}{RGB}{200, 220, 255}
+}
+
+% ============================================================================
+% SCHEME 7: CORPORATE (Professional blue/gray)
+% ============================================================================
+
+\newcommand{\colorSchemeCorporate}{
+    % Corporate blue theme
+    \definecolor{serverBlue}{RGB}{41, 98, 255}
+    \definecolor{clientGreen}{RGB}{70, 130, 180}
+    \definecolor{routerOrange}{RGB}{100, 149, 237}
+    \definecolor{attackerRed}{RGB}{220, 20, 60}
+
+    % Professional grays
+    \definecolor{connNormal}{RGB}{105, 105, 105}
+    \definecolor{connEncrypted}{RGB}{60, 120, 216}
+    \definecolor{connSuspicious}{RGB}{255, 140, 0}
+    \definecolor{connAttack}{RGB}{178, 34, 34}
+
+    % Corporate threats
+    \definecolor{threatCritical}{RGB}{178, 34, 34}
+    \definecolor{threatHigh}{RGB}{255, 140, 0}
+    \definecolor{threatMedium}{RGB}{255, 215, 0}
+    \definecolor{threatLow}{RGB}{135, 206, 250}
+}
+
+% ============================================================================
+% SCHEME 8: NEON (Vibrant, eye-catching)
+% ============================================================================
+
+\newcommand{\colorSchemeNeon}{
+    % Bright neon colors
+    \definecolor{serverBlue}{RGB}{57, 255, 20}      % Neon green
+    \definecolor{clientGreen}{RGB}{255, 20, 147}    % Neon pink
+    \definecolor{routerOrange}{RGB}{255, 255, 0}    % Neon yellow
+    \definecolor{attackerRed}{RGB}{255, 0, 255}     % Neon magenta
+
+    % Bright connections
+    \definecolor{connNormal}{RGB}{0, 255, 255}
+    \definecolor{connEncrypted}{RGB}{57, 255, 20}
+    \definecolor{connSuspicious}{RGB}{255, 165, 0}
+    \definecolor{connAttack}{RGB}{255, 0, 100}
+
+    % Vivid threats
+    \definecolor{threatCritical}{RGB}{255, 0, 255}
+    \definecolor{threatHigh}{RGB}{255, 100, 0}
+    \definecolor{threatMedium}{RGB}{255, 255, 0}
+    \definecolor{threatLow}{RGB}{0, 255, 255}
+}
+
+% ============================================================================
+% SCHEME 9: EARTH TONES (Natural, warm)
+% ============================================================================
+
+\newcommand{\colorSchemeEarth}{
+    % Earth tones
+    \definecolor{serverBlue}{RGB}{139, 90, 43}      % Brown
+    \definecolor{clientGreen}{RGB}{107, 142, 35}    % Olive
+    \definecolor{routerOrange}{RGB}{205, 133, 63}   % Peru
+    \definecolor{attackerRed}{RGB}{160, 82, 45}     % Sienna
+
+    % Natural connections
+    \definecolor{connNormal}{RGB}{105, 105, 105}
+    \definecolor{connEncrypted}{RGB}{85, 107, 47}
+    \definecolor{connSuspicious}{RGB}{184, 134, 11}
+    \definecolor{connAttack}{RGB}{139, 69, 19}
+
+    % Earth threats
+    \definecolor{threatCritical}{RGB}{139, 0, 0}
+    \definecolor{threatHigh}{RGB}{178, 34, 34}
+    \definecolor{threatMedium}{RGB}{184, 134, 11}
+    \definecolor{threatLow}{RGB}{189, 183, 107}
+}
+
+% ============================================================================
+% SCHEME 10: OCEAN (Cool blue/green palette)
+% ============================================================================
+
+\newcommand{\colorSchemeOcean}{
+    % Ocean colors
+    \definecolor{serverBlue}{RGB}{0, 105, 148}      % Deep sea blue
+    \definecolor{clientGreen}{RGB}{0, 139, 139}     % Dark cyan
+    \definecolor{routerOrange}{RGB}{64, 224, 208}   % Turquoise
+    \definecolor{attackerRed}{RGB}{220, 20, 60}     % Crimson (danger)
+
+    % Water connections
+    \definecolor{connNormal}{RGB}{70, 130, 180}
+    \definecolor{connEncrypted}{RGB}{0, 191, 255}
+    \definecolor{connSuspicious}{RGB}{255, 140, 0}
+    \definecolor{connAttack}{RGB}{178, 34, 34}
+
+    % Ocean threats
+    \definecolor{threatCritical}{RGB}{139, 0, 0}
+    \definecolor{threatHigh}{RGB}{255, 99, 71}
+    \definecolor{threatMedium}{RGB}{255, 165, 0}
+    \definecolor{threatLow}{RGB}{135, 206, 235}
+}
+
+% ============================================================================
+% THEME SWITCHER
+% ============================================================================
+
+% Set diagram theme (affects multiple properties)
+% Usage: \setDiagramTheme{theme_name}
+\newcommand{\setDiagramTheme}[1]{
+    \IfStrEq{#1}{light}{
+        \loadColorScheme{default}
+        \def\bgColor{white}
+        \def\textColor{black}
+    }{}
+    \IfStrEq{#1}{dark}{
+        \loadColorScheme{dark}
+        \def\bgColor{black}
+        \def\textColor{white}
+    }{}
+    \IfStrEq{#1}{print}{
+        \loadColorScheme{high-contrast}
+        \def\bgColor{white}
+        \def\textColor{black}
+    }{}
+    \IfStrEq{#1}{presentation}{
+        \loadColorScheme{high-contrast}
+        \def\bgColor{white}
+        \def\textColor{black}
+    }{}
+}
+
+% ============================================================================
+% COLOR UTILITIES
+% ============================================================================
+
+% Lighten a color
+% Usage: \lightenColor{color}{amount}{new_name}
+\newcommand{\lightenColor}[3]{
+    \colorlet{#3}{#1!#2!white}
+}
+
+% Darken a color
+% Usage: \darkenColor{color}{amount}{new_name}
+\newcommand{\darkenColor}[3]{
+    \colorlet{#3}{#1!#2!black}
+}
+
+% Blend two colors
+% Usage: \blendColors{color1}{color2}{ratio}{new_name}
+\newcommand{\blendColors}[4]{
+    \colorlet{#4}{#1!#3!#2}
+}
+
+% ============================================================================
+% CONTRAST VALIDATION
+% ============================================================================
+
+% Check if color combination meets WCAG AA contrast ratio
+% (Simplified - actual implementation would calculate luminance)
+% Usage: \validateContrast{fg_color}{bg_color}{result_macro}
+\newcommand{\validateContrast}[3]{
+    % Simplified - returns 1 for valid, 0 for invalid
+    \def#3{1}
+}

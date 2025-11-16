@@ -1,0 +1,342 @@
+% network_statistics.tex - Network Analysis and Statistics Visualization
+% Generate insights and metrics from network diagrams
+
+% ============================================================================
+% COUNTERS FOR NETWORK STATISTICS
+% ============================================================================
+
+\newcounter{totalServers}
+\newcounter{totalClients}
+\newcounter{totalRouters}
+\newcounter{totalFirewalls}
+\newcounter{totalConnections}
+\newcounter{totalThreats}
+\newcounter{totalSubnets}
+
+% Increment functions (call when creating elements)
+\newcommand{\countServer}{\stepcounter{totalServers}}
+\newcommand{\countClient}{\stepcounter{totalClients}}
+\newcommand{\countRouter}{\stepcounter{totalRouters}}
+\newcommand{\countFirewall}{\stepcounter{totalFirewalls}}
+\newcommand{\countConnection}{\stepcounter{totalConnections}}
+\newcommand{\countThreat}{\stepcounter{totalThreats}}
+\newcommand{\countSubnet}{\stepcounter{totalSubnets}}
+
+% ============================================================================
+% NETWORK TOPOLOGY METRICS
+% ============================================================================
+
+% Calculate total nodes
+\newcommand{\calcTotalNodes}[1]{
+    \pgfmathsetmacro{#1}{
+        \value{totalServers} + \value{totalClients} +
+        \value{totalRouters} + \value{totalFirewalls}
+    }
+}
+
+% Calculate network density
+% Usage: \calcNetworkDensity{result_macro}
+\newcommand{\calcNetworkDensity}[1]{
+    \calcTotalNodes{\totalNodes}
+    \pgfmathsetmacro{\maxConnections}{\totalNodes * (\totalNodes - 1) / 2}
+    \pgfmathsetmacro{#1}{
+        \value{totalConnections} / max(1, \maxConnections) * 100
+    }
+}
+
+% Calculate average connections per node
+% Usage: \calcAvgConnectionsPerNode{result_macro}
+\newcommand{\calcAvgConnectionsPerNode}[1]{
+    \calcTotalNodes{\totalNodes}
+    \pgfmathsetmacro{#1}{\value{totalConnections} / max(1, \totalNodes)}
+}
+
+% Calculate network diameter (simplified)
+% Usage: \calcNetworkDiameter{result_macro}
+\newcommand{\calcNetworkDiameter}[1]{
+    % Simplified: estimate based on topology
+    \calcTotalNodes{\totalNodes}
+    \pgfmathsetmacro{#1}{ceil(log10(\totalNodes + 1))}
+}
+
+% ============================================================================
+% SECURITY METRICS
+% ============================================================================
+
+% Calculate security posture score (0-100)
+% Usage: \calcSecurityScore{result_macro}
+\newcommand{\calcSecurityScore}[1]{
+    \calcTotalNodes{\totalNodes}
+    \pgfmathsetmacro{\firewallRatio}{\value{totalFirewalls} / max(1, \totalNodes)}
+    \pgfmathsetmacro{\threatRatio}{\value{totalThreats} / max(1, \totalNodes)}
+    \pgfmathsetmacro{#1}{
+        max(0, min(100,
+            50 + \firewallRatio * 30 - \threatRatio * 40
+        ))
+    }
+}
+
+% Calculate threat density
+% Usage: \calcThreatDensity{result_macro}
+\newcommand{\calcThreatDensity}[1]{
+    \calcTotalNodes{\totalNodes}
+    \pgfmathsetmacro{#1}{\value{totalThreats} / max(1, \totalNodes) * 100}
+}
+
+% Calculate defense coverage
+% Usage: \calcDefenseCoverage{result_macro}
+\newcommand{\calcDefenseCoverage}[1]{
+    \calcTotalNodes{\totalNodes}
+    \pgfmathsetmacro{#1}{
+        \value{totalFirewalls} / max(1, \value{totalSubnets}) * 100
+    }
+}
+
+% ============================================================================
+% VISUALIZATION: STATISTICS DASHBOARD
+% ============================================================================
+
+% Draw complete statistics dashboard
+% Usage: \drawStatisticsDashboard{x}{y}
+\newcommand{\drawStatisticsDashboard}[2]{
+    \begin{scope}[shift={(#1, #2)}]
+        % Title
+        \node[font=\large\bfseries, anchor=north] at (0, 0) {Network Statistics};
+
+        % Calculate metrics
+        \calcTotalNodes{\totalNodes}
+        \calcNetworkDensity{\density}
+        \calcAvgConnectionsPerNode{\avgConn}
+        \calcSecurityScore{\secScore}
+        \calcThreatDensity{\threatDens}
+
+        % Background box
+        \draw[fill=blue!5, draw=blue!60, rounded corners=3pt, line width=1pt]
+            (-3, -0.5) rectangle (3, -6.5);
+
+        % Node counts
+        \node[anchor=west, font=\small] at (-2.8, -1)
+            {\textbf{Nodes:} \pgfmathprintnumber[precision=0]{\totalNodes}};
+        \node[anchor=west, font=\tiny] at (-2.6, -1.4)
+            {Servers: \arabic{totalServers}};
+        \node[anchor=west, font=\tiny] at (-2.6, -1.7)
+            {Clients: \arabic{totalClients}};
+        \node[anchor=west, font=\tiny] at (-2.6, -2.0)
+            {Routers: \arabic{totalRouters}};
+        \node[anchor=west, font=\tiny] at (-2.6, -2.3)
+            {Firewalls: \arabic{totalFirewalls}};
+
+        % Topology metrics
+        \node[anchor=west, font=\small] at (-2.8, -2.8)
+            {\textbf{Topology:}};
+        \node[anchor=west, font=\tiny] at (-2.6, -3.2)
+            {Connections: \arabic{totalConnections}};
+        \node[anchor=west, font=\tiny] at (-2.6, -3.5)
+            {Density: \pgfmathprintnumber[precision=1]{\density}\%};
+        \node[anchor=west, font=\tiny] at (-2.6, -3.8)
+            {Avg Conn/Node: \pgfmathprintnumber[precision=1]{\avgConn}};
+
+        % Security metrics
+        \node[anchor=west, font=\small] at (-2.8, -4.3)
+            {\textbf{Security:}};
+        \node[anchor=west, font=\tiny] at (-2.6, -4.7)
+            {Security Score: \pgfmathprintnumber[precision=0]{\secScore}/100};
+        \node[anchor=west, font=\tiny] at (-2.6, -5.0)
+            {Threats: \arabic{totalThreats}};
+        \node[anchor=west, font=\tiny] at (-2.6, -5.3)
+            {Threat Density: \pgfmathprintnumber[precision=1]{\threatDens}\%};
+
+        % Security score gauge
+        \drawSecurityGauge{2}{-5.5}{0.8}{\secScore}
+    \end{scope}
+}
+
+% Draw security score gauge
+% Usage: \drawSecurityGauge{x}{y}{radius}{score}
+\newcommand{\drawSecurityGauge}[4]{
+    \begin{scope}[shift={(#1, #2)}]
+        % Background arc
+        \draw[line width=8pt, gray!30] (180:#3) arc (180:0:#3);
+
+        % Score arc (colored by level)
+        \pgfmathsetmacro{\scoreAngle}{180 - #4 * 1.8}
+        \IfStrEq{#4}{#4}{
+            \pgfmathsetmacro{\isHigh}{#4 > 70}
+            \pgfmathsetmacro{\isMedium}{and(#4 > 40, #4 <= 70)}
+        }{}
+
+        \ifnum#4>70
+            \def\scoreColor{green}
+        \else
+            \ifnum#4>40
+                \def\scoreColor{yellow!80!red}
+            \else
+                \def\scoreColor{red}
+            \fi
+        \fi
+
+        \draw[line width=8pt, \scoreColor] (180:#3) arc (180:\scoreAngle:#3);
+
+        % Score text
+        \node[font=\tiny\bfseries] at (0, -#3 - 0.3)
+            {\pgfmathprintnumber[precision=0]{#4}/100};
+    \end{scope}
+}
+
+% ============================================================================
+% VISUALIZATION: NODE TYPE BREAKDOWN
+% ============================================================================
+
+% Draw node type pie chart
+% Usage: \drawNodeTypePie{x}{y}{radius}
+\newcommand{\drawNodeTypePie}[3]{
+    \calcTotalNodes{\totalNodes}
+
+    \begin{scope}[shift={(#1, #2)}]
+        \node[font=\small\bfseries, anchor=south] at (0, #3 + 0.5) {Node Types};
+
+        % Calculate percentages
+        \pgfmathsetmacro{\serverPct}{\value{totalServers} / \totalNodes * 100}
+        \pgfmathsetmacro{\clientPct}{\value{totalClients} / \totalNodes * 100}
+        \pgfmathsetmacro{\routerPct}{\value{totalRouters} / \totalNodes * 100}
+        \pgfmathsetmacro{\fwPct}{\value{totalFirewalls} / \totalNodes * 100}
+
+        % Calculate angles
+        \pgfmathsetmacro{\serverAngle}{\serverPct * 3.6}
+        \pgfmathsetmacro{\clientAngle}{\clientPct * 3.6}
+        \pgfmathsetmacro{\routerAngle}{\routerPct * 3.6}
+        \pgfmathsetmacro{\fwAngle}{\fwPct * 3.6}
+
+        % Draw slices
+        \pgfmathsetmacro{\startAngle}{0}
+
+        % Servers (blue)
+        \fill[serverBlue!60] (0, 0) -- (\startAngle:#3)
+            arc (\startAngle:\startAngle + \serverAngle:#3) -- cycle;
+        \pgfmathsetmacro{\startAngle}{\startAngle + \serverAngle}
+
+        % Clients (green)
+        \fill[clientGreen!60] (0, 0) -- (\startAngle:#3)
+            arc (\startAngle:\startAngle + \clientAngle:#3) -- cycle;
+        \pgfmathsetmacro{\startAngle}{\startAngle + \clientAngle}
+
+        % Routers (orange)
+        \fill[routerOrange!60] (0, 0) -- (\startAngle:#3)
+            arc (\startAngle:\startAngle + \routerAngle:#3) -- cycle;
+        \pgfmathsetmacro{\startAngle}{\startAngle + \routerAngle}
+
+        % Firewalls (red)
+        \fill[attackerRed!60] (0, 0) -- (\startAngle:#3)
+            arc (\startAngle:\startAngle + \fwAngle:#3) -- cycle;
+
+        % Legend
+        \node[anchor=west, font=\tiny] at (#3 + 0.5, 0.6)
+            {\textcolor{serverBlue}{■} Servers (\arabic{totalServers})};
+        \node[anchor=west, font=\tiny] at (#3 + 0.5, 0.2)
+            {\textcolor{clientGreen}{■} Clients (\arabic{totalClients})};
+        \node[anchor=west, font=\tiny] at (#3 + 0.5, -0.2)
+            {\textcolor{routerOrange}{■} Routers (\arabic{totalRouters})};
+        \node[anchor=west, font=\tiny] at (#3 + 0.5, -0.6)
+            {\textcolor{attackerRed}{■} Firewalls (\arabic{totalFirewalls})};
+    \end{scope}
+}
+
+% ============================================================================
+% VISUALIZATION: CONNECTION HEATMAP
+% ============================================================================
+
+% Draw connection heatmap (shows network hotspots)
+% Usage: \drawConnectionHeatmap{x}{y}{width}{height}
+\newcommand{\drawConnectionHeatmap}[4]{
+    % Simplified visualization
+    \begin{scope}[shift={(#1, #2)}]
+        \node[font=\small\bfseries, anchor=north] at (0, 0.5) {Connection Density};
+
+        \calcNetworkDensity{\density}
+
+        % Draw heatmap gradient
+        \shade[left color=green!20, right color=red!60]
+            (-#3/2, 0) rectangle (#3/2, -#4);
+
+        % Mark current density
+        \pgfmathsetmacro{\markerPos}{-#3/2 + (\density / 100) * #3}
+        \draw[line width=2pt, blue] (\markerPos, 0) -- (\markerPos, -#4);
+        \node[font=\tiny, anchor=south] at (\markerPos, 0.2)
+            {\pgfmathprintnumber[precision=0]{\density}\%};
+    \end{scope}
+}
+
+% ============================================================================
+% VISUALIZATION: THREAT TIMELINE
+% ============================================================================
+
+% Draw threat timeline
+% Usage: \drawThreatTimeline{x}{y}{width}
+\newcommand{\drawThreatTimeline}[3]{
+    \begin{scope}[shift={(#1, #2)}]
+        \node[font=\small\bfseries, anchor=north] at (0, 0.5) {Threat Timeline};
+
+        % Timeline axis
+        \draw[->, thick] (-#3/2, 0) -- (#3/2, 0);
+
+        % Example threat markers (would be populated from data)
+        \foreach \i in {1,...,5} {
+            \pgfmathsetmacro{\xpos}{-#3/2 + \i * #3 / 6}
+            \fill[red] (\xpos, 0) circle (0.1);
+            \node[font=\tiny, anchor=north] at (\xpos, -0.3) {T\i};
+        }
+    \end{scope}
+}
+
+% ============================================================================
+% REPORT GENERATION
+% ============================================================================
+
+% Generate text report
+% Usage: \generateNetworkReport{x}{y}
+\newcommand{\generateNetworkReport}[2]{
+    \calcTotalNodes{\totalNodes}
+    \calcNetworkDensity{\density}
+    \calcSecurityScore{\secScore}
+
+    \begin{scope}[shift={(#1, #2)}]
+        \node[text width=8cm, anchor=north west, font=\tiny] at (0, 0) {
+            \textbf{Network Analysis Report}\\[0.2cm]
+            \textbf{Topology:}\\
+            • Total Nodes: \pgfmathprintnumber[precision=0]{\totalNodes}\\
+            • Total Connections: \arabic{totalConnections}\\
+            • Network Density: \pgfmathprintnumber[precision=1]{\density}\%\\[0.2cm]
+            \textbf{Security Assessment:}\\
+            • Security Score: \pgfmathprintnumber[precision=0]{\secScore}/100\\
+            • Active Threats: \arabic{totalThreats}\\
+            • Firewall Coverage: \arabic{totalFirewalls} devices\\[0.2cm]
+            \textbf{Recommendations:}\\
+            \ifnum\secScore<50
+                ⚠ Critical: Improve security posture\\
+            \else
+                ✓ Acceptable security level\\
+            \fi
+        };
+    \end{scope}
+}
+
+% ============================================================================
+% EXPORT FUNCTIONS
+% ============================================================================
+
+% Export statistics to file
+% Usage: \exportStatistics{filename}
+\newcommand{\exportStatistics}[1]{
+    \calcTotalNodes{\totalNodes}
+    \calcNetworkDensity{\density}
+    \calcSecurityScore{\secScore}
+
+    \newwrite\statsfile
+    \immediate\openout\statsfile=#1
+    \immediate\write\statsfile{total_nodes,\pgfmathprintnumber[precision=0]{\totalNodes}}
+    \immediate\write\statsfile{total_connections,\arabic{totalConnections}}
+    \immediate\write\statsfile{network_density,\pgfmathprintnumber[precision=2]{\density}}
+    \immediate\write\statsfile{security_score,\pgfmathprintnumber[precision=0]{\secScore}}
+    \immediate\write\statsfile{total_threats,\arabic{totalThreats}}
+    \immediate\closeout\statsfile
+}
