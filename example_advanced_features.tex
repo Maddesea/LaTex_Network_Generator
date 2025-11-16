@@ -1,0 +1,367 @@
+% example_advanced_features.tex - Advanced features demonstration
+% This showcases the enhanced Agent 1 features:
+% - Multi-part nodes with detailed information
+% - Advanced visual effects (glow, neon, double borders)
+% - Additional badge types (security levels, services, CVE)
+% - Helper macros for quick node creation
+% - Style preset system
+
+\documentclass[11pt,landscape]{article}
+\usepackage[margin=0.5in]{geometry}
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric, shapes.symbols, shapes.multipart, arrows.meta, shadows, patterns, decorations.markings, positioning}
+\usepackage{xcolor}
+\usepackage{ifthen}
+
+% Include the styles configuration
+\input{styles_config.tex}
+
+\begin{document}
+
+\pagestyle{empty}
+
+% ============================================================================
+% EXAMPLE 1: Multi-Part Nodes with Detailed Information
+% ============================================================================
+
+\section*{Example 1: Multi-Part Nodes - Detailed Server Information}
+
+\loadColorScheme{standard}
+
+\begin{center}
+\begin{tikzpicture}[scale=0.9, transform shape]
+
+    % Create detailed server nodes showing hostname, IP, and ports
+    \detailedServer{web1}{0}{0}{web-prod-01}{192.168.1.10}{80, 443}
+    \detailedServer{db1}{6}{0}{db-master}{192.168.1.20}{3306, 5432}
+    \detailedServer{api1}{0}{-4}{api-gateway}{192.168.1.30}{8080, 8443}
+
+    % Create detailed client nodes with OS information
+    \detailedClient{admin1}{-6}{-2}{admin-pc}{192.168.1.100}{Windows 11}
+    \detailedClient{dev1}{-6}{-4}{dev-laptop}{192.168.1.101}{Ubuntu 22.04}
+
+    % Add service badges
+    \addService{web1}{web}{:443}
+    \addService{db1}{database}{:3306}
+    \addService{api1}{api}{:8080}
+
+    % Add CVE information to vulnerable nodes
+    \addCVE{web1}{CVE-2024-1234}{critical}{9.8}
+    \addCVE{db1}{CVE-2024-5678}{high}{7.5}
+
+    % Connections
+    \draw[encrypted conn] (admin1) -- (web1);
+    \draw[encrypted conn] (dev1) -- (api1);
+    \draw[normal conn] (web1) -- (db1);
+    \draw[normal conn] (api1) -- (db1);
+
+\end{tikzpicture}
+\end{center}
+
+\vspace{1cm}
+
+% ============================================================================
+% EXAMPLE 2: Advanced Visual Effects
+% ============================================================================
+
+\section*{Example 2: Advanced Visual Effects (Glow, Neon, Double Border)}
+
+\loadColorScheme{dark}
+
+\begin{center}
+\begin{tikzpicture}[scale=0.9, transform shape, background rectangle/.style={fill=bgDark}, show background rectangle]
+
+    % Nodes with different visual effects
+    \node[server premium, glow] (srv1) at (0,0) {\textcolor{white}{Standard Glow}};
+    \node[server premium, strong glow=blue] (srv2) at (4,0) {\textcolor{white}{Strong Glow}};
+    \node[server premium, neon=serverBlue] (srv3) at (8,0) {\textcolor{white}{Neon Effect}};
+    \node[server premium, double border=serverBlue] (srv4) at (0,-3) {\textcolor{white}{Double Border}};
+    \node[server premium, dashed shadow=serverBlue] (srv5) at (4,-3) {\textcolor{white}{Dashed Shadow}};
+
+    % Critical alert with strong red glow
+    \node[firewall premium, strong glow=red] (alert) at (8,-3) {\textcolor{white}{ALERT!}};
+
+\end{tikzpicture}
+\end{center}
+
+\vspace{1cm}
+
+% ============================================================================
+% EXAMPLE 3: Quick Helper Macros
+% ============================================================================
+
+\section*{Example 3: Quick Helper Macros for Rapid Diagram Creation}
+
+\loadColorScheme{standard}
+
+\begin{center}
+\begin{tikzpicture}[scale=0.9, transform shape]
+
+    % Use quick macros for instant premium styled nodes
+    \quickServer{web}{0}{0}{Web Server}
+    \quickClient{pc}{-4}{-3}{Workstation}
+    \quickRouter{rtr}{0}{-3}{Core Router}
+    \quickFirewall{fw}{4}{-3}{Firewall}
+
+    % Add multiple badges at once
+    \addBadges{web}{linux badge}{online badge}
+    \addBadges{pc}{windows badge}{online badge}
+    \addBadges{rtr}{linux badge}{online badge}
+    \addBadges{fw}{linux badge}{warning badge}
+
+    % Connections
+    \draw[encrypted conn] (pc) -- (rtr);
+    \draw[normal conn] (rtr) -- (web);
+    \draw[normal conn] (rtr) -- (fw);
+
+\end{tikzpicture}
+\end{center}
+
+\vspace{1cm}
+
+% ============================================================================
+% EXAMPLE 4: Additional Badge Types
+% ============================================================================
+
+\section*{Example 4: Enhanced Badge System (Security Levels \& Services)}
+
+\loadColorScheme{standard}
+
+\begin{center}
+\begin{tikzpicture}[scale=0.9, transform shape]
+
+    % Servers with security level badges
+    \node[server premium] (dmz) at (0,0) {DMZ Server};
+    \node[server premium] (internal) at (5,0) {Internal Server};
+    \node[server premium] (secure) at (10,0) {Secure Vault};
+
+    % Add security level badges
+    \nodeBadge{dmz}{security low}{north west}{L}
+    \nodeBadge{internal}{security medium}{north west}{M}
+    \nodeBadge{secure}{security high}{north west}{H}
+
+    % Add OS and status badges
+    \nodeBadge{dmz}{linux badge}{north east}{L}
+    \nodeBadge{internal}{windows badge}{north east}{W}
+    \nodeBadge{secure}{linux badge}{north east}{L}
+
+    % Add service badges
+    \addService{dmz}{web}{:80}
+    \addService{internal}{database}{:3306}
+    \addService{secure}{ssh}{:22}
+
+    % Add labels
+    \node[below=0.5cm of dmz, font=\tiny] {Low Security};
+    \node[below=0.5cm of internal, font=\tiny] {Medium Security};
+    \node[below=0.5cm of secure, font=\tiny] {High Security};
+
+\end{tikzpicture}
+\end{center}
+
+\vspace{1cm}
+
+% ============================================================================
+% EXAMPLE 5: Style Presets - Quick Configuration
+% ============================================================================
+
+\section*{Example 5: Style Presets}
+
+\subsection*{5a. Corporate Preset (Monochrome, Professional)}
+
+\loadCorporatePreset
+
+\begin{center}
+\begin{tikzpicture}[scale=0.7, transform shape]
+    \quickServer{s1}{0}{0}{Server}
+    \quickClient{c1}{-3}{-2}{Client}
+    \quickRouter{r1}{3}{-2}{Router}
+    \draw[normal conn] (c1) -- (s1);
+    \draw[normal conn] (r1) -- (s1);
+\end{tikzpicture}
+\end{center}
+
+\subsection*{5b. Security Report Preset (High Contrast, Threat Focus)}
+
+\loadSecurityPreset
+
+\begin{center}
+\begin{tikzpicture}[scale=0.7, transform shape]
+    \quickServer{s2}{0}{0}{Target}
+    \node[attacker] (att) at (4}{-2) {Attacker};
+    \draw[attack conn] (att) -- (s2);
+\end{tikzpicture}
+\end{center}
+
+\subsection*{5c. Presentation Preset (High Visibility, Glow Effects)}
+
+\loadPresentationPreset
+
+\begin{center}
+\begin{tikzpicture}[scale=0.7, transform shape]
+    \quickServer{s3}{0}{0}{Demo Server}
+    \quickClient{c3}{-3}{-2}{Demo Client}
+    \draw[encrypted conn] (c3) -- (s3);
+\end{tikzpicture}
+\end{center}
+
+\subsection*{5d. Accessible Preset (Colorblind-Safe Patterns)}
+
+\loadAccessiblePreset
+
+\begin{center}
+\begin{tikzpicture}[scale=0.7, transform shape]
+    \node[server] (s4) at (0,0) {Server};
+    \node[client] (c4) at (-3,-2) {Client};
+    \node[firewall] (f4) at (3,-2) {Firewall};
+    \draw[normal conn] (c4) -- (s4);
+    \draw[normal conn] (s4) -- (f4);
+\end{tikzpicture}
+\end{center}
+
+\subsection*{5e. Dark Mode Preset (Neon Effects, Dark Background)}
+
+\loadDarkPreset
+
+\begin{center}
+\begin{tikzpicture}[scale=0.7, transform shape, background rectangle/.style={fill=bgDark}, show background rectangle]
+    \node[server] (s5) at (0,0) {\textcolor{white}{Server}};
+    \node[client] (c5) at (-3,-2) {\textcolor{white}{Client}};
+    \draw[encrypted conn] (c5) -- (s5);
+\end{tikzpicture}
+\end{center}
+
+\vspace{1cm}
+
+% ============================================================================
+% EXAMPLE 6: Complete Security Diagram with All Features
+% ============================================================================
+
+\newpage
+\section*{Example 6: Complete Security Diagram - All Features Combined}
+
+\loadColorScheme{standard}
+
+\begin{center}
+\begin{tikzpicture}[scale=0.85, transform shape]
+
+    % DMZ Zone
+    \detailedServer{web1}{0}{0}{web-dmz-01}{10.0.1.10}{80, 443}
+    \detailedServer{web2}{4}{0}{web-dmz-02}{10.0.1.11}{80, 443}
+
+    % Internal Zone
+    \detailedServer{app1}{0}{-4}{app-prod-01}{192.168.1.10}{8080}
+    \detailedServer{app2}{4}{-4}{app-prod-02}{192.168.1.11}{8080}
+
+    % Database Zone (High Security)
+    \node[server premium, strong glow=blue, double border=serverBlue] (db) at (2,-8) {
+        \textbf{DB Cluster}\\
+        \texttt{192.168.2.10}\\
+        \scriptsize Primary
+    };
+
+    % Load Balancer
+    \quickRouter{lb}{2}{2}{Load Balancer}
+
+    % Firewall
+    \node[firewall premium, double border=firewallRed] (fw1) at (2}{-6) {
+        Firewall\\
+        \texttt{192.168.1.254}
+    };
+
+    % Attacker (with strong red glow)
+    \node[attacker, strong glow=red] (threat) at (10,0) {Threat\\Actor};
+
+    % Add security level badges
+    \nodeBadge{web1}{security low}{north west}{L}
+    \nodeBadge{web2}{security low}{north west}{L}
+    \nodeBadge{app1}{security medium}{north west}{M}
+    \nodeBadge{app2}{security medium}{north west}{M}
+    \nodeBadge{db}{security high}{north west}{H}
+
+    % Add OS badges
+    \nodeBadge{web1}{linux badge}{north east}{L}
+    \nodeBadge{web2}{linux badge}{north east}{L}
+    \nodeBadge{app1}{linux badge}{north east}{L}
+    \nodeBadge{app2}{linux badge}{north east}{L}
+    \nodeBadge{db}{linux badge}{north east}{L}
+
+    % Add service badges
+    \addService{web1}{web}{:443}
+    \addService{web2}{web}{:443}
+    \addService{app1}{api}{:8080}
+    \addService{app2}{api}{:8080}
+    \addService{db}{database}{:5432}
+
+    % Add CVE information
+    \addCVE{web1}{CVE-2024-9999}{critical}{9.8}
+    \addCVE{app1}{CVE-2024-8888}{medium}{5.3}
+
+    % Connections
+    \draw[encrypted conn] (lb) -- (web1);
+    \draw[encrypted conn] (lb) -- (web2);
+    \draw[normal conn] (web1) -- (app1);
+    \draw[normal conn] (web2) -- (app2);
+    \draw[encrypted conn] (app1) -- (fw1);
+    \draw[encrypted conn] (app2) -- (fw1);
+    \draw[encrypted conn] (fw1) -- (db);
+
+    % Attack vectors (dashed, red)
+    \draw[attack conn, dashed shadow=red] (threat) -- (web1);
+    \draw[suspicious conn] (threat) -- (lb);
+
+    % Zone labels
+    \node[above=0.5cm of lb, font=\large\bfseries, text=blue] {Public Zone};
+    \node[left=1cm of app1, font=\large\bfseries, text=orange] {Application Zone};
+    \node[below=0.5cm of db, font=\large\bfseries, text=green!70!black] {Database Zone (Secured)};
+
+\end{tikzpicture}
+\end{center}
+
+\vspace{1cm}
+
+% ============================================================================
+% FEATURE SUMMARY
+% ============================================================================
+
+\section*{Summary of New Features}
+
+\subsection*{Multi-Part Nodes}
+\begin{itemize}
+    \item \texttt{\textbackslash detailedServer\{name\}\{x\}\{y\}\{hostname\}\{IP\}\{ports\}}
+    \item \texttt{\textbackslash detailedClient\{name\}\{x\}\{y\}\{hostname\}\{IP\}\{OS\}}
+\end{itemize}
+
+\subsection*{Visual Effects}
+\begin{itemize}
+    \item \texttt{glow} - Soft shadow glow effect
+    \item \texttt{strong glow=color} - Intense colored glow
+    \item \texttt{neon=color} - Neon tube effect
+    \item \texttt{double border=color} - Emphasis border
+    \item \texttt{dashed shadow=color} - Dashed outline with shadow
+\end{itemize}
+
+\subsection*{Enhanced Badges}
+\begin{itemize}
+    \item Security levels: \texttt{security high/medium/low}
+    \item Services: \texttt{web/database/api/ssh service badge}
+    \item CVE severity: \texttt{cve critical/high/medium/low}
+\end{itemize}
+
+\subsection*{Helper Macros}
+\begin{itemize}
+    \item \texttt{\textbackslash quickServer/Client/Router/Firewall\{name\}\{x\}\{y\}\{label\}}
+    \item \texttt{\textbackslash addBadges\{node\}\{os-badge\}\{status-badge\}}
+    \item \texttt{\textbackslash addCVE\{node\}\{CVE-ID\}\{severity\}\{score\}}
+    \item \texttt{\textbackslash addService\{node\}\{type\}\{port\}}
+\end{itemize}
+
+\subsection*{Style Presets}
+\begin{itemize}
+    \item \texttt{\textbackslash loadCorporatePreset} - Professional monochrome
+    \item \texttt{\textbackslash loadSecurityPreset} - High contrast for threats
+    \item \texttt{\textbackslash loadPresentationPreset} - High visibility with glows
+    \item \texttt{\textbackslash loadAccessiblePreset} - Colorblind-safe patterns
+    \item \texttt{\textbackslash loadDarkPreset} - Dark mode with neon effects
+\end{itemize}
+
+\end{document}

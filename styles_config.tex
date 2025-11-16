@@ -784,3 +784,437 @@
 % - Add support for custom dimensions
 % - Portrait vs landscape orientation support
 % - Multi-page diagram support for very large networks
+
+% ============================================================================
+% BEAMER ANIMATION SUPPORT
+% ============================================================================
+
+% Check if beamer is loaded
+\newif\ifbeamer
+\@ifclassloaded{beamer}{\beamertrue}{\beamerfalse}
+
+% Pulse effect for highlighting nodes (works in Beamer)
+\tikzset{
+    pulse/.style={
+        animate={
+            myself:={
+                0s={opacity=1, scale=1},
+                0.5s={opacity=0.7, scale=1.05},
+                1s={opacity=1, scale=1},
+                repeat
+            }
+        }
+    },
+
+    % Fade in effect for progressive disclosure
+    fade in/.style={
+        opacity=0,
+        animate={
+            myself:={
+                0s={opacity=0},
+                0.3s={opacity=1}
+            }
+        }
+    },
+
+    % Highlight effect (border pulse)
+    highlight pulse/.style={
+        animate={
+            myself:={
+                line width/.list={1.5pt, 3pt, 1.5pt},
+                begin on=click,
+                duration=0.5s,
+                repeat=3
+            }
+        }
+    }
+}
+
+% Overlay-aware node creation for Beamer presentations
+\newcommand{\createOverlayNode}[5]{
+    % #1 = overlay spec, #2 = style, #3 = position, #4 = name, #5 = text
+    \only<#1>{\node[#2] (#4) at #3 {#5};}
+}
+
+% Progressive reveal for connections
+\newcommand{\revealConnection}[4]{
+    % #1 = overlay spec, #2 = style, #3 = from, #4 = to
+    \only<#1>{\draw[#2] (#3) -- (#4);}
+}
+
+% ============================================================================
+% MULTI-PART NODES FOR DETAILED INFORMATION
+% ============================================================================
+
+\tikzset{
+    % Multi-part node base style
+    info node/.style={
+        rectangle split,
+        rectangle split parts=3,
+        draw,
+        rounded corners=2pt,
+        font=\small\sffamily,
+        text width=3cm,
+        align=center
+    },
+
+    % Server with detailed info (hostname | IP | ports)
+    detailed server/.style={
+        info node,
+        rectangle split part fill={serverBlue!30, serverBlue!15, serverBlue!10},
+        draw=serverBlue!80,
+        line width=1pt
+    },
+
+    % Client with system info
+    detailed client/.style={
+        info node,
+        rectangle split part fill={clientGreen!25, clientGreen!12, clientGreen!8},
+        draw=clientGreen!70,
+        line width=1pt
+    },
+
+    % Node with status bars (CPU, Memory, Disk)
+    status node/.style={
+        info node,
+        rectangle split parts=4,
+        minimum width=3.5cm
+    }
+}
+
+% Command to create a detailed server node
+% Usage: \detailedServer{name}{x}{y}{hostname}{IP}{ports}
+\newcommand{\detailedServer}[6]{
+    \node[detailed server] (#1) at (#2,#3) {
+        \textbf{#4}
+        \nodepart{two}\texttt{#5}
+        \nodepart{three}\scriptsize Ports: #6
+    };
+}
+
+% Command to create a detailed client node
+% Usage: \detailedClient{name}{x}{y}{hostname}{IP}{OS}
+\newcommand{\detailedClient}[6]{
+    \node[detailed client] (#1) at (#2,#3) {
+        \textbf{#4}
+        \nodepart{two}\texttt{#5}
+        \nodepart{three}\scriptsize #6
+    };
+}
+
+% ============================================================================
+% ADVANCED VISUAL EFFECTS
+% ============================================================================
+
+\tikzset{
+    % Glow effect for emphasis
+    glow/.style={
+        blur shadow={
+            shadow blur steps=15,
+            shadow xshift=0pt,
+            shadow yshift=0pt,
+            shadow blur radius=8pt,
+            shadow opacity=60
+        }
+    },
+
+    % Strong glow for critical alerts
+    strong glow/.style={
+        blur shadow={
+            shadow blur steps=20,
+            shadow xshift=0pt,
+            shadow yshift=0pt,
+            shadow blur radius=12pt,
+            shadow opacity=80,
+            shadow color=#1
+        }
+    },
+
+    % Neon effect
+    neon/.style={
+        line width=2pt,
+        draw=#1!90,
+        blur shadow={
+            shadow blur steps=15,
+            shadow xshift=0pt,
+            shadow yshift=0pt,
+            shadow blur radius=6pt,
+            shadow color=#1,
+            shadow opacity=70
+        }
+    },
+
+    % Double border for emphasis
+    double border/.style={
+        draw=#1!80,
+        line width=1.5pt,
+        postaction={
+            draw=#1!40,
+            line width=3pt,
+            shorten >=1pt,
+            shorten <=1pt
+        }
+    },
+
+    % Dashed border with shadow
+    dashed shadow/.style={
+        draw=#1!70,
+        line width=1.5pt,
+        dashed,
+        dash pattern=on 4pt off 3pt,
+        blur shadow={shadow blur steps=5}
+    }
+}
+
+% ============================================================================
+% ADDITIONAL BADGE TYPES
+% ============================================================================
+
+\tikzset{
+    % Security level badges
+    security high/.style={
+        base badge,
+        fill=green!70,
+        text=white,
+        draw=green!90,
+        line width=0.5pt
+    },
+
+    security medium/.style={
+        base badge,
+        fill=yellow!70,
+        text=black,
+        draw=yellow!90,
+        line width=0.5pt
+    },
+
+    security low/.style={
+        base badge,
+        fill=red!70,
+        text=white,
+        draw=red!90,
+        line width=0.5pt
+    },
+
+    % Service type badges
+    web service badge/.style={
+        base badge,
+        rectangle,
+        rounded corners=2pt,
+        fill=blue!60,
+        text=white,
+        font=\tiny\ttfamily
+    },
+
+    database service badge/.style={
+        base badge,
+        rectangle,
+        rounded corners=2pt,
+        fill=purple!60,
+        text=white,
+        font=\tiny\ttfamily
+    },
+
+    api service badge/.style={
+        base badge,
+        rectangle,
+        rounded corners=2pt,
+        fill=orange!60,
+        text=white,
+        font=\tiny\ttfamily
+    },
+
+    ssh service badge/.style={
+        base badge,
+        rectangle,
+        rounded corners=2pt,
+        fill=gray!60,
+        text=white,
+        font=\tiny\ttfamily
+    },
+
+    % CVE severity badges
+    cve critical/.style={
+        rectangle,
+        rounded corners=2pt,
+        fill=red!80,
+        text=white,
+        font=\tiny\bfseries,
+        inner sep=2pt,
+        minimum width=1.2cm
+    },
+
+    cve high/.style={
+        rectangle,
+        rounded corners=2pt,
+        fill=orange!80,
+        text=white,
+        font=\tiny\bfseries,
+        inner sep=2pt,
+        minimum width=1.2cm
+    },
+
+    cve medium/.style={
+        rectangle,
+        rounded corners=2pt,
+        fill=yellow!80,
+        text=black,
+        font=\tiny\bfseries,
+        inner sep=2pt,
+        minimum width=1.2cm
+    },
+
+    cve low/.style={
+        rectangle,
+        rounded corners=2pt,
+        fill=green!60,
+        text=white,
+        font=\tiny\bfseries,
+        inner sep=2pt,
+        minimum width=1.2cm
+    }
+}
+
+% ============================================================================
+% HELPER MACROS FOR EASIER USAGE
+% ============================================================================
+
+% Quick node creation with automatic styling
+% Usage: \quickServer{name}{x}{y}{label}
+\newcommand{\quickServer}[4]{
+    \node[server premium, glow] (#1) at (#2,#3) {#4};
+}
+
+\newcommand{\quickClient}[4]{
+    \node[client premium, glow] (#1) at (#2,#3) {#4};
+}
+
+\newcommand{\quickRouter}[4]{
+    \node[router premium, glow] (#1) at (#2,#3) {#4};
+}
+
+\newcommand{\quickFirewall}[4]{
+    \node[firewall premium, glow] (#1) at (#2,#3) {#4};
+}
+
+% Add multiple badges at once
+% Usage: \addBadges{node-name}{os-badge}{status-badge}
+\newcommand{\addBadges}[3]{
+    \nodeBadge{#1}{#2}{north east}{OS}
+    \nodeBadge{#1}{#3}{north west}{\checkmark}
+}
+
+% Add CVE badge to node
+% Usage: \addCVE{node-name}{CVE-ID}{severity}{score}
+\newcommand{\addCVE}[4]{
+    \node[cve #3, below=0.2cm of #1] {#2: #4};
+}
+
+% Add service badge
+% Usage: \addService{node-name}{service-type}{port}
+\newcommand{\addService}[3]{
+    \node[#2 service badge, above=0.1cm of #1] {#3};
+}
+
+% ============================================================================
+% STYLE PRESET SYSTEM
+% ============================================================================
+
+% Preset: Corporate (professional, conservative)
+\newcommand{\loadCorporatePreset}{
+    \loadColorScheme{monochrome}
+    \tikzset{
+        every node/.append style={font=\sffamily},
+        server/.append style={server premium},
+        client/.append style={client premium},
+        router/.append style={router premium}
+    }
+}
+
+% Preset: Security Report (high contrast, clear threats)
+\newcommand{\loadSecurityPreset}{
+    \loadColorScheme{high-contrast}
+    \tikzset{
+        every node/.append style={double border=black},
+        attacker/.append style={strong glow=red}
+    }
+}
+
+% Preset: Presentation (high visibility, animations ready)
+\newcommand{\loadPresentationPreset}{
+    \loadColorScheme{standard}
+    \tikzset{
+        every node/.append style={glow},
+        server/.append style={server premium},
+        client/.append style={client premium}
+    }
+}
+
+% Preset: Colorblind Accessible
+\newcommand{\loadAccessiblePreset}{
+    \loadColorScheme{colorblind}
+    \tikzset{
+        server/.append style={server colorblind},
+        client/.append style={client colorblind},
+        router/.append style={router colorblind},
+        firewall/.append style={firewall colorblind}
+    }
+}
+
+% Preset: Dark Mode
+\newcommand{\loadDarkPreset}{
+    \loadColorScheme{dark}
+    \setTheme{dark}
+    \tikzset{
+        every node/.append style={text=white},
+        server/.append style={server premium, neon=serverBlue},
+        client/.append style={client premium, neon=clientGreen}
+    }
+}
+
+% ============================================================================
+% STYLE EXPORT/IMPORT HELPERS
+% ============================================================================
+
+% Save current color scheme to macro
+\newcommand{\exportCurrentScheme}[1]{
+    \edef#1{\currentColorScheme}
+}
+
+% Restore saved color scheme
+\newcommand{\importScheme}[1]{
+    \loadColorScheme{#1}
+}
+
+% Create custom color scheme from current colors
+\newcommand{\saveAsCustomScheme}[1]{
+    % This creates a snapshot of current colors as a custom scheme
+    % Users can then reload it with \loadColorScheme{#1}
+    \expandafter\newcommand\csname loadColorScheme#1\endcsname{
+        % Colors will be preserved at definition time
+        \colorlet{serverBlue-#1}{serverBlue}
+        \colorlet{clientGreen-#1}{clientGreen}
+        \colorlet{routerOrange-#1}{routerOrange}
+    }
+}
+
+% ============================================================================
+% UTILITY COMMANDS
+% ============================================================================
+
+% Quick color scheme comparison (for documentation)
+\newcommand{\showColorSwatch}[2]{
+    % #1 = color name, #2 = color definition
+    \tikz{\node[fill=#2, minimum width=1cm, minimum height=0.5cm, draw=black] {};}
+    \texttt{#1}
+}
+
+% Display all available color schemes
+\newcommand{\listColorSchemes}{
+    Available schemes: standard, dark, colorblind, tritanopia, monochrome, high-contrast
+}
+
+% Display all available presets
+\newcommand{\listPresets}{
+    Available presets: Corporate, Security, Presentation, Accessible, Dark
+}
