@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE nmaprun>
+<nmaprun scanner="nmap" args="nmap -sV -O 192.168.1.0/24" start="1699564800" version="7.94">
+<scaninfo type="syn" protocol="tcp" numservices="1000" services="1-1000"/>
+
+<host starttime="1699564801" endtime="1699564810">
+  <status state="up" reason="echo-reply"/>
+  <address addr="192.168.1.1" addrtype="ipv4"/>
+  <hostnames>
+    <hostname name="router.local" type="PTR"/>
+  </hostnames>
+  <ports>
+    <port protocol="tcp" portid="22">
+      <state state="open" reason="syn-ack"/>
+      <service name="ssh" product="OpenSSH" version="8.9" ostype="Linux"/>
+    </port>
+    <port protocol="tcp" portid="80">
+      <state state="open" reason="syn-ack"/>
+      <service name="http" product="nginx" version="1.22.1"/>
+    </port>
+    <port protocol="tcp" portid="443">
+      <state state="open" reason="syn-ack"/>
+      <service name="https" product="nginx" version="1.22.1"/>
+    </port>
+  </ports>
+  <os>
+    <osmatch name="Linux 5.10" accuracy="95">
+      <osclass type="router" vendor="Linux" osfamily="Linux" osgen="5.X" accuracy="95"/>
+    </osmatch>
+  </os>
+</host>
+
+<host starttime="1699564811" endtime="1699564820">
+  <status state="up" reason="echo-reply"/>
+  <address addr="192.168.1.10" addrtype="ipv4"/>
+  <hostnames>
+    <hostname name="webserver.local" type="PTR"/>
+  </hostnames>
+  <ports>
+    <port protocol="tcp" portid="22">
+      <state state="open" reason="syn-ack"/>
+      <service name="ssh" product="OpenSSH" version="8.9"/>
+    </port>
+    <port protocol="tcp" portid="80">
+      <state state="open" reason="syn-ack"/>
+      <service name="http" product="Apache" version="2.4.54"/>
+    </port>
+    <port protocol="tcp" portid="443">
+      <state state="open" reason="syn-ack"/>
+      <service name="https" product="Apache" version="2.4.54" tunnel="ssl"/>
+    </port>
+  </ports>
+  <os>
+    <osmatch name="Linux 5.15" accuracy="98">
+      <osclass type="general purpose" vendor="Linux" osfamily="Linux" osgen="5.X" accuracy="98"/>
+    </osmatch>
+  </os>
+</host>
+
+<host starttime="1699564821" endtime="1699564830">
+  <status state="up" reason="echo-reply"/>
+  <address addr="192.168.1.20" addrtype="ipv4"/>
+  <hostnames>
+    <hostname name="dbserver.local" type="PTR"/>
+  </hostnames>
+  <ports>
+    <port protocol="tcp" portid="22">
+      <state state="open" reason="syn-ack"/>
+      <service name="ssh" product="OpenSSH" version="8.9"/>
+    </port>
+    <port protocol="tcp" portid="3306">
+      <state state="open" reason="syn-ack"/>
+      <service name="mysql" product="MySQL" version="8.0.33"/>
+    </port>
+    <port protocol="tcp" portid="5432">
+      <state state="open" reason="syn-ack"/>
+      <service name="postgresql" product="PostgreSQL" version="15.2"/>
+    </port>
+  </ports>
+  <os>
+    <osmatch name="Linux 5.15" accuracy="98">
+      <osclass type="general purpose" vendor="Linux" osfamily="Linux" osgen="5.X" accuracy="98"/>
+    </osmatch>
+  </os>
+</host>
+
+<host starttime="1699564831" endtime="1699564840">
+  <status state="up" reason="echo-reply"/>
+  <address addr="192.168.1.50" addrtype="ipv4"/>
+  <hostnames>
+    <hostname name="workstation1.local" type="PTR"/>
+  </hostnames>
+  <ports>
+    <port protocol="tcp" portid="135">
+      <state state="open" reason="syn-ack"/>
+      <service name="msrpc" product="Microsoft Windows RPC"/>
+    </port>
+    <port protocol="tcp" portid="139">
+      <state state="open" reason="syn-ack"/>
+      <service name="netbios-ssn" product="Microsoft Windows netbios-ssn"/>
+    </port>
+    <port protocol="tcp" portid="445">
+      <state state="open" reason="syn-ack"/>
+      <service name="microsoft-ds" product="Microsoft Windows Server 2019"/>
+    </port>
+  </ports>
+  <os>
+    <osmatch name="Microsoft Windows 10" accuracy="95">
+      <osclass type="general purpose" vendor="Microsoft" osfamily="Windows" osgen="10" accuracy="95"/>
+    </osmatch>
+  </os>
+</host>
+
+<host starttime="1699564841" endtime="1699564850">
+  <status state="up" reason="echo-reply"/>
+  <address addr="192.168.1.100" addrtype="ipv4"/>
+  <hostnames>
+    <hostname name="firewall.local" type="PTR"/>
+  </hostnames>
+  <ports>
+    <port protocol="tcp" portid="22">
+      <state state="open" reason="syn-ack"/>
+      <service name="ssh" product="OpenSSH" version="8.9"/>
+    </port>
+    <port protocol="tcp" portid="443">
+      <state state="open" reason="syn-ack"/>
+      <service name="https" product="pfSense webConfigurator"/>
+    </port>
+  </ports>
+  <os>
+    <osmatch name="FreeBSD 13.1" accuracy="92">
+      <osclass type="firewall" vendor="FreeBSD" osfamily="FreeBSD" osgen="13.X" accuracy="92"/>
+    </osmatch>
+  </os>
+</host>
+
+<runstats>
+  <finished time="1699564850" timestr="Fri Nov 10 00:00:50 2023" elapsed="50.00"/>
+  <hosts up="5" down="0" total="5"/>
+</runstats>
+</nmaprun>

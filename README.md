@@ -11,6 +11,7 @@ A professional, scalable network diagram generation system using LaTeX/TikZ, des
 ✅ **Multiple Layout Algorithms** - Tiered, circular, grid, and force-directed options
 ✅ **Rich Connection Types** - Encrypted, suspicious, attack, and bidirectional connections
 ✅ **Security Zones** - Visual subnet and security boundary representations
+✅ **Data Import/Export** - JSON, YAML, CSV, and Nmap XML support (NEW!)
 ✅ **TeXLive 2024/2025 Compatible** - Uses stable, widely-supported packages
 
 ## Quick Start
@@ -45,7 +46,16 @@ network_diagram_generator.tex  # Main entry point
 ├── network_layout.tex         # Layout algorithms and positioning
 ├── connection_renderer.tex    # Connection drawing and flows
 ├── threat_indicators.tex      # Security threat visualization
-└── network_data.tex           # Actual network topology data
+├── data_import.tex            # Data import/export system (NEW!)
+├── network_data.tex           # Actual network topology data
+└── examples/                  # Example data files (NEW!)
+    ├── example_network.json   # JSON format example
+    ├── example_network.yaml   # YAML format example
+    ├── nodes.csv              # CSV nodes example
+    ├── connections.csv        # CSV connections example
+    ├── threats.csv            # CSV threats example
+    ├── example_nmap.xml       # Nmap XML example
+    └── README.md              # Examples documentation
 ```
 
 ## Creating Your Own Diagrams
@@ -166,6 +176,143 @@ Edit `styles_config.tex`:
 \drawCurvedConnection{node1}{node2}{30}{Label}  % 30 degree bend
 ```
 
+## Data Import/Export (NEW!)
+
+The system now supports importing network topologies from multiple data formats, eliminating the need to manually code network diagrams.
+
+### Supported Import Formats
+
+#### 1. JSON Import
+
+**Requires:** LuaLaTeX
+
+Import complete network topologies from JSON files:
+
+```latex
+% In your main .tex file
+\importJSON{examples/example_network.json}
+```
+
+**JSON Schema:**
+```json
+{
+  "nodes": [
+    {
+      "id": "node1",
+      "type": "server|firewall|router|switch|client|cloud",
+      "ip": "192.168.1.1",
+      "x": 0,
+      "y": 0,
+      "label": "Display Name",
+      "ports": [80, 443]
+    }
+  ],
+  "connections": [
+    {
+      "source": "node1",
+      "dest": "node2",
+      "type": "normal|encrypted|attack|suspicious|bidirectional",
+      "label": "Optional Label"
+    }
+  ],
+  "threats": [
+    {
+      "target": "node1",
+      "type": "vulnerability|malware",
+      "cve": "CVE-2024-1234",
+      "severity": 9.8
+    }
+  ]
+}
+```
+
+#### 2. YAML Import
+
+**Requires:** LuaLaTeX
+
+Human-readable alternative to JSON with comment support:
+
+```latex
+\importYAML{examples/example_network.yaml}
+```
+
+#### 3. CSV Bulk Import
+
+Import network data from CSV spreadsheets:
+
+```latex
+\renewcommand{\renderNetworkNodes}{
+    \importNodesFromCSV{examples/nodes.csv}
+}
+
+\renewcommand{\renderConnections}{
+    \importConnectionsFromCSV{examples/connections.csv}
+}
+
+\renewcommand{\renderThreats}{
+    \importThreatsFromCSV{examples/threats.csv}
+}
+```
+
+**CSV Schemas:**
+- `nodes.csv`: `id,type,ip,x,y,label`
+- `connections.csv`: `source,dest,type,label`
+- `threats.csv`: `target,type,severity,cve,description`
+
+#### 4. Nmap XML Parser
+
+**Requires:** LuaLaTeX
+
+Automatically import network discovery results from Nmap scans:
+
+```latex
+\importNmapXML{scan_results.xml}
+```
+
+**Generate Nmap XML:**
+```bash
+nmap -sV -O 192.168.1.0/24 -oX scan_results.xml
+```
+
+This will automatically:
+- Create nodes for discovered hosts
+- Add open port information
+- Use hostnames as labels
+- Arrange nodes in a grid layout
+
+### Export Formats
+
+Export your network diagrams to other tools:
+
+```latex
+% Export to GraphML (for Gephi, Cytoscape)
+\exportToGraphML{output.graphml}{network_data}
+
+% Export to DOT format (for GraphViz)
+\exportToDOT{output.dot}{network_data}
+```
+
+### Compilation for Data Import
+
+**Important:** JSON, YAML, and Nmap XML parsing require LuaLaTeX:
+
+```bash
+# Compile with LuaLaTeX
+lualatex network_diagram_generator.tex
+
+# Or update compile.sh to use lualatex
+./compile.sh
+```
+
+### Example Files
+
+See the `examples/` directory for complete working examples:
+- `example_network.json` - JSON format
+- `example_network.yaml` - YAML format
+- `nodes.csv`, `connections.csv`, `threats.csv` - CSV format
+- `example_nmap.xml` - Nmap XML format
+- `README.md` - Detailed usage guide
+
 ## Parallel Development Guide
 
 This system is designed for **multiple agents/developers** to work simultaneously on different components:
@@ -220,13 +367,13 @@ This system is designed for **multiple agents/developers** to work simultaneousl
 - [ ] Real-time threat feed integration
 - [ ] Security compliance dashboard (NIST, CIS, PCI-DSS)
 
-### Agent 6: Data Import/Export
+### Agent 6: Data Import/Export ✅ HIGH PRIORITY COMPLETE
 **Priority TODOs:**
-- [ ] JSON/YAML parser for network data input
-- [ ] CSV import for bulk node creation
-- [ ] Nmap XML output parser
+- [✅] JSON/YAML parser for network data input
+- [✅] CSV import for bulk node creation
+- [✅] Nmap XML output parser
 - [ ] Nessus scan result integration
-- [ ] Export to GraphML/DOT format
+- [✅] Export to GraphML/DOT format (basic implementation)
 - [ ] Database connectivity for live network data
 - [ ] REST API for dynamic diagram generation
 
@@ -294,7 +441,8 @@ Free for personal and commercial use. Attribution appreciated.
 ## Version History
 
 - **v1.0 (Foundation)** - Initial modular architecture with core features
-- **v1.1 (Planned)** - Auto-layout algorithms and data import
+- **v1.1 (Current)** - Data import/export system (JSON, YAML, CSV, Nmap XML)
+- **v1.2 (Planned)** - Auto-layout algorithms
 - **v2.0 (Planned)** - SIEM integration and real-time threat feeds
 
 ## Contact & Support

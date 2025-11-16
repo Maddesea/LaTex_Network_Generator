@@ -1,0 +1,10 @@
+id,type,ip,x,y,label
+internet,cloud,0.0.0.0,0,8,Internet
+firewall1,firewall,203.0.113.1,0,6,Edge Firewall
+router1,router,192.168.1.1,0,4,Core Router
+switch1,switch,192.168.1.2,-3,2,DMZ Switch
+switch2,switch,192.168.100.1,3,2,Internal Switch
+webserver1,server,192.168.1.10,-3,0,Web Server
+dbserver1,server,192.168.100.10,3,0,Database Server
+client1,client,192.168.100.50,3,-2,Workstation 1
+client2,client,192.168.100.51,5,-2,Workstation 2

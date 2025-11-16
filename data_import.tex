@@ -1,0 +1,725 @@
+% data_import.tex - Data Import/Export Module
+% Agent 6: Data Import/Export System
+% Version: 1.0
+% Requires: LuaLaTeX for JSON/YAML/XML parsing
+%
+% This module provides comprehensive data import/export functionality:
+% - JSON parser for network topology
+% - YAML parser for human-readable configs
+% - CSV bulk import for nodes and connections
+% - Nmap XML parser for network discovery integration
+% - Export to GraphML/DOT formats
+%
+% ============================================================================
+% PACKAGE DEPENDENCIES
+% ============================================================================
+
+\usepackage{csvsimple}  % For CSV parsing
+\usepackage{luacode}    % For Lua scripting (requires LuaLaTeX)
+\usepackage{filecontents} % For creating example files
+
+% ============================================================================
+% GLOBAL STORAGE FOR IMPORTED DATA
+% ============================================================================
+
+% Storage for imported nodes
+\newcounter{importedNodeCount}
+\setcounter{importedNodeCount}{0}
+
+% Storage for imported connections
+\newcounter{importedConnectionCount}
+\setcounter{importedConnectionCount}{0}
+
+% Storage for imported threats
+\newcounter{importedThreatCount}
+\setcounter{importedThreatCount}{0}
+
+% Enable/disable debug output
+\newif\ifimportdebug
+\importdebugfalse  % Set to true for verbose output
+
+% ============================================================================
+% LUA HELPER FUNCTIONS
+% ============================================================================
+
+\begin{luacode}
+-- ========================================================================
+-- JSON PARSER
+-- ========================================================================
+
+-- Simple JSON decoder (basic implementation)
+-- For production use, consider external libraries like dkjson or cjson
+
+json = {}
+
+function json.decode(jsonString)
+    -- Basic JSON parser for network topology
+    -- Supports: objects, arrays, strings, numbers, booleans, null
+
+    local function skip_whitespace(str, pos)
+        while pos <= #str and str:sub(pos,pos):match("%s") do
+            pos = pos + 1
+        end
+        return pos
+    end
+
+    local function parse_value(str, pos)
+        pos = skip_whitespace(str, pos)
+        local char = str:sub(pos,pos)
+
+        -- Parse string
+        if char == '"' then
+            local start = pos + 1
+            local endpos = start
+            while endpos <= #str and str:sub(endpos,endpos) ~= '"' do
+                endpos = endpos + 1
+            end
+            return str:sub(start, endpos-1), endpos + 1
+
+        -- Parse number
+        elseif char:match("[%-0-9]") then
+            local start = pos
+            local endpos = pos
+            while endpos <= #str and str:sub(endpos,endpos):match("[0-9%.%-eE]") do
+                endpos = endpos + 1
+            end
+            return tonumber(str:sub(start, endpos-1)), endpos
+
+        -- Parse boolean/null
+        elseif str:sub(pos,pos+3) == "true" then
+            return true, pos + 4
+        elseif str:sub(pos,pos+4) == "false" then
+            return false, pos + 5
+        elseif str:sub(pos,pos+3) == "null" then
+            return nil, pos + 4
+
+        -- Parse array
+        elseif char == "[" then
+            local arr = {}
+            pos = pos + 1
+            pos = skip_whitespace(str, pos)
+
+            if str:sub(pos,pos) == "]" then
+                return arr, pos + 1
+            end
+
+            while pos <= #str do
+                local val
+                val, pos = parse_value(str, pos)
+                table.insert(arr, val)
+                pos = skip_whitespace(str, pos)
+
+                if str:sub(pos,pos) == "]" then
+                    return arr, pos + 1
+                elseif str:sub(pos,pos) == "," then
+                    pos = pos + 1
+                end
+            end
+
+        -- Parse object
+        elseif char == "{" then
+            local obj = {}
+            pos = pos + 1
+            pos = skip_whitespace(str, pos)
+
+            if str:sub(pos,pos) == "}" then
+                return obj, pos + 1
+            end
+
+            while pos <= #str do
+                -- Parse key
+                local key
+                key, pos = parse_value(str, pos)
+                pos = skip_whitespace(str, pos)
+
+                -- Expect colon
+                if str:sub(pos,pos) == ":" then
+                    pos = pos + 1
+                end
+
+                -- Parse value
+                local val
+                val, pos = parse_value(str, pos)
+                obj[key] = val
+                pos = skip_whitespace(str, pos)
+
+                if str:sub(pos,pos) == "}" then
+                    return obj, pos + 1
+                elseif str:sub(pos,pos) == "," then
+                    pos = pos + 1
+                end
+            end
+        end
+
+        return nil, pos
+    end
+
+    local result, _ = parse_value(jsonString, 1)
+    return result
+end
+
+-- ========================================================================
+-- YAML PARSER
+-- ========================================================================
+
+yaml = {}
+
+function yaml.decode(yamlString)
+    -- Simple YAML parser for basic network topology files
+    -- Supports: key-value pairs, lists, nested structures
+
+    local result = {}
+    local current_indent = 0
+    local stack = {result}
+
+    for line in yamlString:gmatch("[^\n]+") do
+        -- Skip comments and empty lines
+        if not line:match("^%s*#") and line:match("%S") then
+            local indent = #line:match("^%s*")
+            local content = line:match("^%s*(.-)%s*$")
+
+            -- Handle list items
+            if content:match("^%-") then
+                local value = content:match("^%-%s*(.+)$")
+                local parent = stack[#stack]
+                if type(parent) ~= "table" then
+                    parent = {}
+                    stack[#stack] = parent
+                end
+                table.insert(parent, value)
+
+            -- Handle key-value pairs
+            elseif content:match(":") then
+                local key, value = content:match("^([^:]+):%s*(.*)$")
+                if key and value and value ~= "" then
+                    stack[#stack][key] = value
+                elseif key then
+                    -- Start new nested object
+                    stack[#stack][key] = {}
+                    table.insert(stack, stack[#stack][key])
+                end
+            end
+        end
+    end
+
+    return result
+end
+
+-- ========================================================================
+-- NMAP XML PARSER
+-- ========================================================================
+
+nmap = {}
+
+function nmap.parseXML(xmlString)
+    -- Parse Nmap XML output and extract network topology
+    -- Returns: table of hosts with ports, services, OS info
+
+    local hosts = {}
+
+    -- Extract host blocks
+    for host in xmlString:gmatch("<host[^>]*>.-</host>") do
+        local hostInfo = {}
+
+        -- Extract IP address
+        local ip = host:match('<address%s+addr="([^"]+)"')
+        if ip then
+            hostInfo.ip = ip
+        end
+
+        -- Extract hostname
+        local hostname = host:match('<hostname%s+name="([^"]+)"')
+        if hostname then
+            hostInfo.hostname = hostname
+        else
+            hostInfo.hostname = ip or "unknown"
+        end
+
+        -- Extract OS detection
+        local os = host:match('<osclass%s+type="([^"]+)"')
+        if os then
+            hostInfo.os = os
+        end
+
+        -- Extract open ports
+        hostInfo.ports = {}
+        for port in host:gmatch('<port%s+protocol="([^"]+)"%s+portid="([^"]+)">.-</port>') do
+            local proto, portnum = port:match('<port%s+protocol="([^"]+)"%s+portid="([^"]+)">')
+            local service = port:match('<service%s+name="([^"]+)"')
+
+            table.insert(hostInfo.ports, {
+                protocol = proto,
+                port = portnum,
+                service = service or "unknown"
+            })
+        end
+
+        -- Extract state
+        local state = host:match('<state%s+state="([^"]+)"')
+        hostInfo.state = state or "unknown"
+
+        table.insert(hosts, hostInfo)
+    end
+
+    return hosts
+end
+
+-- ========================================================================
+-- NETWORK DATA CONVERSION FUNCTIONS
+-- ========================================================================
+
+function convertJSONToNodes(jsonData)
+    -- Convert JSON network data to LaTeX node creation commands
+    if not jsonData or not jsonData.nodes then
+        tex.print("% No nodes found in JSON data")
+        return
+    end
+
+    for i, node in ipairs(jsonData.nodes) do
+        local nodeType = node.type or "server"
+        local nodeId = node.id or ("node" .. i)
+        local nodeIP = node.ip or "0.0.0.0"
+        local nodeX = node.x or (i * 2)
+        local nodeY = node.y or 0
+        local nodeLabel = node.label or nodeId
+
+        -- Generate appropriate LaTeX command based on type
+        local cmd = string.format("\\createServer{%s}{%s}{%s}{%s}{%s}",
+            nodeId, nodeIP, nodeX, nodeY, nodeLabel)
+
+        if nodeType == "firewall" then
+            cmd = string.format("\\createFirewall{%s}{%s}{%s}{%s}{%s}",
+                nodeId, nodeIP, nodeX, nodeY, nodeLabel)
+        elseif nodeType == "router" then
+            cmd = string.format("\\createRouter{%s}{%s}{%s}{%s}{%s}",
+                nodeId, nodeIP, nodeX, nodeY, nodeLabel)
+        elseif nodeType == "switch" then
+            cmd = string.format("\\createSwitch{%s}{%s}{%s}{%s}{%s}",
+                nodeId, nodeIP, nodeX, nodeY, nodeLabel)
+        elseif nodeType == "client" then
+            cmd = string.format("\\createClient{%s}{%s}{%s}{%s}{%s}",
+                nodeId, nodeIP, nodeX, nodeY, nodeLabel)
+        elseif nodeType == "cloud" then
+            cmd = string.format("\\createCloud{%s}{%s}{%s}{%s}",
+                nodeId, nodeX, nodeY, nodeLabel)
+        end
+
+        tex.print(cmd)
+    end
+end
+
+function convertJSONToConnections(jsonData)
+    -- Convert JSON connection data to LaTeX connection commands
+    if not jsonData or not jsonData.connections then
+        tex.print("% No connections found in JSON data")
+        return
+    end
+
+    for i, conn in ipairs(jsonData.connections) do
+        local source = conn.source or conn.from
+        local dest = conn.dest or conn.to
+        local connType = conn.type or "normal"
+        local label = conn.label or ""
+
+        local cmd = string.format("\\drawConnection{%s}{%s}{%s}",
+            source, dest, label)
+
+        if connType == "encrypted" then
+            cmd = string.format("\\drawEncryptedConnection{%s}{%s}{%s}",
+                source, dest, label)
+        elseif connType == "attack" then
+            cmd = string.format("\\drawAttackConnection{%s}{%s}{%s}",
+                source, dest, label)
+        elseif connType == "suspicious" then
+            cmd = string.format("\\drawSuspiciousConnection{%s}{%s}{%s}",
+                source, dest, label)
+        elseif connType == "bidirectional" then
+            cmd = string.format("\\drawBidirectional{%s}{%s}{%s}",
+                source, dest, label)
+        end
+
+        tex.print(cmd)
+    end
+end
+
+function convertNmapToNodes(hosts)
+    -- Convert Nmap scan results to node definitions
+    local nodeX = 0
+    local nodeY = 0
+    local nodesPerRow = 4
+
+    for i, host in ipairs(hosts) do
+        local nodeId = "nmap_host" .. i
+        local nodeIP = host.ip or "unknown"
+        local nodeLabel = host.hostname or nodeIP
+
+        -- Calculate position in grid layout
+        nodeX = ((i - 1) % nodesPerRow) * 3
+        nodeY = -math.floor((i - 1) / nodesPerRow) * 2
+
+        -- Determine node type based on open ports
+        local nodeType = "server"
+        if host.ports then
+            for _, port in ipairs(host.ports) do
+                if port.service == "http" or port.service == "https" then
+                    nodeType = "server"
+                elseif port.service == "ssh" then
+                    nodeType = "server"
+                elseif port.service == "domain" then
+                    nodeType = "server"
+                end
+            end
+        end
+
+        -- Generate ports list
+        local portsList = ""
+        if host.ports and #host.ports > 0 then
+            local ports = {}
+            for _, port in ipairs(host.ports) do
+                table.insert(ports, port.port)
+            end
+            portsList = table.concat(ports, ",")
+        end
+
+        local cmd
+        if portsList ~= "" then
+            cmd = string.format("\\createServerWithPorts{%s}{%s}{%s}{%s}{%s}{%s}",
+                nodeId, nodeIP, nodeX, nodeY, nodeLabel, portsList)
+        else
+            cmd = string.format("\\createServer{%s}{%s}{%s}{%s}{%s}",
+                nodeId, nodeIP, nodeX, nodeY, nodeLabel)
+        end
+
+        tex.print(cmd)
+    end
+end
+
+\end{luacode}
+
+% ============================================================================
+% JSON IMPORT FUNCTIONS
+% ============================================================================
+
+\newcommand{\importJSON}[1]{%
+    % Import network topology from JSON file
+    % Usage: \importJSON{filename.json}
+    \IfFileExists{#1}{%
+        \directlua{
+            local file = io.open("#1", "r")
+            if file then
+                local content = file:read("*all")
+                file:close()
+
+                local data = json.decode(content)
+                if data then
+                    tex.print("\string\\renewcommand{\string\\renderNetworkNodes}{")
+                    convertJSONToNodes(data)
+                    tex.print("}")
+
+                    tex.print("\string\\renewcommand{\string\\renderConnections}{")
+                    convertJSONToConnections(data)
+                    tex.print("}")
+                else
+                    tex.print("\string\\PackageWarning{data_import}{Failed to parse JSON file: #1}")
+                end
+            else
+                tex.print("\string\\PackageWarning{data_import}{Could not open JSON file: #1}")
+            end
+        }
+    }{%
+        \PackageWarning{data_import}{JSON file not found: #1}
+    }
+}
+
+\newcommand{\loadJSONNodes}[1]{%
+    % Load only nodes from JSON file
+    \directlua{
+        local file = io.open("#1", "r")
+        if file then
+            local content = file:read("*all")
+            file:close()
+            local data = json.decode(content)
+            if data then convertJSONToNodes(data) end
+        end
+    }
+}
+
+\newcommand{\loadJSONConnections}[1]{%
+    % Load only connections from JSON file
+    \directlua{
+        local file = io.open("#1", "r")
+        if file then
+            local content = file:read("*all")
+            file:close()
+            local data = json.decode(content)
+            if data then convertJSONToConnections(data) end
+        end
+    }
+}
+
+% ============================================================================
+% YAML IMPORT FUNCTIONS
+% ============================================================================
+
+\newcommand{\importYAML}[1]{%
+    % Import network topology from YAML file
+    % Usage: \importYAML{filename.yaml}
+    \IfFileExists{#1}{%
+        \directlua{
+            local file = io.open("#1", "r")
+            if file then
+                local content = file:read("*all")
+                file:close()
+
+                local data = yaml.decode(content)
+                if data then
+                    tex.print("\string\\renewcommand{\string\\renderNetworkNodes}{")
+                    convertJSONToNodes(data) -- YAML structure similar to JSON
+                    tex.print("}")
+
+                    tex.print("\string\\renewcommand{\string\\renderConnections}{")
+                    convertJSONToConnections(data)
+                    tex.print("}")
+                else
+                    tex.print("\string\\PackageWarning{data_import}{Failed to parse YAML file: #1}")
+                end
+            end
+        }
+    }{%
+        \PackageWarning{data_import}{YAML file not found: #1}
+    }
+}
+
+% ============================================================================
+% CSV IMPORT FUNCTIONS
+% ============================================================================
+
+\newcommand{\importNodesFromCSV}[1]{%
+    % Import nodes from CSV file
+    % Expected format: id,type,ip,x,y,label
+    % Usage: \importNodesFromCSV{nodes.csv}
+    \csvreader[
+        head to column names,
+        late after line=,
+    ]{#1}{}%
+    {%
+        \ifthenelse{\equal{\csvcolii}{firewall}}{%
+            \createFirewall{\csvcolone}{\csvcol three}{\csvcolfour}{\csvcolfive}{\csvcol six}%
+        }{}%
+        \ifthenelse{\equal{\csvcolii}{router}}{%
+            \createRouter{\csvcolone}{\csvcol three}{\csvcolfour}{\csvcolfive}{\csvcol six}%
+        }{}%
+        \ifthenelse{\equal{\csvcolii}{switch}}{%
+            \createSwitch{\csvcolone}{\csvcol three}{\csvcolfour}{\csvcolfive}{\csvcol six}%
+        }{}%
+        \ifthenelse{\equal{\csvcolii}{server}}{%
+            \createServer{\csvcolone}{\csvcol three}{\csvcolfour}{\csvcolfive}{\csvcol six}%
+        }{}%
+        \ifthenelse{\equal{\csvcolii}{client}}{%
+            \createClient{\csvcolone}{\csvcol three}{\csvcolfour}{\csvcolfive}{\csvcol six}%
+        }{}%
+    }%
+}
+
+\newcommand{\importConnectionsFromCSV}[1]{%
+    % Import connections from CSV file
+    % Expected format: source,dest,type,label
+    % Usage: \importConnectionsFromCSV{connections.csv}
+    \csvreader[
+        head to column names,
+        late after line=,
+    ]{#1}{}%
+    {%
+        \ifthenelse{\equal{\csvcol three}{encrypted}}{%
+            \drawEncryptedConnection{\csvcolone}{\csvcolii}{\csvcolfour}%
+        }{%
+            \ifthenelse{\equal{\csvcol three}{attack}}{%
+                \drawAttackConnection{\csvcolone}{\csvcolii}{\csvcolfour}%
+            }{%
+                \ifthenelse{\equal{\csvcol three}{suspicious}}{%
+                    \drawSuspiciousConnection{\csvcolone}{\csvcolii}{\csvcolfour}%
+                }{%
+                    \drawConnection{\csvcolone}{\csvcolii}{\csvcolfour}%
+                }%
+            }%
+        }%
+    }%
+}
+
+\newcommand{\importThreatsFromCSV}[1]{%
+    % Import threat indicators from CSV file
+    % Expected format: target,type,severity,cve,description
+    % Usage: \importThreatsFromCSV{threats.csv}
+    \csvreader[
+        head to column names,
+        late after line=,
+    ]{#1}{}%
+    {%
+        \ifthenelse{\equal{\csvcolii}{vulnerability}}{%
+            \markVulnerability{\csvcolone}{\csvcolfour}{\csvcol three}%
+        }{}%
+        \ifthenelse{\equal{\csvcolii}{malware}}{%
+            \visualizeMalware{\csvcolone}{\csvcolfive}%
+        }{}%
+    }%
+}
+
+% ============================================================================
+% NMAP XML IMPORT FUNCTIONS
+% ============================================================================
+
+\newcommand{\importNmapXML}[1]{%
+    % Import network discovery data from Nmap XML output
+    % Usage: \importNmapXML{nmap_scan.xml}
+    \IfFileExists{#1}{%
+        \directlua{
+            local file = io.open("#1", "r")
+            if file then
+                local content = file:read("*all")
+                file:close()
+
+                local hosts = nmap.parseXML(content)
+                if hosts and \string#hosts > 0 then
+                    tex.print("\string\\renewcommand{\string\\renderNetworkNodes}{")
+                    convertNmapToNodes(hosts)
+                    tex.print("}")
+                else
+                    tex.print("\string\\PackageWarning{data_import}{No hosts found in Nmap XML: #1}")
+                end
+            else
+                tex.print("\string\\PackageWarning{data_import}{Could not open Nmap XML file: #1}")
+            end
+        }
+    }{%
+        \PackageWarning{data_import}{Nmap XML file not found: #1}
+    }
+}
+
+% ============================================================================
+% EXPORT FUNCTIONS
+% ============================================================================
+
+\newcommand{\exportToGraphML}[2]{%
+    % Export network topology to GraphML format
+    % Usage: \exportToGraphML{output.graphml}{network_data}
+    % Note: This creates a file that can be imported into Gephi, Cytoscape, etc.
+    \newwrite\graphmlfile
+    \immediate\openout\graphmlfile=#1
+    \immediate\write\graphmlfile{<?xml version="1.0" encoding="UTF-8"?>}
+    \immediate\write\graphmlfile{<graphml xmlns="http://graphml.graphdrawing.org/xmlns">}
+    \immediate\write\graphmlfile{  <graph id="G" edgedefault="directed">}
+
+    % TODO: Write nodes and edges based on #2 data
+    % This requires access to the node and connection data structures
+
+    \immediate\write\graphmlfile{  </graph>}
+    \immediate\write\graphmlfile{</graphml>}
+    \immediate\closeout\graphmlfile
+}
+
+\newcommand{\exportToDOT}[2]{%
+    % Export network topology to DOT format (GraphViz)
+    % Usage: \exportToDOT{output.dot}{network_data}
+    \newwrite\dotfile
+    \immediate\openout\dotfile=#1
+    \immediate\write\dotfile{digraph network \string{}
+
+    % TODO: Write nodes and edges in DOT format
+
+    \immediate\write\dotfile{\string}}
+    \immediate\closeout\dotfile
+}
+
+% ============================================================================
+% UTILITY FUNCTIONS
+% ============================================================================
+
+\newcommand{\setImportDebug}[1]{%
+    % Enable or disable debug output
+    % Usage: \setImportDebug{true} or \setImportDebug{false}
+    \ifthenelse{\equal{#1}{true}}{%
+        \importdebugtrue
+    }{%
+        \importdebugfalse
+    }%
+}
+
+\newcommand{\validateJSONFile}[1]{%
+    % Validate JSON file syntax
+    % Usage: \validateJSONFile{filename.json}
+    \directlua{
+        local file = io.open("#1", "r")
+        if file then
+            local content = file:read("*all")
+            file:close()
+            local data = json.decode(content)
+            if data then
+                tex.print("JSON file is valid: #1")
+            else
+                tex.print("JSON file has syntax errors: #1")
+            end
+        else
+            tex.print("Could not open file: #1")
+        end
+    }
+}
+
+\newcommand{\printImportStats}{%
+    % Print statistics about imported data
+    Imported: \theimportedNodeCount\ nodes, %
+    \theimportedConnectionCount\ connections, %
+    \theimportedThreatCount\ threats%
+}
+
+% ============================================================================
+% SCHEMA DEFINITIONS (For documentation)
+% ============================================================================
+
+% JSON Schema for network topology:
+% {
+%   "nodes": [
+%     {
+%       "id": "node1",
+%       "type": "server|firewall|router|switch|client|cloud",
+%       "ip": "192.168.1.1",
+%       "x": 0,
+%       "y": 0,
+%       "label": "Web Server",
+%       "ports": [80, 443]  // optional
+%     }
+%   ],
+%   "connections": [
+%     {
+%       "source": "node1",
+%       "dest": "node2",
+%       "type": "normal|encrypted|attack|suspicious|bidirectional",
+%       "label": "HTTPS"  // optional
+%     }
+%   ],
+%   "threats": [  // optional
+%     {
+%       "target": "node1",
+%       "type": "vulnerability|malware",
+%       "cve": "CVE-2024-1234",
+%       "severity": 9.8
+%     }
+%   ]
+% }
+
+% CSV Schema for nodes (nodes.csv):
+% id,type,ip,x,y,label
+% fw1,firewall,192.168.1.1,0,0,Main Firewall
+% srv1,server,192.168.1.10,2,0,Web Server
+
+% CSV Schema for connections (connections.csv):
+% source,dest,type,label
+% fw1,srv1,encrypted,HTTPS
+% srv1,db1,normal,MySQL
+
+% ============================================================================
+% END OF MODULE
+% ============================================================================
+
+\ifimportdebug
+    \typeout{data_import.tex loaded successfully}
+\fi
