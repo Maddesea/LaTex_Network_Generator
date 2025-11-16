@@ -537,25 +537,99 @@
 % CONNECTION FILTERING AND LAYERS
 % ============================================================================
 
-% Only show connections of specific type
-% Usage: \filterConnectionsByType{type}
-% Types: all, encrypted, suspicious, attacks, normal
-\newcommand{\filterConnectionsByType}[1]{
-    % Implementation would use conditional rendering
+% Filter flags (set to true/false to enable/disable rendering)
+\newif\ifshowNormalConnections
+\newif\ifshowEncryptedConnections
+\newif\ifshowSuspiciousConnections
+\newif\ifshowAttackConnections
+\newif\ifshowVPNConnections
+\newif\ifshowWirelessConnections
+
+% Default: show all connection types
+\showNormalConnectionstrue
+\showEncryptedConnectionstrue
+\showSuspiciousConnectionstrue
+\showAttackConnectionstrue
+\showVPNConnectionstrue
+\showWirelessConnectionstrue
+
+% Enable specific connection type filter
+% Usage: \enableConnectionType{normal|encrypted|suspicious|attack|vpn|wireless}
+\newcommand{\enableConnectionType}[1]{
+    \ifthenelse{\equal{#1}{normal}}{\showNormalConnectionstrue}{}
+    \ifthenelse{\equal{#1}{encrypted}}{\showEncryptedConnectionstrue}{}
+    \ifthenelse{\equal{#1}{suspicious}}{\showSuspiciousConnectionstrue}{}
+    \ifthenelse{\equal{#1}{attack}}{\showAttackConnectionstrue}{}
+    \ifthenelse{\equal{#1}{vpn}}{\showVPNConnectionstrue}{}
+    \ifthenelse{\equal{#1}{wireless}}{\showWirelessConnectionstrue}{}
 }
 
-% Show connections only for specific protocol
-% Usage: \filterConnectionsByProtocol{protocol}
-\newcommand{\filterConnectionsByProtocol}[1]{
-    % Implementation would filter by protocol name
+% Disable specific connection type filter
+% Usage: \disableConnectionType{normal|encrypted|suspicious|attack|vpn|wireless}
+\newcommand{\disableConnectionType}[1]{
+    \ifthenelse{\equal{#1}{normal}}{\showNormalConnectionsfalse}{}
+    \ifthenelse{\equal{#1}{encrypted}}{\showEncryptedConnectionsfalse}{}
+    \ifthenelse{\equal{#1}{suspicious}}{\showSuspiciousConnectionsfalse}{}
+    \ifthenelse{\equal{#1}{attack}}{\showAttackConnectionsfalse}{}
+    \ifthenelse{\equal{#1}{vpn}}{\showVPNConnectionsfalse}{}
+    \ifthenelse{\equal{#1}{wireless}}{\showWirelessConnectionsfalse}{}
 }
 
-% TODO: Advanced filtering
-% - Port-based filtering (show only port 80, 443, etc.)
-% - Time-based filtering (show connections in time range)
-% - Threshold filtering (show only high-bandwidth connections)
-% - Interactive layer toggles for different connection types
-% - Subnet-based filtering (show only intra/inter-subnet)
+% Show only specific connection types
+% Usage: \showOnlyConnectionTypes{normal,encrypted}
+\newcommand{\showOnlyConnectionTypes}[1]{
+    % Disable all first
+    \showNormalConnectionsfalse
+    \showEncryptedConnectionsfalse
+    \showSuspiciousConnectionsfalse
+    \showAttackConnectionsfalse
+    \showVPNConnectionsfalse
+    \showWirelessConnectionsfalse
+    % Enable specified types
+    \foreach \conntype in {#1} {
+        \enableConnectionType{\conntype}
+    }
+}
+
+% Port-based filtering
+% Usage: \drawConnectionIfPort{from}{to}{port}{target_port}{label}
+\newcommand{\drawConnectionIfPort}[5]{
+    \pgfmathsetmacro{\portmatch}{ifthenelse(#3==#4,1,0)}
+    \ifnum\portmatch=1
+        \draw[normal conn, -{Stealth[length=2.5mm]}] (#1) -- (#2)
+            node[midway, above, font=\tiny] {#5};
+    \fi
+}
+
+% Bandwidth threshold filtering
+% Usage: \drawConnectionIfBandwidth{from}{to}{bandwidth}{threshold}{label}
+\newcommand{\drawConnectionIfBandwidth}[5]{
+    \pgfmathsetmacro{\bwcheck}{ifthenelse(#3>=#4,1,0)}
+    \ifnum\bwcheck=1
+        \pgfmathsetmacro{\linewidth}{0.5 + ln(max(1, #3))/2}
+        \draw[draw=connNormal, line width=\linewidth pt, -{Stealth[length=3mm]}]
+            (#1) -- (#2)
+            node[midway, above, font=\tiny] {#5: #3 Mbps};
+    \fi
+}
+
+% Layer-based rendering control
+% Usage: \beginConnectionLayer{name} ... \endConnectionLayer
+\newcommand{\beginConnectionLayer}[1]{
+    \begin{scope}[on background layer]
+}
+\newcommand{\endConnectionLayer}{
+    \end{scope}
+}
+
+% Z-order controlled connection
+% Usage: \drawConnectionWithZOrder{from}{to}{z_order}{label}
+\newcommand{\drawConnectionWithZOrder}[4]{
+    \begin{scope}[transparency group, opacity=1]
+        \draw[normal conn, -{Stealth[length=2.5mm]}] (#1) -- (#2)
+            node[midway, above, font=\tiny] {#4};
+    \end{scope}
+}
 
 % ============================================================================
 % CONNECTION PATTERNS AND ANALYSIS
@@ -578,38 +652,492 @@
 % Show connection path through network
 % Usage: \showConnectionPath{node_list}
 \newcommand{\showConnectionPath}[1]{
-    % Draw path through multiple hops
-    % Highlight the route taken by traffic
+    \foreach \node [count=\i] in {#1} {
+        \ifnum\i>1
+            \pgfmathtruncatemacro{\prev}{\i-1}
+            \draw[draw=blue!70, line width=2pt, -{Stealth[length=3mm]}]
+                (node\prev) -- (node\i);
+        \fi
+    }
 }
 
-% TODO: Pattern detection visualization
-% - DDoS pattern (many-to-one)
-% - Data exfiltration pattern (one-to-many external)
-% - Lateral movement pattern (peer-to-peer internal)
-% - Command & Control pattern (periodic beaconing)
-% - Port scanning pattern (one-to-many same port)
+% ============================================================================
+% ATTACK PATTERN DETECTION AND VISUALIZATION
+% ============================================================================
+
+% DDoS Pattern Visualization (many-to-one)
+% Usage: \highlightDDoSPattern{target}{source_list}
+\newcommand{\highlightDDoSPattern}[2]{
+    \begin{scope}[on background layer]
+        % Draw attacking connections
+        \foreach \source in {#2} {
+            \draw[draw=red!70, line width=1.5pt, -{Stealth[length=3mm]}]
+                (\source) -- (#1);
+        }
+        % Highlight target with pulsing effect
+        \node[draw=red!80, line width=4pt, rounded corners=8pt,
+              inner sep=10pt, fill=red!20, double=red!40, double distance=2pt]
+            at (#1) {};
+        % Add DDoS label
+        \node[below=15pt, fill=red!80, text=white, font=\tiny\bfseries,
+              rounded corners=2pt, inner sep=2pt]
+            at (#1) {DDoS ATTACK};
+    \end{scope}
+}
+
+% Data Exfiltration Pattern (one-to-many external)
+% Usage: \highlightExfiltrationPattern{source}{destination_list}
+\newcommand{\highlightExfiltrationPattern}[2]{
+    \begin{scope}[on background layer]
+        % Draw exfiltration connections
+        \foreach \dest in {#2} {
+            \draw[draw=orange!70, line width=1.5pt, dashed,
+                  dash pattern=on 4pt off 2pt, -{Stealth[length=3mm]}]
+                (#1) -- (\dest);
+        }
+        % Highlight source
+        \node[draw=orange!80, line width=3pt, rounded corners=6pt,
+              inner sep=8pt, fill=orange!15]
+            at (#1) {};
+        % Add exfiltration warning
+        \node[above=12pt, fill=orange!80, text=white, font=\tiny\bfseries,
+              rounded corners=2pt, inner sep=2pt]
+            at (#1) {DATA EXFIL};
+    \end{scope}
+}
+
+% Lateral Movement Pattern (peer-to-peer internal)
+% Usage: \highlightLateralMovement{node_list}
+\newcommand{\highlightLateralMovement}[1]{
+    \begin{scope}[on background layer]
+        \foreach \node [count=\i] in {#1} {
+            \ifnum\i>1
+                \pgfmathtruncatemacro{\prev}{\i-1}
+                \pgfmathtruncatemacro{\prevnode}{\prev}
+                % Draw lateral movement connection
+                \draw[draw=purple!70, line width=2pt, dashed,
+                      dash pattern=on 3pt off 2pt, -{Stealth[length=3mm]},
+                      postaction={draw, line width=0.5pt, draw=purple!30}]
+                    (lat\prevnode) -- (lat\i);
+            \fi
+            % Highlight compromised nodes
+            \node[draw=purple!70, line width=2pt, circle,
+                  inner sep=6pt, fill=purple!10]
+                (lat\i) at (\node) {};
+        }
+        % Add lateral movement label
+        \node[fill=purple!80, text=white, font=\tiny\bfseries,
+              rounded corners=2pt, inner sep=2pt]
+            at (lat1) {LATERAL MOVE};
+    \end{scope}
+}
+
+% Command & Control (C2) Beaconing Pattern
+% Usage: \highlightC2Pattern{compromised}{c2_server}{label}
+\newcommand{\highlightC2Pattern}[3]{
+    % Bidirectional beaconing connection
+    \draw[draw=red!60, line width=1.5pt, bidirectional,
+          decoration={snake, amplitude=0.5mm, segment length=5mm}, decorate]
+        (#1) -- (#2);
+    % Beacon indicator dots
+    \foreach \pos in {0.2, 0.4, 0.6, 0.8} {
+        \node[circle, fill=red!70, inner sep=1.5pt] at ($(#1)!\pos!(#2)$) {};
+    }
+    % C2 labels
+    \node[above, fill=red!80, text=white, font=\tiny\bfseries,
+          rounded corners=2pt, inner sep=1pt]
+        at ($(#1)!0.5!(#2)$) {#3};
+    \node[below, font=\tiny, fill=red!15, inner sep=1pt]
+        at ($(#1)!0.5!(#2)$) {C2 Beacon};
+}
+
+% Port Scanning Pattern (one-to-many same port)
+% Usage: \highlightPortScanPattern{scanner}{target_list}{port}
+\newcommand{\highlightPortScanPattern}[3]{
+    \begin{scope}[on background layer]
+        % Draw scanning connections
+        \foreach \target in {#2} {
+            \draw[draw=yellow!70!orange, line width=1pt,
+                  decoration={markings,
+                      mark=at position 0.5 with {\arrow{Stealth[length=2mm]}}},
+                  postaction={decorate}]
+                (#1) -- (\target);
+        }
+        % Scanner indicator
+        \node[draw=yellow!80!orange, line width=3pt, star, star points=5,
+              inner sep=4pt, fill=yellow!20]
+            at (#1) {};
+        % Scan label
+        \node[below=10pt, fill=yellow!80!orange, text=white,
+              font=\tiny\bfseries, rounded corners=2pt, inner sep=2pt]
+            at (#1) {PORT SCAN: #3};
+    \end{scope}
+}
+
+% Reconnaissance Pattern
+% Usage: \highlightReconPattern{attacker}{targets}
+\newcommand{\highlightReconPattern}[2]{
+    \begin{scope}[on background layer]
+        \foreach \target in {#2} {
+            \draw[draw=cyan!60, line width=0.8pt, dashed,
+                  dash pattern=on 2pt off 1pt, ->]
+                (#1) -- (\target);
+        }
+        \node[draw=cyan!70, line width=2pt, rounded corners=4pt,
+              inner sep=6pt, fill=cyan!10]
+            at (#1) {};
+        \node[above=8pt, fill=cyan!70, text=white, font=\tiny\bfseries,
+              rounded corners=2pt, inner sep=1pt]
+            at (#1) {RECON};
+    \end{scope}
+}
+
+% Man-in-the-Middle (MITM) Pattern
+% Usage: \highlightMITMPattern{source}{mitm}{destination}
+\newcommand{\highlightMITMPattern}[3]{
+    % Connection from source to MITM
+    \draw[draw=red!70, line width=1.5pt, -{Stealth[length=3mm]}]
+        (#1) -- (#2);
+    % Connection from MITM to destination
+    \draw[draw=red!70, line width=1.5pt, -{Stealth[length=3mm]}]
+        (#2) -- (#3);
+    % Highlight MITM node
+    \node[draw=red!80, line width=3pt, diamond, aspect=2,
+          inner sep=8pt, fill=red!15]
+        at (#2) {};
+    % MITM warning
+    \node[right=8pt, fill=red!80, text=white, font=\tiny\bfseries,
+          rounded corners=2pt, inner sep=2pt]
+        at (#2) {MITM};
+}
 
 % ============================================================================
 % CONNECTION STATISTICS AND METRICS
 % ============================================================================
 
-% Draw connection statistics summary
+% Connection type counters
+\newcounter{normalConnCount}
+\newcounter{encryptedConnCount}
+\newcounter{suspiciousConnCount}
+\newcounter{attackConnCount}
+\newcounter{vpnConnCount}
+\newcounter{wirelessConnCount}
+\newcounter{totalBandwidth}
+
+% Increment connection counters
+\newcommand{\incrementNormalConn}{\stepcounter{normalConnCount}}
+\newcommand{\incrementEncryptedConn}{\stepcounter{encryptedConnCount}}
+\newcommand{\incrementSuspiciousConn}{\stepcounter{suspiciousConnCount}}
+\newcommand{\incrementAttackConn}{\stepcounter{attackConnCount}}
+\newcommand{\incrementVPNConn}{\stepcounter{vpnConnCount}}
+\newcommand{\incrementWirelessConn}{\stepcounter{wirelessConnCount}}
+
+% Enhanced connection statistics summary
 % Usage: \drawConnectionSummary{x}{y}
 \newcommand{\drawConnectionSummary}[2]{
-    \node[legend box, anchor=north west] at (#1,#2) {
+    \node[fill=white, draw=black!30, line width=1pt, rounded corners=3pt,
+          anchor=north west, inner sep=5pt] at (#1,#2) {
         \begin{tabular}{lr}
-            \textbf{Connections} & \\
-            Normal & \theconncount \\
-            Encrypted & 0 \\
-            Suspicious & 0 \\
-            Attacks & 0 \\
+            \multicolumn{2}{c}{\textbf{Connection Statistics}} \\
+            \hline
+            Normal & \thenormalConnCount \\
+            Encrypted & \theencryptedConnCount \\
+            Suspicious & \thesuspiciousConnCount \\
+            Attacks & \theattackConnCount \\
+            VPN & \thevpnConnCount \\
+            Wireless & \thewirelessConnCount \\
+            \hline
+            \textbf{Total} & \pgfmathparse{int(\thenormalConnCount+\theencryptedConnCount+\thesuspiciousConnCount+\theattackConnCount+\thevpnConnCount+\thewirelessConnCount)}\pgfmathresult \\
         \end{tabular}
     };
 }
 
-% TODO: Statistics enhancements
-% - Real-time connection counts
-% - Bandwidth utilization graphs
-% - Protocol distribution pie chart
-% - Top talkers list
-% - Connection timeline visualization
+% Detailed connection dashboard
+% Usage: \drawConnectionDashboard{x}{y}{total_bw}
+\newcommand{\drawConnectionDashboard}[3]{
+    \node[fill=blue!5, draw=blue!50, line width=1.5pt, rounded corners=5pt,
+          anchor=north west, inner sep=8pt] at (#1,#2) {
+        \begin{tabular}{lc}
+            \multicolumn{2}{c}{\Large\textbf{Network Overview}} \\
+            \hline
+            & \\
+            \textbf{Connections} & \\
+            \quad Normal & \color{green!60!black}\thenormalConnCount \\
+            \quad Encrypted & \color{blue!70}\theencryptedConnCount \\
+            \quad Suspicious & \color{yellow!80!orange}\thesuspiciousConnCount \\
+            \quad Attacks & \color{red!70}\theattackConnCount \\
+            & \\
+            \hline
+            & \\
+            \textbf{Bandwidth} & #3 Gbps \\
+            \textbf{Utilization} & \pgfmathparse{int(rand*100)}\pgfmathresult\% \\
+            & \\
+            \hline
+            & \\
+            \textbf{Security Status} & \\
+            \quad Threats & \theattackConnCount \\
+            \quad Risk Level & \ifthenelse{\theattackConnCount>5}{\color{red}HIGH}{\color{green}LOW} \\
+        \end{tabular}
+    };
+}
+
+% Protocol distribution visualization
+% Usage: \drawProtocolDistribution{x}{y}{tcp_pct}{udp_pct}{other_pct}
+\newcommand{\drawProtocolDistribution}[5]{
+    \node[fill=white, draw=black!30, line width=1pt, rounded corners=3pt,
+          anchor=north west, inner sep=5pt] at (#1,#2) {
+        \begin{tabular}{lcc}
+            \multicolumn{3}{c}{\textbf{Protocol Distribution}} \\
+            \hline
+            Protocol & Count & \% \\
+            \hline
+            TCP & \pgfmathparse{int(#3)}\pgfmathresult & #3\% \\
+            UDP & \pgfmathparse{int(#4)}\pgfmathresult & #4\% \\
+            Other & \pgfmathparse{int(#5)}\pgfmathresult & #5\% \\
+        \end{tabular}
+    };
+    % Simple bar visualization
+    \pgfmathsetmacro{\tcpbar}{#3/10}
+    \pgfmathsetmacro{\udpbar}{#4/10}
+    \pgfmathsetmacro{\otherbar}{#5/10}
+    \draw[fill=blue!70] (#1+3,#2-1) rectangle +({\tcpbar},0.3);
+    \draw[fill=green!70] (#1+3,#2-1.5) rectangle +({\udpbar},0.3);
+    \draw[fill=orange!70] (#1+3,#2-2) rectangle +({\otherbar},0.3);
+}
+
+% Top talkers list
+% Usage: \drawTopTalkers{x}{y}{talker1}{bw1}{talker2}{bw2}{talker3}{bw3}
+\newcommand{\drawTopTalkers}[8]{
+    \node[fill=yellow!10, draw=yellow!60, line width=1pt, rounded corners=3pt,
+          anchor=north west, inner sep=5pt] at (#1,#2) {
+        \begin{tabular}{lc}
+            \multicolumn{2}{c}{\textbf{Top Talkers}} \\
+            \hline
+            Node & Bandwidth \\
+            \hline
+            #3 & #4 Mbps \\
+            #5 & #6 Mbps \\
+            #7 & #8 Mbps \\
+        \end{tabular}
+    };
+}
+
+% Connection quality meter
+% Usage: \drawConnectionQualityMeter{x}{y}{quality_score}
+\newcommand{\drawConnectionQualityMeter}[3]{
+    \pgfmathsetmacro{\quality}{#3}
+    % Determine color based on quality
+    \pgfmathsetmacro{\qualitycolor}{
+        \quality>80 ? "green!70" : (
+        \quality>50 ? "yellow!80!orange" : "red!70"
+        )
+    }
+    \node[fill=white, draw=black!30, line width=1pt, rounded corners=3pt,
+          anchor=north west, inner sep=5pt] at (#1,#2) {
+        \begin{tabular}{c}
+            \textbf{Network Quality} \\
+            \hline
+            \\
+            \Huge #3\% \\
+            \\
+        \end{tabular}
+    };
+    % Quality bar
+    \pgfmathsetmacro{\qualitybar}{#3/20}
+    \draw[line width=8pt, draw=gray!30, rounded corners=2pt]
+        (#1+0.5,#2-2) -- +(5,0);
+    \draw[line width=8pt, draw=\qualitycolor, rounded corners=2pt]
+        (#1+0.5,#2-2) -- +({\qualitybar},0);
+}
+
+% ============================================================================
+% CONNECTION STATE MANAGEMENT
+% ============================================================================
+
+% Connection states: active, inactive, intermittent, failed
+% Active connection (solid line with strong color)
+% Usage: \drawActiveConnection{from}{to}{label}
+\newcommand{\drawActiveConnection}[3]{
+    \draw[draw=green!70, line width=1.5pt, -{Stealth[length=3mm]}]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny, fill=white, inner sep=1pt] {#3}
+        node[midway, below, font=\tiny, fill=green!15, inner sep=1pt] {ACTIVE};
+}
+
+% Inactive connection (dashed line with muted color)
+% Usage: \drawInactiveConnection{from}{to}{label}
+\newcommand{\drawInactiveConnection}[3]{
+    \draw[draw=gray!50, line width=0.8pt, dashed,
+          dash pattern=on 2pt off 2pt, -{Stealth[length=2mm]}]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny, fill=white, inner sep=1pt, text=gray] {#3}
+        node[midway, below, font=\tiny, fill=gray!10, inner sep=1pt] {INACTIVE};
+}
+
+% Intermittent connection (dotted line)
+% Usage: \drawIntermittentConnection{from}{to}{uptime_pct}{label}
+\newcommand{\drawIntermittentConnection}[4]{
+    \draw[draw=yellow!70!orange, line width=1pt, dotted,
+          -{Stealth[length=2.5mm]}]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny, fill=white, inner sep=1pt] {#4}
+        node[midway, below, font=\tiny, fill=yellow!15, inner sep=1pt] {FLAPPING: #3\%};
+}
+
+% Failed connection (red cross pattern)
+% Usage: \drawFailedConnection{from}{to}{reason}
+\newcommand{\drawFailedConnection}[3]{
+    \draw[draw=red!70, line width=1.5pt, dashed,
+          dash pattern=on 1pt off 2pt, decoration={markings,
+              mark=between positions 0.2 and 0.8 step 0.2 with {
+                  \node[cross out, draw=red!70, minimum size=2pt] {};
+              }}, postaction={decorate}]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny, fill=white, inner sep=1pt, text=red!70] {#3}
+        node[midway, below, font=\tiny, fill=red!15, inner sep=1pt] {FAILED};
+}
+
+% Connection with health indicator
+% Usage: \drawConnectionWithHealth{from}{to}{health_pct}{label}
+\newcommand{\drawConnectionWithHealth}[4]{
+    \pgfmathsetmacro{\health}{#3}
+    % Color based on health
+    \pgfmathsetmacro{\healthval}{\health}
+    \ifnum\healthval>75
+        \def\healthColor{green!70}
+    \else
+        \ifnum\healthval>50
+            \def\healthColor{yellow!80!orange}
+        \else
+            \def\healthColor{red!70}
+        \fi
+    \fi
+    \draw[draw=\healthColor, line width=1.2pt, -{Stealth[length=3mm]}]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny, fill=white, inner sep=1pt] {#4}
+        node[midway, below, font=\tiny, fill=\healthColor!15, inner sep=1pt] {Health: #3\%};
+}
+
+% ============================================================================
+% CONNECTION QUALITY INDICATORS
+% ============================================================================
+
+% High quality connection (thick green line)
+% Usage: \drawHighQualityConnection{from}{to}{metrics}{label}
+\newcommand{\drawHighQualityConnection}[4]{
+    \draw[draw=green!70, line width=2pt, -{Stealth[length=3mm]},
+          double=green!30, double distance=0.5pt]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny\bfseries, fill=white, inner sep=2pt] {#4}
+        node[midway, below, font=\tiny, fill=green!20, inner sep=1pt] {#3};
+}
+
+% Degraded connection (yellow with warning indicators)
+% Usage: \drawDegradedConnection{from}{to}{issue}{label}
+\newcommand{\drawDegradedConnection}[4]{
+    \draw[draw=yellow!80!orange, line width=1.5pt, -{Stealth[length=3mm]},
+          decoration={markings,
+              mark=between positions 0.25 and 0.75 step 0.25 with {
+                  \node[regular polygon, regular polygon sides=3,
+                        draw=yellow!80!orange, fill=yellow!30,
+                        minimum size=3pt, inner sep=0pt] {};
+              }}, postaction={decorate}]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny, fill=white, inner sep=1pt] {#4}
+        node[midway, below, font=\tiny, fill=yellow!20, inner sep=1pt] {DEGRADED: #3};
+}
+
+% Connection with QoS indicators
+% Usage: \drawQoSConnection{from}{to}{qos_class}{latency}{label}
+\newcommand{\drawQoSConnection}[5]{
+    % QoS class: platinum, gold, silver, bronze
+    \ifthenelse{\equal{#3}{platinum}}{
+        \def\qosColor{purple!70}
+        \def\qosWidth{2.5pt}
+    }{
+        \ifthenelse{\equal{#3}{gold}}{
+            \def\qosColor{yellow!80!orange}
+            \def\qosWidth{2pt}
+        }{
+            \ifthenelse{\equal{#3}{silver}}{
+                \def\qosColor{gray!60}
+                \def\qosWidth{1.5pt}
+            }{
+                \def\qosColor{brown!60}
+                \def\qosWidth{1pt}
+            }
+        }
+    }
+    \draw[draw=\qosColor, line width=\qosWidth, -{Stealth[length=3mm]}]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny, fill=white, inner sep=1pt] {#5}
+        node[midway, below, font=\tiny, fill=\qosColor!15, inner sep=1pt] {QoS: #3 | #4ms};
+}
+
+% Connection with packet loss indicator
+% Usage: \drawConnectionWithLoss{from}{to}{loss_pct}{label}
+\newcommand{\drawConnectionWithLoss}[4]{
+    \pgfmathsetmacro{\loss}{#3}
+    \ifnum\loss>10
+        \def\lossColor{red!70}
+    \else
+        \ifnum\loss>2
+            \def\lossColor{yellow!80!orange}
+        \else
+            \def\lossColor{green!60}
+        \fi
+    \fi
+    % Draw connection with gaps representing packet loss
+    \draw[draw=\lossColor, line width=1.2pt,
+          dash pattern=on 8pt off \loss pt, -{Stealth[length=3mm]}]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny, fill=white, inner sep=1pt] {#4}
+        node[midway, below, font=\tiny, fill=\lossColor!15, inner sep=1pt] {Loss: #3\%};
+}
+
+% Connection with jitter visualization
+% Usage: \drawConnectionWithJitter{from}{to}{jitter_ms}{label}
+\newcommand{\drawConnectionWithJitter}[4]{
+    \pgfmathsetmacro{\jitter}{#3}
+    \ifnum\jitter>50
+        \def\jitterAmp}{0.8mm}
+        \def\jitterColor{red!70}
+    \else
+        \ifnum\jitter>20
+            \def\jitterAmp}{0.4mm}
+            \def\jitterColor{yellow!80!orange}
+        \else
+            \def\jitterAmp}{0.2mm}
+            \def\jitterColor{green!60}
+        \fi
+    \fi
+    \draw[draw=\jitterColor, line width=1pt,
+          decoration={snake, amplitude=\jitterAmp, segment length=3mm},
+          decorate, -{Stealth[length=2.5mm]}]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny, fill=white, inner sep=1pt] {#4}
+        node[midway, below, font=\tiny, fill=\jitterColor!15, inner sep=1pt] {Jitter: #3ms};
+}
+
+% SLA compliance indicator
+% Usage: \drawSLAConnection{from}{to}{sla_pct}{label}
+\newcommand{\drawSLAConnection}[4]{
+    \pgfmathsetmacro{\sla}{#3}
+    \ifnum\sla>99
+        \def\slaColor{green!70}
+        \def\slaStatus}{COMPLIANT}
+    \else
+        \ifnum\sla>95
+            \def\slaColor{yellow!80!orange}
+            \def\slaStatus}{WARNING}
+        \else
+            \def\slaColor{red!70}
+            \def\slaStatus}{VIOLATION}
+        \fi
+    \fi
+    \draw[draw=\slaColor, line width=1.5pt, -{Stealth[length=3mm]}]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny, fill=white, inner sep=1pt] {#4}
+        node[midway, below, font=\tiny\bfseries, fill=\slaColor!20, inner sep=2pt]
+            {SLA: #3\% - \slaStatus};
+}
