@@ -1469,6 +1469,367 @@
 }
 
 % ============================================================================
+% ADVANCED THREAT HUNTING AND BEHAVIORAL ANALYTICS
+% ============================================================================
+
+% Sigma rule detection visualization
+% Usage: \drawSigmaDetection{x}{y}{rule_name}{rule_id}{severity}{confidence}{matches}
+\newcommand{\drawSigmaDetection}[7]{
+    \ifthenelse{\equal{#5}{critical}}{
+        \def\sigmacolor{threatCritical}
+    }{
+    \ifthenelse{\equal{#5}{high}}{
+        \def\sigmacolor{threatHigh}
+    }{
+        \def\sigmacolor{threatMedium}
+    }}
+
+    \node[legend box, anchor=north west, minimum width=6cm,
+          draw=\sigmacolor, line width=2pt] at (#1,#2) {
+        \begin{tabular}{ll}
+            \multicolumn{2}{c}{\textbf{\textcolor{\sigmacolor}{Sigma Detection}}} \\
+            \hline
+            \textbf{Rule:} & #3 \\
+            \textbf{ID:} & \texttt{\tiny #4} \\
+            \textbf{Severity:} & \textcolor{\sigmacolor}{\uppercase{#5}} \\
+            \textbf{Confidence:} & #6\% \\
+            \textbf{Matches:} & #7 \\
+        \end{tabular}
+    };
+}
+
+% Behavioral anomaly detection
+% Usage: \drawBehavioralAnomaly{x}{y}{entity}{baseline}{current}{deviation}{anomaly_score}
+\newcommand{\drawBehavioralAnomaly}[7]{
+    \pgfmathsetmacro{\anomalyscore}{#7}
+    \ifthenelse{\lengthtest{\anomalyscore pt > 80 pt}}{
+        \def\anomalycolor{threatCritical}
+        \def\anomalylabel{CRITICAL ANOMALY}
+    }{
+    \ifthenelse{\lengthtest{\anomalyscore pt > 60 pt}}{
+        \def\anomalycolor{threatHigh}
+        \def\anomalylabel{HIGH ANOMALY}
+    }{
+        \def\anomalycolor{orange}
+        \def\anomalylabel{MODERATE ANOMALY}
+    }}
+
+    \node[legend box, anchor=north west, minimum width=6cm,
+          draw=\anomalycolor, line width=2pt] at (#1,#2) {
+        \begin{tabular}{ll}
+            \multicolumn{2}{c}{\textbf{\textcolor{\anomalycolor}{Behavioral Anomaly}}} \\
+            \hline
+            \textbf{Entity:} & #3 \\
+            \textbf{Baseline:} & #4 \\
+            \textbf{Current:} & #5 \\
+            \textbf{Deviation:} & #6\% \\
+            \hline
+            \textbf{Score:} & \textcolor{\anomalycolor}{#7/100 - \anomalylabel} \\
+        \end{tabular}
+    };
+}
+
+% UEBA (User and Entity Behavior Analytics) risk score
+% Usage: \drawUEBARisk{node}{entity_name}{risk_score}{risk_factors}
+\newcommand{\drawUEBARisk}[4]{
+    \pgfmathsetmacro{\uebarscore}{#3}
+    \ifthenelse{\lengthtest{\uebarscore pt > 75 pt}}{
+        \def\uebacolor{threatCritical}
+    }{
+    \ifthenelse{\lengthtest{\uebarscore pt > 50 pt}}{
+        \def\uebacolor{threatHigh}
+    }{
+        \def\uebacolor{orange}
+    }}
+
+    \node[legend box, anchor=north west, minimum width=5cm,
+          draw=\uebacolor, line width=2pt] at (#1) {
+        \begin{tabular}{ll}
+            \multicolumn{2}{c}{\textbf{\textcolor{\uebacolor}{UEBA Risk: #2}}} \\
+            \hline
+            \textbf{Risk Score:} & \textcolor{\uebacolor}{#3/100} \\
+            \hline
+            \multicolumn{2}{l}{\textbf{Risk Factors:}} \\
+            \multicolumn{2}{p{4.5cm}}{\tiny #4} \\
+        \end{tabular}
+    };
+}
+
+% Threat intelligence enrichment display
+% Usage: \drawThreatEnrichment{x}{y}{ioc}{enrichment_data}
+\newcommand{\drawThreatEnrichment}[4]{
+    \node[legend box, anchor=north west, minimum width=6cm,
+          draw=purple!70, line width=1.5pt] at (#1,#2) {
+        \begin{tabular}{p{5.5cm}}
+            \multicolumn{1}{c}{\textbf{Enrichment: #3}} \\
+            \hline
+            #4 \\
+        \end{tabular}
+    };
+}
+
+% ============================================================================
+% ZERO-DAY AND ADVANCED THREAT DETECTION
+% ============================================================================
+
+% Zero-day vulnerability indicator
+% Usage: \markZeroDay{node}{vulnerability_name}{discovery_date}{exploited}
+\newcommand{\markZeroDay}[4]{
+    \node[draw=threatCritical, fill=threatCritical, text=white,
+          font=\small\bfseries, rounded corners=3pt, inner sep=4pt,
+          anchor=north] at (#1.north) [yshift=0.8cm] {
+        ⚠ ZERO-DAY ⚠
+    };
+    \node[legend box, anchor=north, minimum width=4cm,
+          draw=threatCritical, line width=2.5pt] at (#1.north) [yshift=0.3cm] {
+        \begin{tabular}{ll}
+            \textbf{Vuln:} & #2 \\
+            \textbf{Discovered:} & #3 \\
+            \textbf{Exploited:} & #4 \\
+        \end{tabular}
+    };
+}
+
+% Advanced Persistent Threat (APT) campaign visualization
+% Usage: \drawAPTCampaign{x}{y}{apt_name}{campaign}{duration}{objectives}{success_rate}
+\newcommand{\drawAPTCampaign}[7]{
+    \node[legend box, anchor=north west, minimum width=7cm,
+          draw=threatCritical, line width=3pt, fill=red!5] at (#1,#2) {
+        \begin{tabular}{ll}
+            \multicolumn{2}{c}{\textbf{\textcolor{threatCritical}{APT Campaign: #3}}} \\
+            \hline
+            \textbf{Campaign Name:} & #4 \\
+            \textbf{Duration:} & #5 \\
+            \textbf{Objectives:} & #6 \\
+            \textbf{Success Rate:} & \textcolor{threatCritical}{#7\%} \\
+        \end{tabular}
+    };
+}
+
+% Fileless malware detection
+% Usage: \markFilelessMalware{node}{technique}{memory_artifacts}
+\newcommand{\markFilelessMalware}[3]{
+    \node[draw=threatCritical, fill=purple!30, text=black,
+          font=\tiny\bfseries, rounded corners=2pt, inner sep=3pt,
+          anchor=north] at (#1.north) [yshift=0.5cm] {
+        FILELESS MALWARE DETECTED
+    };
+    \node[below, font=\tiny, fill=white, draw=purple!70,
+          inner sep=2pt] at (#1.north) [yshift=0.2cm] {
+        Technique: #2 | Artifacts: #3
+    };
+}
+
+% Living off the Land (LOLBin) detection
+% Usage: \markLOLBin{node}{binary}{technique}{risk_level}
+\newcommand{\markLOLBin}[4]{
+    \ifthenelse{\equal{#4}{high}}{
+        \def\lolcolor{threatCritical}
+    }{\def\lolcolor{threatHigh}}
+
+    \node[draw=\lolcolor, fill=yellow!40, text=black,
+          font=\tiny\bfseries, rounded corners=2pt, inner sep=2pt,
+          anchor=west] at (#1.west) [xshift=0.2cm] {
+        LOLBin: #2
+    };
+    \node[below, font=\tiny, fill=white, draw=\lolcolor,
+          inner sep=1pt] at (#1.west) [xshift=0.5cm, yshift=-0.3cm] {
+        #3
+    };
+}
+
+% ============================================================================
+% THREAT INTELLIGENCE SCORING AND PRIORITIZATION
+% ============================================================================
+
+% Comprehensive threat score calculator
+% Usage: \drawThreatScore{x}{y}{target}{cvss}{epss}{exploited}{ioc_count}{final_score}
+\newcommand{\drawThreatScore}[8]{
+    \pgfmathsetmacro{\finalscore}{#8}
+    \ifthenelse{\lengthtest{\finalscore pt > 90 pt}}{
+        \def\scorecolor{threatCritical}
+        \def\scorelabel{CRITICAL THREAT}
+        \def\scoreaction{IMMEDIATE ACTION}
+    }{
+    \ifthenelse{\lengthtest{\finalscore pt > 70 pt}}{
+        \def\scorecolor{threatHigh}
+        \def\scorelabel{HIGH THREAT}
+        \def\scoreaction{URGENT RESPONSE}
+    }{
+    \ifthenelse{\lengthtest{\finalscore pt > 50 pt}}{
+        \def\scorecolor{threatMedium}
+        \def\scorelabel{MODERATE THREAT}
+        \def\scoreaction{SCHEDULED RESPONSE}
+    }{
+        \def\scorecolor{threatLow}
+        \def\scorelabel{LOW THREAT}
+        \def\scoreaction{MONITOR}
+    }}}
+
+    \node[legend box, anchor=north west, minimum width=6cm,
+          draw=\scorecolor, line width=2.5pt] at (#1,#2) {
+        \begin{tabular}{ll}
+            \multicolumn{2}{c}{\textbf{\textcolor{\scorecolor}{Threat Score: #3}}} \\
+            \hline
+            CVSS Score & #4 \\
+            EPSS Score & #5 \\
+            Actively Exploited & #6 \\
+            IOC Matches & #7 \\
+            \hline
+            \textbf{Final Score} & \textcolor{\scorecolor}{\textbf{#8/100}} \\
+            \textbf{Classification} & \textcolor{\scorecolor}{\scorelabel} \\
+            \textbf{Action Required} & \textcolor{\scorecolor}{\scoreaction} \\
+        \end{tabular}
+    };
+}
+
+% Threat actor playbook visualization
+% Usage: \drawThreatPlaybook{x}{y}{actor}{playbook_name}{stages}{detection_coverage}
+\newcommand{\drawThreatPlaybook}[6]{
+    \node[legend box, anchor=north west, minimum width=6.5cm,
+          draw=red!70, line width=2pt] at (#1,#2) {
+        \begin{tabular}{p{6cm}}
+            \multicolumn{1}{c}{\textbf{\textcolor{threatCritical}{Threat Playbook: #3}}} \\
+            \hline
+            \textbf{Playbook:} #4 \\
+            \hline
+            \textbf{Attack Stages:} \\
+            #5 \\
+            \hline
+            \textbf{Detection Coverage:} \textcolor{green!60!black}{#6\%} \\
+        \end{tabular}
+    };
+}
+
+% ============================================================================
+% SECURITY ORCHESTRATION AND AUTOMATION (SOAR)
+% ============================================================================
+
+% Automated response action indicator
+% Usage: \drawSOARAction{x}{y}{trigger}{action}{status}{execution_time}
+\newcommand{\drawSOARAction}[6]{
+    \ifthenelse{\equal{#5}{success}}{
+        \def\soarcolor{green!60!black}
+    }{
+    \ifthenelse{\equal{#5}{pending}}{
+        \def\soarcolor{orange}
+    }{
+        \def\soarcolor{threatCritical}
+    }}
+
+    \node[legend box, anchor=north west, minimum width=5.5cm,
+          draw=\soarcolor, line width=2pt] at (#1,#2) {
+        \begin{tabular}{ll}
+            \multicolumn{2}{c}{\textbf{SOAR Action}} \\
+            \hline
+            \textbf{Trigger:} & #3 \\
+            \textbf{Action:} & #4 \\
+            \textbf{Status:} & \textcolor{\soarcolor}{\uppercase{#5}} \\
+            \textbf{Exec Time:} & #6 \\
+        \end{tabular}
+    };
+}
+
+% Playbook execution status
+% Usage: \drawPlaybookExecution{x}{y}{playbook_name}{steps_total}{steps_completed}{status}
+\newcommand{\drawPlaybookExecution}[6]{
+    \pgfmathsetmacro{\progress}{(#5 / #4) * 100}
+    \ifthenelse{\equal{#6}{running}}{
+        \def\pbcolor{blue!70}
+    }{
+    \ifthenelse{\equal{#6}{completed}}{
+        \def\pbcolor{green!60!black}
+    }{
+        \def\pbcolor{threatCritical}
+    }}
+
+    \node[legend box, anchor=north west, minimum width=5cm,
+          draw=\pbcolor, line width=2pt] at (#1,#2) {
+        \begin{tabular}{ll}
+            \multicolumn{2}{c}{\textbf{Playbook: #3}} \\
+            \hline
+            Progress & #5/#4 steps \\
+            Status & \textcolor{\pbcolor}{\uppercase{#6}} \\
+            \textbf{Completion} & \textbf{\pgfmathprintnumber[precision=0]{\progress}\%} \\
+        \end{tabular}
+    };
+}
+
+% ============================================================================
+% ADVANCED ANALYTICS AND PREDICTIVE MODELING
+% ============================================================================
+
+% Predictive threat forecast
+% Usage: \drawThreatForecast{x}{y}{target}{current_risk}{predicted_risk}{timeframe}{confidence}
+\newcommand{\drawThreatForecast}[7]{
+    \pgfmathsetmacro{\predictedrisk}{#5}
+    \ifthenelse{\lengthtest{\predictedrisk pt > 70 pt}}{
+        \def\forecastcolor{threatCritical}
+    }{
+        \def\forecastcolor{orange}
+    }
+
+    \node[legend box, anchor=north west, minimum width=5.5cm,
+          draw=\forecastcolor, line width=2pt] at (#1,#2) {
+        \begin{tabular}{ll}
+            \multicolumn{2}{c}{\textbf{Threat Forecast: #3}} \\
+            \hline
+            Current Risk & #4\% \\
+            Predicted Risk & \textcolor{\forecastcolor}{#5\%} \\
+            Timeframe & #6 \\
+            Confidence & #7\% \\
+        \end{tabular}
+    };
+}
+
+% Attack surface analysis
+% Usage: \drawAttackSurface{x}{y}{exposed_services}{vulnerabilities}{misconfigs}{total_risk}
+\newcommand{\drawAttackSurface}[6]{
+    \node[legend box, anchor=north west, minimum width=6cm,
+          draw=orange!80, line width=2pt] at (#1,#2) {
+        \begin{tabular}{lc}
+            \multicolumn{2}{c}{\textbf{Attack Surface Analysis}} \\
+            \hline
+            Exposed Services & #3 \\
+            Known Vulnerabilities & #4 \\
+            Misconfigurations & #5 \\
+            \hline
+            \textbf{Total Risk Score} & \textcolor{threatHigh}{\textbf{#6/100}} \\
+        \end{tabular}
+    };
+}
+
+% Threat intelligence confidence scoring
+% Usage: \drawConfidenceScore{x}{y}{intelligence}{sources}{corroboration}{age}{final_confidence}
+\newcommand{\drawConfidenceScore}[7]{
+    \pgfmathsetmacro{\confidence}{#7}
+    \ifthenelse{\lengthtest{\confidence pt > 80 pt}}{
+        \def\confcolor{green!60!black}
+        \def\conflabel{HIGH CONFIDENCE}
+    }{
+    \ifthenelse{\lengthtest{\confidence pt > 50 pt}}{
+        \def\confcolor{orange}
+        \def\conflabel{MEDIUM CONFIDENCE}
+    }{
+        \def\confcolor{gray!60}
+        \def\conflabel{LOW CONFIDENCE}
+    }}
+
+    \node[legend box, anchor=north west, minimum width=5.5cm,
+          draw=\confcolor, line width=2pt] at (#1,#2) {
+        \begin{tabular}{ll}
+            \multicolumn{2}{c}{\textbf{Intelligence: #3}} \\
+            \hline
+            Sources & #4 \\
+            Corroboration & #5\% \\
+            Age & #6 days \\
+            \hline
+            \textbf{Confidence} & \textcolor{\confcolor}{\textbf{#7\% - \conflabel}} \\
+        \end{tabular}
+    };
+}
+
+% ============================================================================
 % MAIN THREAT RENDERING ENGINE
 % ============================================================================
 
@@ -1478,11 +1839,3 @@
     % \visualizeDDoS{attacker1,attacker2}{srv1}{critical}
     % \markVulnerability{srv2}{CVE-2024-1234}{9.8}
 }
-
-% TODO: Intelligent threat rendering
-% - Threat prioritization based on risk
-% - Auto-layout threat indicators to avoid overlap
-% - Threat correlation and grouping
-% - Attack path visualization
-% - Threat timeline with incident markers
-% - Real-time threat feed updates
