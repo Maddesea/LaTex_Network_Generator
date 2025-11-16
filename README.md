@@ -209,6 +209,116 @@ In `network_diagram_generator.tex`:
 \drawAttackPath{attacker}{web_server}{database}{4}  % Stage 4
 ```
 
+### Threat Actor Attribution ✨ ENHANCED
+
+```latex
+% Comprehensive threat actor profile
+\drawThreatActorProfile{x}{y}{APT29}{Cozy Bear}{Russia}{Espionage}{85}
+
+% TTP (Tactics, Techniques, Procedures) profile
+\drawTTPProfile{x}{y}{APT28}{Spear phishing \\ Credential dumping}{Mimikatz \\ Cobalt Strike}
+
+% Campaign tracking
+\drawCampaignTracker{x}{y}{Operation Cloud Hopper}{2024-01-15}{Healthcare sector}{active}
+
+% Attribution badge with confidence
+\actorBadge{node_name}{APT29}{85}
+
+% Attribution debate (multiple analysts)
+\drawAttributionDebate{x}{y}{web_server}{APT28 (70\%)}{APT29 (60\%)}
+```
+
+### Compliance Frameworks ✨ NEW
+
+```latex
+% NIST CSF detailed dashboard
+\drawNISTDashboard{x}{y}{85}{75}{65}{55}{45}
+
+% CIS Controls v8
+\drawCISControls{x}{y}{90}{80}{60}{77}  % IG1/IG2/IG3/Overall
+
+% PCI-DSS v4.0 compliance
+\drawPCIDSS{x}{y}{95}{88}{82}{90}{85}{88}
+
+% HIPAA compliance
+\drawHIPAA{x}{y}{92}{88}{90}{90}
+
+% SOC 2 Trust Services
+\drawSOC2{x}{y}{95}{98}{90}{88}{85}
+
+% ISO 27001:2022
+\drawISO27001{x}{y}{98}{114}{certified}
+
+% Multi-framework overview
+\drawMultiFrameworkCompliance{x}{y}{85}{90}{88}{95}
+```
+
+### Vulnerability Management ✨ NEW
+
+```latex
+% Comprehensive vulnerability report
+\drawVulnerabilityReport{x}{y}{web_server}{15}{2}{5}{6}{2}
+
+% Exploit availability indicator
+\markExploitAvailable{node_name}{CVE-2024-1234}{high}  % weaponized
+
+% Patch status
+\markPatchStatus{node_name}{CVE-2024-1234}{available}{7}
+
+% Vulnerability age
+\markVulnerabilityAge{node_name}{CVE-2024-1234}{15}
+
+% EPSS (Exploit Prediction Scoring)
+\markEPSS{node_name}{CVE-2024-1234}{0.85}{95}
+
+% Vulnerability priority scoring
+\drawVulnPriority{x}{y}{CVE-2024-1234}{9.8}{0.92}{Yes}{95}
+
+% Scan results summary
+\drawScanResults{x}{y}{Nessus}{2024-01-15}{25}{3}
+```
+
+### Threat Correlation & Incident Response ✨ NEW
+
+```latex
+% IOC correlation
+\drawIOCCorrelation{x}{y}{Related Attack}{1.2.3.4}{evil.com}{malware.exe}{85}
+
+% Incident timeline reconstruction
+\drawIncidentTimeline{x}{y}{Ransomware Attack}{2024-01-15 08:00}{2024-01-15 14:30}{08:00 Initial access \\ 10:30 Lateral movement \\ 14:00 Encryption started}
+
+% Lateral movement visualization
+\drawLateralMovement{workstation}{file_server}{domain_controller}{PSExec}{14:32}
+
+% Infection spread tracking
+\drawInfectionSpread{patient_zero}{47}{contained}
+
+% C2 beacon detection
+\drawC2Beacon{compromised_host}{c2_server}{Every 60s}{HTTPS}
+
+% Data exfiltration path
+\drawExfiltrationPath{database}{proxy}{attacker}{2.5GB}{Blocked}
+
+% Threat hunting results
+\drawHuntingResults{x}{y}{Suspicious PowerShell}{145}{12}{133}
+
+% Incident severity assessment
+\drawIncidentSeverity{x}{y}{Data Breach}{95}{Critical}{Immediate}
+```
+
+### Security Metrics & KPIs ✨ NEW
+
+```latex
+% Mean Time metrics
+\drawMTTMetrics{x}{y}{4.2}{8.5}{12.0}  % MTTD/MTTR/MTTC in hours
+
+% Security coverage heatmap
+\drawCoverageHeatmap{x}{y}{95}{88}{72}{85}{90}
+
+% Risk score trending
+\drawRiskTrend{x}{y}{45}{62}{decreasing}
+```
+
 ## Security Zones
 
 ```latex
@@ -289,17 +399,28 @@ This system is designed for **multiple agents/developers** to work simultaneousl
 - [ ] Connection aggregation (show "10 connections" vs 10 lines)
 
 ### Agent 5: Threat Intelligence (`threat_indicators.tex`)
-**Completed Features:**
+**Completed Features (v1.1):**
 - [x] CVSS score integration and visualization ✅
 - [x] MITRE ATT&CK framework mapping ✅
 - [x] IOC (Indicators of Compromise) visualization ✅
 - [x] Attack kill chain progression display ✅
+- [x] Enhanced threat actor attribution with TTP profiles ✅
+- [x] Campaign tracking and visualization ✅
+- [x] Comprehensive compliance dashboards (NIST, CIS, PCI-DSS, HIPAA, SOC 2, ISO 27001) ✅
+- [x] Vulnerability database integration (NVD, EPSS, exploit maturity) ✅
+- [x] Threat correlation and IOC grouping ✅
+- [x] Incident timeline reconstruction ✅
+- [x] Lateral movement and infection spread tracking ✅
+- [x] C2 beacon visualization ✅
+- [x] Threat hunting query results ✅
+- [x] Security metrics and KPIs (MTTD, MTTR, MTTC) ✅
+- [x] Security coverage heatmaps ✅
+- [x] Risk trend analysis ✅
 
 **Remaining TODOs:**
-- [ ] Threat actor attribution with confidence levels
-- [ ] Real-time threat feed integration
-- [ ] Security compliance dashboard (NIST, CIS, PCI-DSS)
-- [ ] Vulnerability database integration
+- [ ] Real-time threat feed auto-updates
+- [ ] SIEM integration (Splunk, ELK)
+- [ ] Threat intelligence report exports
 
 ### Agent 6: Data Import/Export
 **Priority TODOs:**
@@ -375,13 +496,21 @@ Free for personal and commercial use. Attribution appreciated.
 ## Version History
 
 - **v1.0 (Foundation)** - Initial modular architecture with core features
-- **v1.1 (Current)** - Enhanced threat intelligence module with:
-  - CVSS score visualization (base, temporal, environmental scores)
-  - MITRE ATT&CK framework mapping with kill chain progression
-  - IOC visualization (malicious IPs, domains, file hashes)
-  - Cyber Kill Chain progression tracking
-  - NIST Cybersecurity Framework mapping
-  - Attack timeline and path visualization
+
+- **v1.1 (Current)** - Comprehensive threat intelligence and security operations module:
+  - **CVSS Integration:** Full CVSS v3.1 support with base, temporal, environmental scores
+  - **MITRE ATT&CK:** Framework mapping, technique tracking, kill chain progression (9 stages)
+  - **IOC Management:** Malicious IPs, domains, file hashes with reputation scoring
+  - **Kill Chain:** Lockheed Martin 7-stage cyber kill chain visualization
+  - **Threat Actors:** Enhanced attribution with confidence levels, TTP profiles, campaign tracking
+  - **Compliance:** Full dashboards for NIST CSF, CIS Controls, PCI-DSS, HIPAA, SOC 2, ISO 27001
+  - **Vulnerability Mgmt:** NVD integration, EPSS scoring, exploit maturity, patch status tracking
+  - **Incident Response:** Timeline reconstruction, lateral movement tracking, C2 beacon detection
+  - **Threat Correlation:** IOC correlation with confidence scoring, multi-indicator analysis
+  - **Security Metrics:** MTTD/MTTR/MTTC tracking, coverage heatmaps, risk trending
+  - **Threat Hunting:** Query result visualization with precision metrics
+  - **Infection Spread:** Patient zero tracking, containment status visualization
+
 - **v1.2 (Planned)** - Auto-layout algorithms and data import
 - **v2.0 (Planned)** - SIEM integration and real-time threat feeds
 

@@ -601,7 +601,7 @@
 }
 
 % ============================================================================
-% THREAT ACTOR VISUALIZATION
+% ENHANCED THREAT ACTOR ATTRIBUTION
 % ============================================================================
 
 % Mark threat actor with attribution
@@ -611,6 +611,110 @@
           fill=white, draw=threatCritical, rounded corners=2pt,
           inner sep=3pt] at (#1.north) [yshift=0.5cm] {
         #2 (Confidence: #3\%)
+    };
+}
+
+% Comprehensive threat actor profile
+% Usage: \drawThreatActorProfile{x}{y}{actor_name}{aka}{origin}{motivation}{confidence}
+\newcommand{\drawThreatActorProfile}[7]{
+    \pgfmathsetmacro{\confpct}{#7}
+    \ifthenelse{\lengthtest{\confpct pt > 80 pt}}{
+        \def\confcolor{threatCritical}
+    }{
+    \ifthenelse{\lengthtest{\confpct pt > 50 pt}}{
+        \def\confcolor{threatHigh}
+    }{
+        \def\confcolor{threatMedium}
+    }}
+
+    \node[legend box, anchor=north west, minimum width=6cm,
+          draw=\confcolor, line width=2pt] at (#1,#2) {
+        \begin{tabular}{ll}
+            \multicolumn{2}{c}{\textbf{\textcolor{\confcolor}{Threat Actor Profile}}} \\
+            \hline
+            \textbf{Primary Name:} & #3 \\
+            \textbf{Also Known As:} & \textit{#4} \\
+            \textbf{Origin:} & #5 \\
+            \textbf{Motivation:} & #6 \\
+            \hline
+            \textbf{Confidence:} & \textcolor{\confcolor}{#7\%} \\
+        \end{tabular}
+    };
+}
+
+% TTP (Tactics, Techniques, Procedures) overlay
+% Usage: \drawTTPProfile{x}{y}{actor_name}{preferred_techniques}{tools_used}
+\newcommand{\drawTTPProfile}[5]{
+    \node[legend box, anchor=north west, minimum width=6cm,
+          draw=threatHigh, line width=1.5pt] at (#1,#2) {
+        \begin{tabular}{p{5.5cm}}
+            \multicolumn{1}{c}{\textbf{TTP Profile: #3}} \\
+            \hline
+            \textbf{Preferred Techniques:} \\
+            #4 \\
+            \hline
+            \textbf{Known Tools:} \\
+            #5 \\
+        \end{tabular}
+    };
+}
+
+% Campaign tracking visualization
+% Usage: \drawCampaignTracker{x}{y}{campaign_name}{start_date}{targets}{status}
+\newcommand{\drawCampaignTracker}[6]{
+    \ifthenelse{\equal{#6}{active}}{
+        \def\statuscolor{threatCritical}
+    }{
+    \ifthenelse{\equal{#6}{ongoing}}{
+        \def\statuscolor{threatHigh}
+    }{
+        \def\statuscolor{gray!50}
+    }}
+
+    \node[legend box, anchor=north west, minimum width=5.5cm,
+          draw=\statuscolor, line width=2pt] at (#1,#2) {
+        \begin{tabular}{ll}
+            \multicolumn{2}{c}{\textbf{\textcolor{\statuscolor}{Campaign: #3}}} \\
+            \hline
+            \textbf{Started:} & #4 \\
+            \textbf{Targets:} & #5 \\
+            \textbf{Status:} & \textcolor{\statuscolor}{\uppercase{#6}} \\
+        \end{tabular}
+    };
+}
+
+% Threat actor attribution badge with confidence indicator
+% Usage: \actorBadge{node}{actor_name}{confidence}
+\newcommand{\actorBadge}[3]{
+    \pgfmathsetmacro{\conf}{#3}
+    \ifthenelse{\lengthtest{\conf pt > 70 pt}}{
+        \def\badgecolor{red!80!black}
+    }{
+    \ifthenelse{\lengthtest{\conf pt > 40 pt}}{
+        \def\badgecolor{orange!80!black}
+    }{
+        \def\badgecolor{yellow!80!black}
+    }}
+
+    \node[draw=\badgecolor, fill=\badgecolor, text=white,
+          font=\tiny\bfseries, rounded corners=2pt, inner sep=2pt,
+          anchor=north east] at (#1.north east) [xshift=-0.1cm] {
+        #2: #3\%
+    };
+}
+
+% Multiple attribution (different analysts have different conclusions)
+% Usage: \drawAttributionDebate{x}{y}{target}{analyst1_conclusion}{analyst2_conclusion}
+\newcommand{\drawAttributionDebate}[5]{
+    \node[legend box, anchor=north west, minimum width=5cm,
+          draw=orange, line width=1.5pt] at (#1,#2) {
+        \begin{tabular}{p{4.5cm}}
+            \multicolumn{1}{c}{\textbf{Attribution Debate: #3}} \\
+            \hline
+            \textcolor{threatHigh}{Analyst A:} #4 \\
+            \hline
+            \textcolor{threatMedium}{Analyst B:} #5 \\
+        \end{tabular}
     };
 }
 
@@ -759,38 +863,610 @@
 % ============================================================================
 
 % Draw security posture dashboard
-% Usage: \drawSecurityDashboard{x}{y}
-\newcommand{\drawSecurityDashboard}[2]{
+% Usage: \drawSecurityDashboard{x}{y}{critical}{high}{medium}{low}{risk_score}
+\newcommand{\drawSecurityDashboard}[7]{
     \node[legend box, anchor=north east, minimum width=4cm] at (#1,#2) {
         \begin{tabular}{ll}
             \multicolumn{2}{c}{\textbf{Security Posture}} \\
             \hline
-            \textcolor{threatCritical}{● Critical} & 0 \\
-            \textcolor{threatHigh}{● High} & 0 \\
-            \textcolor{threatMedium}{● Medium} & 0 \\
-            \textcolor{threatLow}{● Low} & 0 \\
+            \textcolor{threatCritical}{● Critical} & #3 \\
+            \textcolor{threatHigh}{● High} & #4 \\
+            \textcolor{threatMedium}{● Medium} & #5 \\
+            \textcolor{threatLow}{● Low} & #6 \\
             \hline
-            \textbf{Risk Score} & \textbf{0/100} \\
+            \textbf{Risk Score} & \textbf{#7/100} \\
         \end{tabular}
     };
 }
 
-% Show compliance status
-% Usage: \drawComplianceStatus{x}{y}{framework}
-\newcommand{\drawComplianceStatus}[3]{
-    \node[legend box, anchor=north east] at (#1,#2) {
-        \small\bfseries #3 Compliance \\
-        \tiny Status: Checking...
+% ============================================================================
+% COMPLIANCE FRAMEWORK DASHBOARDS
+% ============================================================================
+
+% NIST Cybersecurity Framework detailed dashboard
+% Usage: \drawNISTDashboard{x}{y}{identify}{protect}{detect}{respond}{recover}
+\newcommand{\drawNISTDashboard}[7]{
+    \node[legend box, anchor=north west, minimum width=6cm,
+          draw=blue!70, line width=2pt] at (#1,#2) {
+        \begin{tabular}{lcc}
+            \multicolumn{3}{c}{\textbf{NIST CSF Assessment}} \\
+            \hline
+            \textbf{Function} & \textbf{Score} & \textbf{Status} \\
+            \hline
+            Identify & #3\% & \drawComplianceBar{#3} \\
+            Protect & #4\% & \drawComplianceBar{#4} \\
+            Detect & #5\% & \drawComplianceBar{#5} \\
+            Respond & #6\% & \drawComplianceBar{#6} \\
+            Recover & #7\% & \drawComplianceBar{#7} \\
+        \end{tabular}
     };
 }
 
-% TODO: Security dashboards
-% - Overall network security score
-% - Compliance framework status (NIST, CIS, PCI-DSS, etc.)
-% - Security control effectiveness metrics
-% - Mean time to detect (MTTD)
-% - Mean time to respond (MTTR)
-% - Security coverage heatmap
+% Helper for compliance status bar
+\newcommand{\drawComplianceBar}[1]{
+    \pgfmathsetmacro{\score}{#1}
+    \ifthenelse{\lengthtest{\score pt > 80 pt}}{
+        \textcolor{green!60!black}{●●●●●}
+    }{
+    \ifthenelse{\lengthtest{\score pt > 60 pt}}{
+        \textcolor{green!60!black}{●●●●}\textcolor{gray!50}{●}
+    }{
+    \ifthenelse{\lengthtest{\score pt > 40 pt}}{
+        \textcolor{orange}{●●●}\textcolor{gray!50}{●●}
+    }{
+    \ifthenelse{\lengthtest{\score pt > 20 pt}}{
+        \textcolor{threatHigh}{●●}\textcolor{gray!50}{●●●}
+    }{
+        \textcolor{threatCritical}{●}\textcolor{gray!50}{●●●●}
+    }}}}
+}
+
+% CIS Controls compliance dashboard
+% Usage: \drawCISControls{x}{y}{basic}{foundational}{organizational}{overall}
+\newcommand{\drawCISControls}[6]{
+    \node[legend box, anchor=north west, minimum width=6cm,
+          draw=blue!60, line width=2pt] at (#1,#2) {
+        \begin{tabular}{lc}
+            \multicolumn{2}{c}{\textbf{CIS Controls v8}} \\
+            \hline
+            \textbf{Control Category} & \textbf{Coverage} \\
+            \hline
+            Basic (IG1) & #3\% \\
+            Foundational (IG2) & #4\% \\
+            Organizational (IG3) & #5\% \\
+            \hline
+            \textbf{Overall Compliance} & \textbf{#6\%} \\
+        \end{tabular}
+    };
+}
+
+% PCI-DSS compliance dashboard
+% Usage: \drawPCIDSS{x}{y}{network_security}{access_control}{monitoring}{info_security}{policies}{overall}
+\newcommand{\drawPCIDSS}[8]{
+    \pgfmathsetmacro{\overallscore}{#8}
+    \ifthenelse{\lengthtest{\overallscore pt > 90 pt}}{
+        \def\pcicolor{green!60!black}
+        \def\pcistatus{COMPLIANT}
+    }{
+    \ifthenelse{\lengthtest{\overallscore pt > 70 pt}}{
+        \def\pcicolor{orange}
+        \def\pcistatus{REMEDIATION NEEDED}
+    }{
+        \def\pcicolor{threatCritical}
+        \def\pcistatus{NON-COMPLIANT}
+    }}
+
+    \node[legend box, anchor=north west, minimum width=6.5cm,
+          draw=\pcicolor, line width=2pt] at (#1,#2) {
+        \begin{tabular}{lc}
+            \multicolumn{2}{c}{\textbf{PCI-DSS v4.0 Compliance}} \\
+            \hline
+            Network Security & #3\% \\
+            Access Control & #4\% \\
+            Monitoring \& Testing & #5\% \\
+            Information Security & #6\% \\
+            Policies \& Procedures & #7\% \\
+            \hline
+            \textbf{Overall} & \textbf{#8\%} \\
+            \textbf{Status} & \textcolor{\pcicolor}{\pcistatus} \\
+        \end{tabular}
+    };
+}
+
+% HIPAA compliance dashboard
+% Usage: \drawHIPAA{x}{y}{admin}{physical}{technical}{overall}
+\newcommand{\drawHIPAA}[6]{
+    \pgfmathsetmacro{\hipaascore}{#6}
+    \ifthenelse{\lengthtest{\hipaascore pt > 85 pt}}{
+        \def\hipaacolor{green!60!black}
+    }{
+        \def\hipaacolor{threatCritical}
+    }
+
+    \node[legend box, anchor=north west, minimum width=5.5cm,
+          draw=\hipaacolor, line width=2pt] at (#1,#2) {
+        \begin{tabular}{lc}
+            \multicolumn{2}{c}{\textbf{HIPAA Compliance}} \\
+            \hline
+            Administrative Safeguards & #3\% \\
+            Physical Safeguards & #4\% \\
+            Technical Safeguards & #5\% \\
+            \hline
+            \textbf{Overall Compliance} & \textbf{#6\%} \\
+        \end{tabular}
+    };
+}
+
+% SOC 2 trust services criteria
+% Usage: \drawSOC2{x}{y}{security}{availability}{processing}{confidentiality}{privacy}
+\newcommand{\drawSOC2}[7]{
+    \node[legend box, anchor=north west, minimum width=6cm,
+          draw=purple!70, line width=2pt] at (#1,#2) {
+        \begin{tabular}{lc}
+            \multicolumn{2}{c}{\textbf{SOC 2 Trust Services}} \\
+            \hline
+            Security & #3\% \\
+            Availability & #4\% \\
+            Processing Integrity & #5\% \\
+            Confidentiality & #6\% \\
+            Privacy & #7\% \\
+        \end{tabular}
+    };
+}
+
+% ISO 27001 compliance dashboard
+% Usage: \drawISO27001{x}{y}{controls_implemented}{controls_total}{certification_status}
+\newcommand{\drawISO27001}[5]{
+    \ifthenelse{\equal{#5}{certified}}{
+        \def\isocolor{green!60!black}
+    }{
+    \ifthenelse{\equal{#5}{in-progress}}{
+        \def\isocolor{orange}
+    }{
+        \def\isocolor{gray!60}
+    }}
+
+    \node[legend box, anchor=north west, minimum width=5cm,
+          draw=\isocolor, line width=2pt] at (#1,#2) {
+        \begin{tabular}{lc}
+            \multicolumn{2}{c}{\textbf{ISO 27001:2022}} \\
+            \hline
+            Controls Implemented & #3 \\
+            Total Controls & #4 \\
+            \hline
+            \textbf{Status} & \textcolor{\isocolor}{\uppercase{#5}} \\
+        \end{tabular}
+    };
+}
+
+% Multi-framework compliance overview
+% Usage: \drawMultiFrameworkCompliance{x}{y}{nist}{cis}{pci}{iso}
+\newcommand{\drawMultiFrameworkCompliance}[6]{
+    \node[legend box, anchor=north west, minimum width=5.5cm,
+          draw=blue!80, line width=2.5pt] at (#1,#2) {
+        \begin{tabular}{lc}
+            \multicolumn{2}{c}{\textbf{Compliance Overview}} \\
+            \hline
+            NIST CSF & #3\% \\
+            CIS Controls & #4\% \\
+            PCI-DSS & #5\% \\
+            ISO 27001 & #6\% \\
+        \end{tabular}
+    };
+}
+
+% ============================================================================
+% VULNERABILITY DATABASE INTEGRATION
+% ============================================================================
+
+% Comprehensive vulnerability report for a node
+% Usage: \drawVulnerabilityReport{x}{y}{node_name}{cve_count}{critical}{high}{medium}{low}
+\newcommand{\drawVulnerabilityReport}[8]{
+    \pgfmathsetmacro{\totalvulns}{#3 + #4 + #5 + #6}
+    \node[legend box, anchor=north west, minimum width=5cm,
+          draw=threatHigh, line width=2pt] at (#1,#2) {
+        \begin{tabular}{lc}
+            \multicolumn{2}{c}{\textbf{Vulnerability Report: #3}} \\
+            \hline
+            \textcolor{threatCritical}{Critical} & #5 \\
+            \textcolor{threatHigh}{High} & #6 \\
+            \textcolor{threatMedium}{Medium} & #7 \\
+            \textcolor{threatLow}{Low} & #8 \\
+            \hline
+            \textbf{Total CVEs} & \textbf{#4} \\
+        \end{tabular}
+    };
+}
+
+% Exploit availability indicator
+% Usage: \markExploitAvailable{node}{cve}{exploit_maturity}
+% exploit_maturity: poc, functional, high (weaponized)
+\newcommand{\markExploitAvailable}[3]{
+    \ifthenelse{\equal{#3}{high}}{
+        \def\exploitcolor{threatCritical}
+        \def\exploitlabel{WEAPONIZED}
+    }{
+    \ifthenelse{\equal{#3}{functional}}{
+        \def\exploitcolor{threatHigh}
+        \def\exploitlabel{FUNCTIONAL}
+    }{
+        \def\exploitcolor{threatMedium}
+        \def\exploitlabel{POC}
+    }}
+
+    \node[draw=\exploitcolor, fill=\exploitcolor!30, text=black,
+          font=\tiny\bfseries, rounded corners=2pt, inner sep=2pt,
+          anchor=east] at (#1.east) [xshift=-0.1cm] {
+        EXPLOIT: \exploitlabel
+    };
+    \node[below, font=\tiny\ttfamily, fill=white, draw=\exploitcolor,
+          inner sep=1pt] at (#1.east) [xshift=-0.5cm, yshift=-0.3cm] {
+        #2
+    };
+}
+
+% Patch availability status
+% Usage: \markPatchStatus{node}{cve}{patch_status}{days_since_patch}
+% patch_status: available, pending, none
+\newcommand{\markPatchStatus}[4]{
+    \ifthenelse{\equal{#3}{available}}{
+        \def\patchcolor{green!60!black}
+        \def\patchlabel{PATCH AVAILABLE}
+    }{
+    \ifthenelse{\equal{#3}{pending}}{
+        \def\patchcolor{orange}
+        \def\patchlabel{PATCH PENDING}
+    }{
+        \def\patchcolor{threatCritical}
+        \def\patchlabel{NO PATCH}
+    }}
+
+    \node[fill=\patchcolor, text=white, font=\tiny\bfseries,
+          inner sep=2pt, rounded corners=1pt, anchor=west]
+        at (#1.west) [xshift=0.1cm] {
+        \patchlabel\ (#4d)
+    };
+}
+
+% Vulnerability age indicator
+% Usage: \markVulnerabilityAge{node}{cve}{days_since_disclosure}
+\newcommand{\markVulnerabilityAge}[3]{
+    \pgfmathsetmacro{\agedays}{#3}
+    \ifthenelse{\lengthtest{\agedays pt < 30 pt}}{
+        \def\agecolor{threatCritical}
+        \def\agelabel{NEW}
+    }{
+    \ifthenelse{\lengthtest{\agedays pt < 180 pt}}{
+        \def\agecolor{threatHigh}
+        \def\agelabel{RECENT}
+    }{
+    \ifthenelse{\lengthtest{\agedays pt < 365 pt}}{
+        \def\agecolor{orange}
+        \def\agelabel{AGING}
+    }{
+        \def\agecolor{gray!70}
+        \def\agelabel{OLD}
+    }}}
+
+    \node[fill=\agecolor, text=white, font=\tiny,
+          inner sep=1pt, rounded corners=1pt, anchor=south]
+        at (#1.south) [yshift=-0.5cm] {
+        \agelabel: #3 days
+    };
+}
+
+% EPSS (Exploit Prediction Scoring System) indicator
+% Usage: \markEPSS{node}{cve}{epss_score}{percentile}
+\newcommand{\markEPSS}[4]{
+    \pgfmathsetmacro{\epssscore}{#3 * 100}
+    \ifthenelse{\lengthtest{\epssscore pt > 70 pt}}{
+        \def\epsscolor{threatCritical}
+    }{
+    \ifthenelse{\lengthtest{\epssscore pt > 30 pt}}{
+        \def\epsscolor{threatHigh}
+    }{
+        \def\epsscolor{threatMedium}
+    }}
+
+    \node[legend box, anchor=south west, minimum width=3cm,
+          draw=\epsscolor, line width=1.5pt] at (#1.south west) [yshift=-1cm] {
+        \begin{tabular}{ll}
+            \multicolumn{2}{c}{\textbf{\textcolor{\epsscolor}{EPSS}}} \\
+            \hline
+            \textbf{CVE:} & \texttt{\tiny #2} \\
+            \textbf{Score:} & #3 (#4th \%ile) \\
+        \end{tabular}
+    };
+}
+
+% Vulnerability priority score (combines CVSS, EPSS, exploit availability)
+% Usage: \drawVulnPriority{x}{y}{cve}{cvss}{epss}{exploit}{priority_score}
+\newcommand{\drawVulnPriority}[7]{
+    \pgfmathsetmacro{\priority}{#7}
+    \ifthenelse{\lengthtest{\priority pt > 90 pt}}{
+        \def\prioritycolor{threatCritical}
+        \def\prioritylabel{CRITICAL - PATCH NOW}
+    }{
+    \ifthenelse{\lengthtest{\priority pt > 70 pt}}{
+        \def\prioritycolor{threatHigh}
+        \def\prioritylabel{HIGH - PATCH URGENT}
+    }{
+    \ifthenelse{\lengthtest{\priority pt > 40 pt}}{
+        \def\prioritycolor{threatMedium}
+        \def\prioritylabel{MEDIUM - SCHEDULE}
+    }{
+        \def\prioritycolor{threatLow}
+        \def\prioritylabel{LOW - MONITOR}
+    }}}
+
+    \node[legend box, anchor=north west, minimum width=5cm,
+          draw=\prioritycolor, line width=2.5pt] at (#1,#2) {
+        \begin{tabular}{ll}
+            \multicolumn{2}{c}{\textbf{\textcolor{\prioritycolor}{#3}}} \\
+            \hline
+            CVSS Score & #4 \\
+            EPSS Score & #5 \\
+            Exploit Available & #6 \\
+            \hline
+            \textbf{Priority} & \textbf{#7/100} \\
+            \multicolumn{2}{c}{\textcolor{\prioritycolor}{\prioritylabel}} \\
+        \end{tabular}
+    };
+}
+
+% Vulnerability scan results summary
+% Usage: \drawScanResults{x}{y}{scanner_name}{scan_date}{vulns_found}{false_positives}
+\newcommand{\drawScanResults}[6]{
+    \node[legend box, anchor=north west, minimum width=5cm,
+          draw=blue!60, line width=1.5pt] at (#1,#2) {
+        \begin{tabular}{ll}
+            \multicolumn{2}{c}{\textbf{Scan Results: #3}} \\
+            \hline
+            Scan Date & #4 \\
+            Vulnerabilities Found & #5 \\
+            False Positives & #6 \\
+            \hline
+            \textbf{Net Findings} & \textbf{\pgfmathparse{int(#5-#6)}\pgfmathresult} \\
+        \end{tabular}
+    };
+}
+% ============================================================================
+% THREAT CORRELATION AND INCIDENT RECONSTRUCTION
+% ============================================================================
+
+% Correlate multiple IOCs to show relationship
+% Usage: \drawIOCCorrelation{x}{y}{title}{ioc1}{ioc2}{ioc3}{correlation_confidence}
+\newcommand{\drawIOCCorrelation}[7]{
+    \pgfmathsetmacro{\correlation}{#7}
+    \ifthenelse{\lengthtest{\correlation pt > 80 pt}}{
+        \def\corrcolor{threatCritical}
+        \def\corrlabel{HIGH CONFIDENCE}
+    }{
+    \ifthenelse{\lengthtest{\correlation pt > 50 pt}}{
+        \def\corrcolor{threatHigh}
+        \def\corrlabel{MEDIUM CONFIDENCE}
+    }{
+        \def\corrcolor{orange}
+        \def\corrlabel{LOW CONFIDENCE}
+    }}
+
+    \node[legend box, anchor=north west, minimum width=6cm,
+          draw=\corrcolor, line width=2pt] at (#1,#2) {
+        \begin{tabular}{p{5.5cm}}
+            \multicolumn{1}{c}{\textbf{\textcolor{\corrcolor}{#3}}} \\
+            \hline
+            \textbf{Correlated IOCs:} \\
+            ● #4 \\
+            ● #5 \\
+            ● #6 \\
+            \hline
+            \textbf{Confidence:} \textcolor{\corrcolor}{#7\% - \corrlabel} \\
+        \end{tabular}
+    };
+}
+
+% Incident timeline reconstruction
+% Usage: \drawIncidentTimeline{x}{y}{incident_name}{start}{end}{events}
+\newcommand{\drawIncidentTimeline}[6]{
+    \node[legend box, anchor=north west, minimum width=7cm,
+          draw=threatCritical, line width=2pt] at (#1,#2) {
+        \begin{tabular}{p{6.5cm}}
+            \multicolumn{1}{c}{\textbf{\textcolor{threatCritical}{Incident: #3}}} \\
+            \hline
+            \textbf{Start:} #4 \\
+            \textbf{End:} #5 \\
+            \hline
+            \textbf{Timeline:} \\
+            #6 \\
+        \end{tabular}
+    };
+}
+
+% Lateral movement path visualization
+% Usage: \drawLateralMovement{node1}{node2}{node3}{method}{timestamp}
+\newcommand{\drawLateralMovement}[5]{
+    \draw[draw=threatCritical, line width=2.5pt, dashed,
+          -{Stealth[length=4mm]}] (#1) -- (#2)
+        node[midway, above, font=\tiny, fill=yellow!30, inner sep=1pt] {
+            #4 @ #5
+        };
+    \draw[draw=threatCritical, line width=2.5pt, dashed,
+          -{Stealth[length=4mm]}] (#2) -- (#3)
+        node[midway, above, font=\tiny, fill=yellow!30, inner sep=1pt] {
+            #4 @ #5
+        };
+}
+
+% Infection spread visualization
+% Usage: \drawInfectionSpread{patient_zero}{infected_nodes_count}{containment_status}
+\newcommand{\drawInfectionSpread}[3]{
+    \node[circle, draw=threatCritical, line width=3pt, fill=threatCritical!20,
+          minimum size=1.5cm] at (#1) {};
+    \node[above, font=\small\bfseries, text=threatCritical, fill=white,
+          inner sep=2pt] at (#1.north) [yshift=0.8cm] {
+        PATIENT ZERO
+    };
+    \node[below, font=\tiny, fill=white, draw=threatCritical,
+          inner sep=2pt] at (#1.south) [yshift=-0.5cm] {
+        Infected: #2 | Status: #3
+    };
+}
+
+% Command & Control (C2) beacon indicator
+% Usage: \drawC2Beacon{compromised_node}{c2_server}{frequency}{protocol}
+\newcommand{\drawC2Beacon}[4]{
+    \draw[draw=threatCritical, line width=2pt, dotted,
+          <->, shorten >=0.2cm, shorten <=0.2cm]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny, fill=red!20, inner sep=2pt] {
+            C2: #4 (#3)
+        };
+}
+
+% Data exfiltration visualization with volume
+% Usage: \drawExfiltrationPath{source}{intermediate}{destination}{data_volume}{detection}
+\newcommand{\drawExfiltrationPath}[5]{
+    \draw[draw=red!80!black, line width=3pt, -{Stealth[length=5mm]}]
+        (#1) -- (#2)
+        node[midway, below, font=\tiny, fill=red!20, inner sep=1pt] {
+            #4
+        };
+    \draw[draw=red!80!black, line width=3pt, -{Stealth[length=5mm]}]
+        (#2) -- (#3)
+        node[midway, below, font=\tiny, fill=red!20, inner sep=1pt] {
+            Detection: #5
+        };
+}
+
+% Threat hunting query results
+% Usage: \drawHuntingResults{x}{y}{query_name}{matches_found}{false_positives}{true_positives}
+\newcommand{\drawHuntingResults}[6]{
+    \pgfmathsetmacro{\precision}{(#6 / #4) * 100}
+    \node[legend box, anchor=north west, minimum width=5.5cm,
+          draw=purple!70, line width=2pt] at (#1,#2) {
+        \begin{tabular}{ll}
+            \multicolumn{2}{c}{\textbf{Hunt: #3}} \\
+            \hline
+            Matches Found & #4 \\
+            False Positives & #5 \\
+            True Positives & #6 \\
+            \hline
+            \textbf{Precision} & \textbf{\pgfmathprintnumber[precision=1]{\precision}\%} \\
+        \end{tabular}
+    };
+}
+
+% Incident severity meter
+% Usage: \drawIncidentSeverity{x}{y}{incident_name}{severity_score}{impact}{urgency}
+\newcommand{\drawIncidentSeverity}[6]{
+    \pgfmathsetmacro{\severity}{#4}
+    \ifthenelse{\lengthtest{\severity pt > 80 pt}}{
+        \def\sevcolor{threatCritical}
+        \def\sevlabel{CRITICAL INCIDENT}
+    }{
+    \ifthenelse{\lengthtest{\severity pt > 60 pt}}{
+        \def\sevcolor{threatHigh}
+        \def\sevlabel{HIGH SEVERITY}
+    }{
+    \ifthenelse{\lengthtest{\severity pt > 40 pt}}{
+        \def\sevcolor{threatMedium}
+        \def\sevlabel{MEDIUM SEVERITY}
+    }{
+        \def\sevcolor{threatLow}
+        \def\sevlabel{LOW SEVERITY}
+    }}}
+
+    \node[legend box, anchor=north west, minimum width=5cm,
+          draw=\sevcolor, line width=2.5pt] at (#1,#2) {
+        \begin{tabular}{ll}
+            \multicolumn{2}{c}{\textbf{\textcolor{\sevcolor}{#3}}} \\
+            \hline
+            Severity Score & #4/100 \\
+            Impact & #5 \\
+            Urgency & #6 \\
+            \hline
+            \multicolumn{2}{c}{\textcolor{\sevcolor}{\sevlabel}} \\
+        \end{tabular}
+    };
+}
+
+% ============================================================================
+% SECURITY METRICS AND KPIs
+% ============================================================================
+
+% Mean Time metrics (MTTD, MTTR, MTTC)
+% Usage: \drawMTTMetrics{x}{y}{mttd_hours}{mttr_hours}{mttc_hours}
+\newcommand{\drawMTTMetrics}[5]{
+    \node[legend box, anchor=north west, minimum width=5cm,
+          draw=blue!70, line width=2pt] at (#1,#2) {
+        \begin{tabular}{lc}
+            \multicolumn{2}{c}{\textbf{Response Metrics}} \\
+            \hline
+            MTTD (Detect) & #3h \\
+            MTTR (Respond) & #4h \\
+            MTTC (Contain) & #5h \\
+        \end{tabular}
+    };
+}
+
+% Security coverage heatmap
+% Usage: \drawCoverageHeatmap{x}{y}{endpoint}{network}{cloud}{identity}{data}
+\newcommand{\drawCoverageHeatmap}[7]{
+    \node[legend box, anchor=north west, minimum width=6cm,
+          draw=green!60!black, line width=2pt] at (#1,#2) {
+        \begin{tabular}{lc}
+            \multicolumn{2}{c}{\textbf{Security Coverage}} \\
+            \hline
+            Endpoint Security & \drawCoverageBar{#3} \\
+            Network Security & \drawCoverageBar{#4} \\
+            Cloud Security & \drawCoverageBar{#5} \\
+            Identity \& Access & \drawCoverageBar{#6} \\
+            Data Protection & \drawCoverageBar{#7} \\
+        \end{tabular}
+    };
+}
+
+% Helper for coverage visualization
+\newcommand{\drawCoverageBar}[1]{
+    \pgfmathsetmacro{\cov}{#1}
+    \ifthenelse{\lengthtest{\cov pt > 90 pt}}{
+        \textcolor{green!60!black}{#1\%}
+    }{
+    \ifthenelse{\lengthtest{\cov pt > 70 pt}}{
+        \textcolor{orange}{#1\%}
+    }{
+        \textcolor{threatHigh}{#1\%}
+    }}
+}
+
+% Risk score trending
+% Usage: \drawRiskTrend{x}{y}{current_score}{last_month}{trend}
+% trend: increasing, decreasing, stable
+\newcommand{\drawRiskTrend}[5]{
+    \ifthenelse{\equal{#5}{increasing}}{
+        \def\trendcolor{threatCritical}
+        \def\trendlabel{↑ INCREASING}
+    }{
+    \ifthenelse{\equal{#5}{decreasing}}{
+        \def\trendcolor{green!60!black}
+        \def\trendlabel{↓ DECREASING}
+    }{
+        \def\trendcolor{orange}
+        \def\trendlabel{→ STABLE}
+    }}
+
+    \node[legend box, anchor=north west, minimum width=4.5cm,
+          draw=\trendcolor, line width=2pt] at (#1,#2) {
+        \begin{tabular}{ll}
+            \multicolumn{2}{c}{\textbf{Risk Score Trend}} \\
+            \hline
+            Current & #3/100 \\
+            Last Month & #4/100 \\
+            \hline
+            \textbf{Trend} & \textcolor{\trendcolor}{\trendlabel} \\
+        \end{tabular}
+    };
+}
 
 % ============================================================================
 % MAIN THREAT RENDERING ENGINE
