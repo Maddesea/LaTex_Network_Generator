@@ -238,29 +238,41 @@
 ## AGENT 5: Threat Intelligence (threat_indicators.tex)
 
 ### High Priority
-- [ ] CVSS score integration and visualization
-  - Parse CVSS vectors
-  - Display base, temporal, environmental scores
-  - Color-code by severity (0-10 scale)
-  - Show score breakdown on hover/detail view
+- [x] **CVSS score integration and visualization - COMPLETED**
+  - ✅ Parse CVSS scores (base, temporal, environmental)
+  - ✅ Display with color-coding by severity (0-10 scale)
+  - ✅ CVSS meter visualization with gradient
+  - ✅ Score breakdown display tables
+  - ✅ Compact CVSS badge for nodes
+  - Commands: `\markVulnerabilityCVSS`, `\drawCVSSMeter`, `\drawCVSSBreakdown`, `\cvssBadge`
 
-- [ ] MITRE ATT&CK framework mapping
-  - Map attacks to tactics and techniques
-  - Show kill chain progression
-  - Display ATT&CK IDs (T1566, etc.)
-  - Link to MITRE documentation
+- [x] **MITRE ATT&CK framework mapping - COMPLETED**
+  - ✅ Map attacks to tactics and techniques with color coding
+  - ✅ Show kill chain progression (7 stages)
+  - ✅ Display ATT&CK IDs (T1566, T1110, etc.)
+  - ✅ TTP profile visualization
+  - ✅ ATT&CK Matrix legend with all 12 tactics
+  - ✅ Attack technique badges on nodes
+  - Commands: `\attackTechnique`, `\drawAttackKillChain`, `\drawAttackTechniqueList`, `\drawTTPProfile`, `\drawAttackMatrix`
 
-- [ ] IOC (Indicators of Compromise) visualization
-  - Display: malicious IPs, domains, file hashes
-  - Reputation scoring integration
-  - Threat feed integration (VirusTotal, etc.)
-  - Age/freshness indicators
+- [x] **IOC (Indicators of Compromise) visualization - COMPLETED**
+  - ✅ Display malicious IPs, domains, file hashes
+  - ✅ Reputation scoring with visual indicators
+  - ✅ Age/freshness indicators (FRESH, RECENT, OLD)
+  - ✅ C2 server marking with beacon indicators
+  - ✅ IOC dashboard and comprehensive lists
+  - ✅ Threat feed status indicators
+  - Commands: `\markIOCEnhanced`, `\markMaliciousIP`, `\markFileHashIOC`, `\markC2Server`, `\drawIOCDashboard`, `\drawIOCList`
 
-- [ ] Attack kill chain progression
-  - Visualize 7-stage kill chain
-  - Highlight current attack stage
-  - Show defensive gaps
-  - NIST Cybersecurity Framework mapping
+- [x] **Attack kill chain progression - COMPLETED**
+  - ✅ Visualize 7-stage cyber kill chain (Lockheed Martin model)
+  - ✅ Highlight current attack stage with progress tracking
+  - ✅ Compact progress bar variant
+  - ✅ Time-based attack timeline
+  - ✅ Attack path tree visualization
+  - ✅ Infection spread visualization
+  - ✅ Kill chain stage details with ATT&CK mapping
+  - Commands: `\drawKillChain`, `\drawKillChainCompact`, `\drawAttackTimeline`, `\drawAttackPath`, `\drawInfectionSpread`, `\drawKillChainDetails`
 
 ### Medium Priority
 - [ ] Threat actor attribution

@@ -131,6 +131,92 @@ In `network_diagram_generator.tex`:
 \visualizeExfiltration{source_node}{attacker_node}{500MB}
 ```
 
+### NEW: Advanced Threat Intelligence Features
+
+#### CVSS Score Visualization
+```latex
+% Enhanced CVSS vulnerability marker with breakdown
+\markVulnerabilityCVSS{node}{CVE-2024-1234}{9.8}{9.5}{8.7}
+
+% CVSS score meter (visual gauge)
+\drawCVSSMeter{0}{0}{9.8}{Web Server Vulnerability}
+
+% Detailed CVSS breakdown
+\drawCVSSBreakdown{0}{0}{9.8}{8.5}{9.2}{9.5}{8.7}
+
+% Compact CVSS badge
+\cvssBadge{node}{9.8}
+```
+
+#### MITRE ATT&CK Framework Integration
+```latex
+% Display ATT&CK technique on node
+\attackTechnique{node}{credential-access}{T1110}{Brute Force}
+
+% Full kill chain visualization (7 stages)
+\drawAttackKillChain{0}{0}{4}  % Currently at stage 4 (Exploitation)
+
+% ATT&CK technique list
+\drawAttackTechniqueList{10}{5}
+
+% TTP Profile for threat actor
+\drawTTPProfile{0}{0}{APT29}
+
+% Attack with technique label
+\drawAttackWithTechnique{attacker}{victim}{T1566.001}{Spearphishing}
+
+% ATT&CK Matrix legend
+\drawAttackMatrix{12}{8}
+```
+
+#### IOC (Indicators of Compromise)
+```latex
+% Enhanced IOC marker with reputation and age
+\markIOCEnhanced{node}{malicious-ip}{192.0.2.1}{85}{3}
+
+% Malicious IP with geolocation
+\markMaliciousIP{node}{192.0.2.1}{Russia}{92}
+
+% File hash IOC
+\markFileHashIOC{node}{SHA256}{a1b2c3d4...}{WannaCry}
+
+% Mark C2 server
+\markC2Server{node}{evil.badguys.com}{APT28}
+
+% IOC Dashboard
+\drawIOCDashboard{10}{5}
+
+% Threat feed status
+\drawThreatFeedStatus{0}{0}{VirusTotal}{active}
+
+% Comprehensive IOC list
+\drawIOCList{0}{5}
+
+% Reputation score meter
+\drawReputationScore{0}{0}{75}{suspicious.domain.com}
+```
+
+#### Attack Kill Chain & Progression
+```latex
+% Full cyber kill chain with current stage
+\drawKillChain{-8}{-5}{3}  % Currently at stage 3 (Delivery)
+
+% Compact progress bar
+\drawKillChainCompact{0}{0}{5}
+
+% Time-based attack timeline
+\drawAttackTimeline{-5}{3}
+
+% Attack path tree
+\drawAttackPath{10}{5}
+
+% Infection spread visualization
+\drawInfectionSpread{patient_zero}{srv1,srv2,srv3}
+
+% Kill chain stage details
+\drawKillChainDetails{0}{5}{3}  % Details for stage 3
+```
+
 ## Security Zones
 
 ```latex
@@ -212,10 +298,10 @@ This system is designed for **multiple agents/developers** to work simultaneousl
 
 ### Agent 5: Threat Intelligence (`threat_indicators.tex`)
 **Priority TODOs:**
-- [ ] CVSS score integration and visualization
-- [ ] MITRE ATT&CK framework mapping
-- [ ] IOC (Indicators of Compromise) visualization
-- [ ] Attack kill chain progression display
+- [x] CVSS score integration and visualization - **COMPLETED**
+- [x] MITRE ATT&CK framework mapping - **COMPLETED**
+- [x] IOC (Indicators of Compromise) visualization - **COMPLETED**
+- [x] Attack kill chain progression display - **COMPLETED**
 - [ ] Threat actor attribution with confidence levels
 - [ ] Real-time threat feed integration
 - [ ] Security compliance dashboard (NIST, CIS, PCI-DSS)
