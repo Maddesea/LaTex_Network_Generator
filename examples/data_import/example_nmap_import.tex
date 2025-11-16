@@ -1,0 +1,78 @@
+% example_nmap_import.tex - Demonstrates Nmap XML import functionality
+% Compile with: lualatex example_nmap_import.tex
+% NOTE: Requires LuaLaTeX for XML parsing
+
+\documentclass[tikz,border=10pt]{standalone}
+
+% Load required packages
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric, arrows.meta, positioning, backgrounds, fit, calc, decorations.pathmorphing, shadows}
+\usepackage{ifthen}
+
+% Include all modules from the parent directory
+\input{../../styles_config.tex}
+\input{../../node_definitions.tex}
+\input{../../network_layout.tex}
+\input{../../connection_renderer.tex}
+\input{../../threat_indicators.tex}
+\input{../../data_import.tex}
+
+\begin{document}
+\begin{tikzpicture}[
+    scale=\diagramScale,
+    every node/.style={transform shape}
+]
+
+% ============================================================================
+% NMAP XML IMPORT EXAMPLE
+% ============================================================================
+% This example demonstrates importing network discovery data from Nmap scans
+% The XML file contains:
+%   - Discovered hosts and IP addresses
+%   - Open ports and running services
+%   - Operating system detection
+%   - Service version information
+%
+% This approach is ideal for:
+%   - Automated network discovery
+%   - Security assessment documentation
+%   - Vulnerability mapping
+%   - Network inventory management
+% ============================================================================
+
+\message{========================================}
+\message{Nmap XML Import Example}
+\message{========================================}
+
+% Import network data from Nmap XML
+\renewcommand{\renderNetworkNodes}{
+    \importNmapXML{nmap-scan.xml}
+}
+
+% Render the network
+\renderNetworkNodes
+
+% Note: Connections would need to be inferred or manually defined
+% Future enhancement: Auto-create connections based on port relationships
+
+% Legend
+\node[legend box, anchor=south west] at (-2,-3) {
+    \small\bfseries Nmap Import Example \\[2pt]
+    \tiny
+    Data imported from: \\
+    • nmap-scan.xml \\[2pt]
+    Discovered: \\
+    • 4 hosts \\
+    • Multiple services \\
+    • OS fingerprints
+};
+
+% Metadata
+\node[font=\tiny, anchor=south east, text=black!60] at (12,-3) {
+    Generated: \today \\
+    Nmap XML Import Module \\
+    Agent 6: Data Import
+};
+
+\end{tikzpicture}
+\end{document}

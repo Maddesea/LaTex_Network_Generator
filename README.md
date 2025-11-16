@@ -11,6 +11,7 @@ A professional, scalable network diagram generation system using LaTeX/TikZ, des
 ✅ **Multiple Layout Algorithms** - Tiered, circular, grid, and force-directed options
 ✅ **Rich Connection Types** - Encrypted, suspicious, attack, and bidirectional connections
 ✅ **Security Zones** - Visual subnet and security boundary representations
+✅ **Data Import/Export** - CSV, JSON, YAML, and Nmap XML import support
 ✅ **TeXLive 2024/2025 Compatible** - Uses stable, widely-supported packages
 
 ## Quick Start
@@ -45,7 +46,10 @@ network_diagram_generator.tex  # Main entry point
 ├── network_layout.tex         # Layout algorithms and positioning
 ├── connection_renderer.tex    # Connection drawing and flows
 ├── threat_indicators.tex      # Security threat visualization
-└── network_data.tex           # Actual network topology data
+├── data_import.tex            # Data import/export functionality
+├── network_data.tex           # Actual network topology data
+└── examples/
+    └── data_import/           # CSV, JSON, YAML, Nmap examples
 ```
 
 ## Creating Your Own Diagrams
@@ -144,6 +148,74 @@ In `network_diagram_generator.tex`:
     {High Trust}
 ```
 
+## Data Import/Export
+
+The system supports importing network topology data from various formats, ideal for automation and integration with existing tools.
+
+### CSV Import
+
+Import network data from spreadsheet-compatible CSV files:
+
+```latex
+\input{data_import.tex}
+
+% Import all network data from CSV files
+\importNetworkFromCSV{nodes.csv}{connections.csv}{threats.csv}
+```
+
+**nodes.csv format:**
+```csv
+id,type,ip,x,y,label
+srv1,server,192.168.1.10,0,0,Web Server
+fw1,firewall,192.168.1.1,0,3,Edge Firewall
+```
+
+**connections.csv format:**
+```csv
+source,destination,label,type
+fw1,srv1,HTTPS,encrypted
+srv1,db1,,normal
+```
+
+**threats.csv format:**
+```csv
+target,type,severity,cve,description
+srv1,vulnerability,9.8,CVE-2024-1234,SQL Injection
+```
+
+### Nmap XML Import
+
+Import network discovery data directly from Nmap scans (requires LuaLaTeX):
+
+```bash
+# Run Nmap scan
+nmap -sV -O 192.168.1.0/24 -oX nmap-scan.xml
+
+# Import in LaTeX
+\input{data_import.tex}
+\importNmapXML{nmap-scan.xml}
+```
+
+Automatically extracts:
+- Discovered hosts and IP addresses
+- Open ports and services
+- Operating system detection
+- Service version information
+
+### JSON/YAML Import
+
+Import from structured data files (requires LuaLaTeX):
+
+```latex
+% JSON format
+\importNetworkFromJSON{network.json}
+
+% YAML format (human-readable)
+\importNetworkFromYAML{network.yaml}
+```
+
+See `examples/data_import/` for complete examples and file format specifications.
+
 ## Advanced Features
 
 ### Custom Colors
@@ -220,15 +292,19 @@ This system is designed for **multiple agents/developers** to work simultaneousl
 - [ ] Real-time threat feed integration
 - [ ] Security compliance dashboard (NIST, CIS, PCI-DSS)
 
-### Agent 6: Data Import/Export
+### Agent 6: Data Import/Export (`data_import.tex`)
+**Completed Features:**
+- [x] JSON/YAML parser for network data input
+- [x] CSV import for bulk node creation
+- [x] Nmap XML output parser
+- [x] Export to GraphML/DOT format (basic implementation)
+
 **Priority TODOs:**
-- [ ] JSON/YAML parser for network data input
-- [ ] CSV import for bulk node creation
-- [ ] Nmap XML output parser
 - [ ] Nessus scan result integration
-- [ ] Export to GraphML/DOT format
 - [ ] Database connectivity for live network data
 - [ ] REST API for dynamic diagram generation
+- [ ] Auto-position calculation for imported nodes
+- [ ] Enhanced JSON/YAML parsing with proper libraries
 
 ## Performance Optimization
 

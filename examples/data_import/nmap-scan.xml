@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE nmaprun>
+<nmaprun scanner="nmap" args="nmap -sV -O 192.168.1.0/24" start="1700000000" version="7.94">
+  <host starttime="1700000001" endtime="1700000010">
+    <status state="up" reason="arp-response"/>
+    <address addr="192.168.1.1" addrtype="ipv4"/>
+    <address addr="00:50:56:C0:00:01" addrtype="mac" vendor="VMware"/>
+    <hostnames>
+      <hostname name="firewall.example.com" type="PTR"/>
+    </hostnames>
+    <ports>
+      <port protocol="tcp" portid="22">
+        <state state="open" reason="syn-ack"/>
+        <service name="ssh" product="OpenSSH" version="8.2p1" method="probed"/>
+      </port>
+      <port protocol="tcp" portid="443">
+        <state state="open" reason="syn-ack"/>
+        <service name="https" product="nginx" version="1.18.0" method="probed"/>
+      </port>
+    </ports>
+    <os>
+      <osmatch name="Linux 5.4" accuracy="95"/>
+    </os>
+  </host>
+
+  <host starttime="1700000011" endtime="1700000020">
+    <status state="up" reason="arp-response"/>
+    <address addr="192.168.1.10" addrtype="ipv4"/>
+    <address addr="00:50:56:C0:00:10" addrtype="mac" vendor="VMware"/>
+    <hostnames>
+      <hostname name="webserver.example.com" type="PTR"/>
+    </hostnames>
+    <ports>
+      <port protocol="tcp" portid="80">
+        <state state="open" reason="syn-ack"/>
+        <service name="http" product="Apache httpd" version="2.4.41" method="probed"/>
+      </port>
+      <port protocol="tcp" portid="443">
+        <state state="open" reason="syn-ack"/>
+        <service name="https" product="Apache httpd" version="2.4.41" method="probed"/>
+      </port>
+      <port protocol="tcp" portid="3306">
+        <state state="open" reason="syn-ack"/>
+        <service name="mysql" product="MySQL" version="8.0.27" method="probed"/>
+      </port>
+    </ports>
+    <os>
+      <osmatch name="Linux 5.4" accuracy="92"/>
+    </os>
+  </host>
+
+  <host starttime="1700000021" endtime="1700000030">
+    <status state="up" reason="arp-response"/>
+    <address addr="192.168.1.20" addrtype="ipv4"/>
+    <address addr="00:50:56:C0:00:20" addrtype="mac" vendor="VMware"/>
+    <hostnames>
+      <hostname name="mailserver.example.com" type="PTR"/>
+    </hostnames>
+    <ports>
+      <port protocol="tcp" portid="25">
+        <state state="open" reason="syn-ack"/>
+        <service name="smtp" product="Postfix" method="probed"/>
+      </port>
+      <port protocol="tcp" portid="587">
+        <state state="open" reason="syn-ack"/>
+        <service name="smtp" product="Postfix" method="probed"/>
+      </port>
+      <port protocol="tcp" portid="993">
+        <state state="open" reason="syn-ack"/>
+        <service name="imaps" product="Dovecot" method="probed"/>
+      </port>
+    </ports>
+    <os>
+      <osmatch name="Linux 5.10" accuracy="93"/>
+    </os>
+  </host>
+
+  <host starttime="1700000031" endtime="1700000040">
+    <status state="up" reason="arp-response"/>
+    <address addr="192.168.1.100" addrtype="ipv4"/>
+    <address addr="00:50:56:C0:01:00" addrtype="mac" vendor="VMware"/>
+    <hostnames>
+      <hostname name="dbserver.example.com" type="PTR"/>
+    </hostnames>
+    <ports>
+      <port protocol="tcp" portid="5432">
+        <state state="open" reason="syn-ack"/>
+        <service name="postgresql" product="PostgreSQL" version="13.3" method="probed"/>
+      </port>
+    </ports>
+    <os>
+      <osmatch name="Linux 5.10" accuracy="94"/>
+    </os>
+  </host>
+
+  <runstats>
+    <finished time="1700000040" timestr="Tue Nov 14 12:34:00 2023"/>
+    <hosts up="4" down="0" total="4"/>
+  </runstats>
+</nmaprun>

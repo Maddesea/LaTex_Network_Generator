@@ -1,0 +1,106 @@
+% example_csv_import.tex - Demonstrates CSV import functionality
+% Compile with: pdflatex example_csv_import.tex
+
+\documentclass[tikz,border=10pt]{standalone}
+
+% Load required packages
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric, arrows.meta, positioning, backgrounds, fit, calc, decorations.pathmorphing, shadows}
+\usepackage{ifthen}
+
+% Include all modules from the parent directory
+\input{../../styles_config.tex}
+\input{../../node_definitions.tex}
+\input{../../network_layout.tex}
+\input{../../connection_renderer.tex}
+\input{../../threat_indicators.tex}
+\input{../../data_import.tex}
+
+\begin{document}
+\begin{tikzpicture}[
+    scale=\diagramScale,
+    every node/.style={transform shape}
+]
+
+% ============================================================================
+% CSV IMPORT EXAMPLE
+% ============================================================================
+% This example demonstrates importing network data from CSV files
+% The CSV files contain:
+%   - nodes.csv: Network devices (servers, routers, firewalls, etc.)
+%   - connections.csv: Network connections between devices
+%   - threats.csv: Security threats and vulnerabilities
+%
+% This approach is ideal for:
+%   - Bulk import of network data
+%   - Integration with spreadsheets and databases
+%   - Automated network documentation
+%   - Regular updates from monitoring tools
+% ============================================================================
+
+% Import network data from CSV files
+\message{========================================}
+\message{CSV Import Example}
+\message{========================================}
+
+% Define nodes using CSV import
+\renewcommand{\renderNetworkNodes}{
+    \importNodesFromCSV{nodes.csv}
+}
+
+% Define connections using CSV import
+\renewcommand{\renderConnections}{
+    \importConnectionsFromCSV{connections.csv}
+}
+
+% Define threats using CSV import
+\renewcommand{\renderThreats}{
+    \importThreatsFromCSV{threats.csv}
+
+    % Draw security dashboard
+    \drawSecurityDashboard{10}{8}
+}
+
+% Render the network
+\renderNetworkNodes
+\renderConnections
+
+% Draw security zones manually (could also be CSV-driven in future)
+\begin{scope}[on background layer]
+    % DMZ Zone
+    \drawSecurityZone{dmz}{routerOrange}
+        {(fw1) (rtr1) (web1) (mail1)}
+        {DMZ}{Low Trust}
+
+    % Internal Zone
+    \drawSecurityZone{internal}{clientGreen}
+        {(fw2) (sw1) (app1) (app2) (ws1) (ws2) (ws3)}
+        {Internal Network}{Medium Trust}
+
+    % Database Zone
+    \drawSecurityZone{database}{serverBlue}
+        {(db1) (db2)}
+        {Database Tier}{High Trust}
+\end{scope}
+
+\renderThreats
+
+% Legend
+\node[legend box, anchor=south west] at (-10,-9) {
+    \small\bfseries CSV Import Example \\[2pt]
+    \tiny
+    Data imported from: \\
+    • nodes.csv \\
+    • connections.csv \\
+    • threats.csv
+};
+
+% Metadata
+\node[font=\tiny, anchor=south east, text=black!60] at (10,-9) {
+    Generated: \today \\
+    CSV Import Module \\
+    Agent 6: Data Import
+};
+
+\end{tikzpicture}
+\end{document}

@@ -1,0 +1,17 @@
+source,destination,label,type
+fw1,rtr1,,normal
+rtr1,web1,,normal
+rtr1,mail1,,normal
+web1,fw2,HTTPS,encrypted
+mail1,fw2,,normal
+fw2,sw1,,normal
+sw1,app1,,normal
+sw1,app2,,normal
+sw1,ws1,,bidirectional
+sw1,ws2,,bidirectional
+sw1,ws3,,bidirectional
+app1,db1,TLS 1.3,encrypted
+app2,db1,TLS 1.3,encrypted
+db1,db2,Replication,normal
+attacker1,fw1,Port Scan,attack
+ws2,db1,Unauthorized,suspicious

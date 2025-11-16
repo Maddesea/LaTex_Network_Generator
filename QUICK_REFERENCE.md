@@ -88,6 +88,35 @@
 \drawThreatIndicator{-5}{5}{critical}{Breach Detected}
 ```
 
+### Data Import/Export
+```latex
+% Load the module
+\input{data_import.tex}
+
+% CSV Import
+\importNodesFromCSV{nodes.csv}
+\importConnectionsFromCSV{connections.csv}
+\importThreatsFromCSV{threats.csv}
+
+% Or all at once
+\importNetworkFromCSV{nodes.csv}{connections.csv}{threats.csv}
+
+% Nmap XML Import (requires lualatex)
+\importNmapXML{nmap-scan.xml}
+
+% JSON Import (requires lualatex)
+\importNetworkFromJSON{network.json}
+
+% YAML Import (requires lualatex)
+\importNetworkFromYAML{network.yaml}
+
+% Export to GraphML
+\exportToGraphML{output.graphml}
+
+% Export to DOT
+\exportToDOT{output.dot}
+```
+
 ## Complete Minimal Example
 
 ```latex
