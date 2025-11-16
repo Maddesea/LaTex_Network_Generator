@@ -327,10 +327,62 @@ See the `examples/` directory for complete working examples:
 - `example_network.yaml` - YAML format example
 - `nodes.csv`, `connections.csv`, `threats.csv` - CSV format examples
 - `example_nmap.xml` - Nmap XML format example
-- `example_nessus.nessus` - Nessus vulnerability scan example (NEW!)
-- `json_import_demo.tex` - Complete demo using JSON import (NEW!)
-- `convert_network_data.py` - Python conversion utility (NEW!)
+- `example_nessus.nessus` - Nessus vulnerability scan example
+- `json_import_demo.tex` - Complete demo using JSON import
+- `convert_network_data.py` - Python conversion utility
 - `README.md` - Detailed usage guide
+
+### Automation Tools
+
+**Shell Scripts:**
+- `network_diagram_tool.sh` - Automation suite for common workflows (NEW!)
+- `quickstart.sh` - Project template generator (NEW!)
+
+**Usage:**
+```bash
+# Auto-generate diagram from Nmap scan
+./network_diagram_tool.sh nmap scan.xml my_network
+
+# Generate vulnerability report from Nessus
+./network_diagram_tool.sh nessus scan.nessus vuln_report
+
+# Batch process all scans in a directory
+./network_diagram_tool.sh batch ./scans ./output
+
+# Create a new project from template
+./quickstart.sh
+```
+
+### Advanced Features (NEW!)
+
+**Data Filtering:**
+```latex
+% Filter by subnet
+\filterNodesBySubnet{192.168.1}{network.json}
+
+% Filter by type
+\filterNodesByType{server}{network.json}
+
+% Show only critical vulnerabilities
+\filterVulnerabilitiesByCVSS{7.0}{threats.json}
+
+% Exclude certain types
+\excludeNodesByType{client}{network.json}
+```
+
+**Data Transformation:**
+```latex
+% Auto-layout by subnet grouping
+\autoLayoutBySubnet{network.json}
+
+% Scale node positions
+\scaleNodePositions{1.5}{network.json}
+
+% Merge multiple data sources
+\mergeNetworkData{network1.json}{network2.json}
+```
+
+See [WORKFLOWS.md](WORKFLOWS.md) for complete real-world usage examples.
 
 ## Parallel Development Guide
 
@@ -464,9 +516,11 @@ Free for personal and commercial use. Attribution appreciated.
 ## Version History
 
 - **v1.0 (Foundation)** - Initial modular architecture with core features
-- **v1.1 (Current)** - Data import/export system (JSON, YAML, CSV, Nmap XML)
-- **v1.2 (Planned)** - Auto-layout algorithms
-- **v2.0 (Planned)** - SIEM integration and real-time threat feeds
+- **v1.1** - Data import/export system (JSON, YAML, CSV, Nmap XML)
+- **v1.2** - Nessus integration, complete export functions, Python utilities
+- **v1.3 (Current)** - Advanced filtering, transformation, automation tools
+- **v2.0 (Planned)** - Auto-layout algorithms and intelligent positioning
+- **v3.0 (Planned)** - SIEM integration and real-time threat feeds
 
 ## Contact & Support
 
