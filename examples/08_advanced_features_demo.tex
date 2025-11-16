@@ -1,0 +1,159 @@
+% Example 8: Advanced Features Demonstration
+% Showcases all new advanced features from final enhancements
+\documentclass[border=5mm]{standalone}
+\usepackage{tikz}
+\usepackage{xcolor}
+\usepackage{ifthen}
+
+\usetikzlibrary{shapes, arrows, shadows, decorations.markings, patterns, fit, calc}
+
+\input{../styles_config.tex}
+
+\begin{document}
+
+\begin{tikzpicture}[scale=0.9]
+
+    % Title
+    \node[font=\LARGE\bfseries] at (6,14) {Advanced Features Showcase};
+    \node[font=\large, text=gray] at (6,13.4) {Connection Types, Annotations, and Topology Templates};
+
+    % ========== SECTION 1: ADVANCED CONNECTION TYPES ==========
+    \node[font=\Large\bfseries, anchor=west] at (-1,12) {1. Advanced Connection Types};
+
+    % Bandwidth indicators
+    \node[font=\small, anchor=west] at (0,11.3) {Bandwidth-based:};
+    \node[gradient server, minimum width=1.5cm, minimum height=0.8cm] (bw1) at (0,10.5) {10M};
+    \node[gradient server, minimum width=1.5cm, minimum height=0.8cm] (bw2) at (2.5,10.5) {100M};
+    \node[gradient server, minimum width=1.5cm, minimum height=0.8cm] (bw3) at (5,10.5) {1G};
+
+    \draw[bw low] (bw1) -- (bw2) node[midway, above, font=\tiny] {Low};
+    \draw[bw high] (bw2) -- (bw3) node[midway, above, font=\tiny] {High};
+
+    % Special connection types
+    \node[font=\small, anchor=west] at (7,11.3) {Special Types:};
+    \node[gradient client, minimum width=1.5cm, minimum height=0.8cm] (sp1) at (7,10.5) {Site A};
+    \node[gradient client, minimum width=1.5cm, minimum height=0.8cm] (sp2) at (9.5,10.5) {Site B};
+    \node[gradient client, minimum width=1.5cm, minimum height=0.8cm] (sp3) at (12,10.5) {Cloud};
+
+    \draw[vpn tunnel] (sp1) -- (sp2) node[midway, above, font=\tiny] {VPN};
+    \draw[wireless] (sp2) -- (sp3) node[midway, above, font=\tiny] {WiFi};
+
+    % Fiber and satellite
+    \node[gradient server, minimum width=1.5cm, minimum height=0.8cm] (dc1) at (0,9) {DC1};
+    \node[gradient server, minimum width=1.5cm, minimum height=0.8cm] (dc2) at (3,9) {DC2};
+    \node[gradient server, minimum width=1.5cm, minimum height=0.8cm] (sat) at (6,9) {Satellite};
+
+    \draw[fiber optic] (dc1) -- (dc2) node[midway, above, font=\tiny] {Fiber};
+    \draw[satellite link] (dc2) -- (sat) node[midway, above, font=\tiny] {SatLink};
+
+    % Blocked and load balanced
+    \node[gradient firewall, minimum width=1.5cm, minimum height=0.8cm] (fw) at (9,9) {FW};
+    \node[pattern critical, minimum width=1.5cm, minimum height=0.8cm] (threat) at (12,9) {Threat};
+    \node[gradient server, minimum width=1.5cm, minimum height=0.8cm] (lb) at (9,7.5) {LB};
+
+    \draw[blocked conn] (fw) -- (threat) node[midway, above, font=\tiny] {Blocked};
+    \draw[load balanced] (fw) -- (lb) node[midway, right, font=\tiny] {LB};
+
+    % ========== SECTION 2: NETWORK ZONES AND ANNOTATIONS ==========
+    \node[font=\Large\bfseries, anchor=west] at (-1,6.5) {2. Network Zones \& Annotations};
+
+    % DMZ Zone
+    \begin{scope}[shift={(0,3)}]
+        \node[dmz zone, minimum width=5cm, minimum height=2.5cm,
+              label=above left:{\color{red!70}\textbf{DMZ Zone}}] (dmz) at (2,3) {};
+
+        \node[gradient firewall, minimum width=1.2cm, minimum height=0.7cm] (dmzfw) at (1,3.5) {\tiny FW};
+        \node[gradient server, minimum width=1.2cm, minimum height=0.7cm] (dmzweb) at (3,3.5) {\tiny Web};
+        \node[gradient server, minimum width=1.2cm, minimum height=0.7cm] (dmzmail) at (3,2.5) {\tiny Mail};
+    \end{scope}
+
+    % Internal Zone
+    \begin{scope}[shift={(6,3)}]
+        \node[internal zone, minimum width=4cm, minimum height=2.5cm,
+              label=above left:{\color{green!70}\textbf{Internal}}] (int) at (2,3) {};
+
+        \node[gradient server, minimum width=1.2cm, minimum height=0.7cm] (intapp) at (1.5,3.5) {\tiny App};
+        \node[radial server, minimum width=1.2cm, minimum height=0.7cm] (intdb) at (2.5,2.5) {\tiny DB};
+    \end{scope}
+
+    % Callout annotations
+    \node[warning callout, anchor=west] at (11,5.5) {
+        \textbf{Warning:}\\
+        High traffic on\\
+        DMZ interface
+    };
+
+    \node[info callout, anchor=west] at (11,3.5) {
+        \textbf{Info:}\\
+        Database\\
+        replication\\
+        active
+    };
+
+    % ========== SECTION 3: TOPOLOGY TEMPLATES ==========
+    \node[font=\Large\bfseries, anchor=west] at (-1,1) {3. Topology Templates};
+
+    % Hub-and-Spoke example (small scale)
+    \begin{scope}[shift={(2,-1.5)}, scale=0.6]
+        \node[font=\small, text=gray] at (0,2.5) {Hub-and-Spoke};
+        \hubSpokeTemplate{hub}{4}{2cm}{metallic router}{gradient client}
+    \end{scope}
+
+    % Partial mesh example
+    \begin{scope}[shift={(7,-1.5)}, scale=0.6]
+        \node[font=\small, text=gray] at (0,2.5) {Mesh Network};
+        \foreach \i in {1,...,4} {
+            \pgfmathsetmacro{\angle}{360/4 * (\i - 1)}
+            \node[gradient server, minimum width=1cm, minimum height=0.6cm] (m\i) at (\angle:2) {\tiny N\i};
+        }
+        \draw[encrypted conn] (m1) -- (m2);
+        \draw[encrypted conn] (m2) -- (m3);
+        \draw[encrypted conn] (m3) -- (m4);
+        \draw[encrypted conn] (m4) -- (m1);
+        \draw[encrypted conn] (m1) -- (m3);
+        \draw[encrypted conn] (m2) -- (m4);
+    \end{scope}
+
+    % ========== METADATA AND STATISTICS ==========
+    \diagramMetadata{Advanced Features Demo}{Network Team}{\today}{v2.0}{south west}
+    at (-1,-4);
+
+    \networkStats{15}{8}{7}{22}{1}{south east}
+    at (13,-4);
+
+    % ========== COMPREHENSIVE LEGEND ==========
+    \node[legend large, anchor=north east] at (13,12) {
+        \begin{tabular}{ll}
+            \legendTitle{Connection Types} \\
+            \tikz\draw[bw low] (0,0) -- (0.6,0); & Low BW \\
+            \tikz\draw[bw high] (0,0) -- (0.6,0); & High BW \\
+            \tikz\draw[vpn tunnel] (0,0) -- (0.6,0); & VPN \\
+            \tikz\draw[wireless] (0,0) -- (0.6,0); & Wireless \\
+            \tikz\draw[fiber optic] (0,0) -- (0.6,0); & Fiber \\
+            \tikz\draw[blocked conn] (0,0) -- (0.6,0); & Blocked \\
+            \hline
+            \legendTitle{Zones} \\
+            \tikz\node[dmz zone, minimum width=0.4cm, minimum height=0.3cm] {}; & DMZ \\
+            \tikz\node[internal zone, minimum width=0.4cm, minimum height=0.3cm] {}; & Internal \\
+        \end{tabular}
+    };
+
+    % Feature highlights box
+    \node[rectangle, draw=blue!70, fill=blue!5, thick, rounded corners=3pt,
+          inner sep=8pt, text width=5cm, anchor=north west] at (-1,12) {
+        \textbf{New Features Demonstrated:} \\[3pt]
+        {\footnotesize
+        ✓ 10+ connection styles \\
+        ✓ Bandwidth indicators \\
+        ✓ VPN, wireless, fiber, satellite \\
+        ✓ Network zone boundaries \\
+        ✓ Callout annotations \\
+        ✓ Topology templates \\
+        ✓ Metadata boxes \\
+        ✓ Statistics dashboard
+        }
+    };
+
+\end{tikzpicture}
+
+\end{document}

@@ -1,0 +1,119 @@
+% Enterprise Data Center Template
+% A professional 3-tier architecture template
+%
+% Features: Gradient styles, zones, metadata
+% Compile with: pdflatex enterprise_datacenter.tex
+
+\documentclass[border=5mm]{standalone}
+\usepackage{tikz}
+\usepackage{xcolor}
+\usepackage{ifthen}
+
+\usetikzlibrary{shapes, arrows, shadows, decorations.markings, patterns, fit}
+
+\input{../styles_config.tex}
+
+\begin{document}
+
+\useColorblindSafe  % Accessibility-friendly colors
+
+\begin{tikzpicture}[scale=1.1]
+
+    % Title
+    \node[font=\Huge\bfseries] at (4,10) {Enterprise Data Center};
+    \node[font=\large, text=gray] at (4,9.4) {3-Tier Architecture};
+
+    % === WEB TIER ===
+    \node[font=\bfseries, text=blue!70] at (-1,8) {Web Tier};
+
+    \node[gradient server,
+          pin={[badge linux]45:Linux},
+          pin={[badge online]135:●}
+         ] (web1) at (1,7.5) {\serverIcon\\Web-1\\10.0.1.10};
+
+    \node[gradient server,
+          pin={[badge linux]45:Linux},
+          pin={[badge online]135:●}
+         ] (web2) at (4,7.5) {\serverIcon\\Web-2\\10.0.1.11};
+
+    \node[gradient server,
+          pin={[badge linux]45:Linux},
+          pin={[badge online]135:●}
+         ] (web3) at (7,7.5) {\serverIcon\\Web-3\\10.0.1.12};
+
+    % === APPLICATION TIER ===
+    \node[font=\bfseries, text=green!70] at (-1,5) {App Tier};
+
+    \node[gradient server,
+          pin={[badge windows]45:Win},
+          pin={[badge online]135:●}
+         ] (app1) at (1,4.5) {\serverIcon\\App-1\\10.0.2.10};
+
+    \node[gradient server,
+          pin={[badge windows]45:Win},
+          pin={[badge online]135:●}
+         ] (app2) at (4,4.5) {\serverIcon\\App-2\\10.0.2.11};
+
+    \node[gradient server,
+          pin={[badge windows]45:Win},
+          pin={[badge warning]135:⚠}
+         ] (app3) at (7,4.5) {\serverIcon\\App-3\\10.0.2.12};
+
+    % === DATA TIER ===
+    \node[font=\bfseries, text=purple!70] at (-1,2) {Data Tier};
+
+    \node[radial server,
+          pin={[badge linux]45:Linux},
+          pin={[badge online]135:●}
+         ] (db1) at (2.5,1.5) {\databaseIcon\\Database\\Primary\\10.0.3.10};
+
+    \node[radial server,
+          pin={[badge linux]45:Linux},
+          pin={[badge online]135:●}
+         ] (db2) at (5.5,1.5) {\databaseIcon\\Database\\Replica\\10.0.3.11};
+
+    % === CONNECTIONS ===
+
+    % Web to App tier
+    \foreach \w in {web1,web2,web3} {
+        \foreach \a in {app1,app2,app3} {
+            \draw[normal conn] (\w) -- (\a);
+        }
+    }
+
+    % App to Data tier
+    \foreach \a in {app1,app2,app3} {
+        \draw[encrypted conn] (\a) -- (db1);
+        \draw[encrypted conn] (\a) -- (db2);
+    }
+
+    % Database replication
+    \draw[bidirectional, draw=connEncrypted, line width=1.5pt, dashed] (db1) -- (db2)
+        node[midway, below, font=\tiny] {Replication};
+
+    % === METADATA ===
+    \diagramMetadata{Enterprise Data Center}{Network Team}{\today}{v1.0}{south west}
+    at (-1,-0.5);
+
+    \networkStats{11}{9}{0}{30}{1}{south east}
+    at (8,-0.5);
+
+    % === LEGEND ===
+    \node[legend large, anchor=north east] at (8,8) {
+        \begin{tabular}{ll}
+            \legendTitle{Components} \\
+            \legendServer \\
+            \hline
+            \legendTitle{Connections} \\
+            \legendNormalConn \\
+            \legendEncryptedConn \\
+            \hline
+            \legendTitle{Status} \\
+            \legendOnline \\
+            \legendWarning \\
+        \end{tabular}
+    };
+
+\end{tikzpicture}
+
+\end{document}

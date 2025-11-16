@@ -1,0 +1,290 @@
+% topology_templates.tex - Pre-built network topology templates
+% This module provides ready-to-use templates for common network architectures
+
+% ============================================================================
+% TEMPLATE: 3-TIER WEB APPLICATION
+% ============================================================================
+
+% Usage: \createThreeTierApp{prefix}{baseip}
+% Creates: Load Balancers, Web Servers, App Servers, Database Cluster
+\newcommand{\createThreeTierApp}[2]{
+    % Web/Presentation Tier
+    \createLoadBalancerActive{#1_lb1}{#2.10.10}{-6}{6}{Primary LB}{round-robin}
+    \createLoadBalancerPassive{#1_lb2}{#2.10.11}{-3}{6}{Standby LB}
+
+    \createNodeWithMetrics{#1_web1}{#2.20.10}{-6}{3}{Web-01}{35}{45}{28}
+    \createNodeWithMetrics{#1_web2}{#2.20.11}{-4}{3}{Web-02}{42}{52}{31}
+    \createNodeWithMetrics{#1_web3}{#2.20.12}{-2}{3}{Web-03}{38}{48}{29}
+
+    % Application Tier
+    \createServer{#1_app1}{#2.30.10}{-6}{0}{App-01}
+    \createServer{#1_app2}{#2.30.11}{-4}{0}{App-02}
+    \createServer{#1_app3}{#2.30.12}{-2}{0}{App-03}
+
+    % Database Tier
+    \createDatabasePrimary{#1_db1}{#2.40.10}{-6}{-3}{DB Primary}
+    \createDatabaseReplica{#1_db2}{#2.40.11}{-4}{-3}{DB Replica-1}
+    \createDatabaseReplica{#1_db3}{#2.40.12}{-2}{-3}{DB Replica-2}
+
+    % Connections
+    \draw[normal conn] (#1_lb1) -- (#1_web1);
+    \draw[normal conn] (#1_lb1) -- (#1_web2);
+    \draw[normal conn] (#1_lb1) -- (#1_web3);
+    \draw[encrypted conn] (#1_web1) -- (#1_app1);
+    \draw[encrypted conn] (#1_web2) -- (#1_app2);
+    \draw[encrypted conn] (#1_web3) -- (#1_app3);
+    \draw[encrypted conn] (#1_app1) -- (#1_db1);
+    \draw[encrypted conn] (#1_app2) -- (#1_db1);
+    \draw[encrypted conn] (#1_app3) -- (#1_db1);
+    \draw[normal conn, bend left=15] (#1_db1) -- (#1_db2);
+    \draw[normal conn, bend left=15] (#1_db1) -- (#1_db3);
+
+    % Clustering
+    \begin{scope}[on background layer]
+        \createSubnet{#1_web_tier}{Web Tier}{#2.20.0/24}{(#1_web1)(#1_web2)(#1_web3)}{high}
+        \createSubnet{#1_app_tier}{App Tier}{#2.30.0/24}{(#1_app1)(#1_app2)(#1_app3)}{high}
+        \createHAPair{#1_db_ha}{DB HA Pair}{(#1_db1)}{(#1_db2)}
+    \end{scope}
+}
+
+% ============================================================================
+% TEMPLATE: DMZ WITH SECURITY LAYERS
+% ============================================================================
+
+% Usage: \createSecureDMZ{prefix}{publicip}{dmzip}{internalip}
+\newcommand{\createSecureDMZ}[4]{
+    % Internet/External
+    \createCloud{#1_internet}{0}{8}{Internet}
+
+    % Edge Security
+    \createFirewall{#1_edge_fw}{#2.1}{-3}{6}{Edge Firewall}
+    \createIPS{#1_ips}{#2.2}{0}{6}{IPS-01}{IPS Mode}
+    \createWAF{#1_waf}{#2.3}{3}{6}{WAF-01}{OWASP}
+
+    % DMZ Zone
+    \createLoadBalancerActive{#1_dmz_lb}{#3.10}{-2}{3}{DMZ LB}{least-conn}
+    \createProxy{#1_proxy}{#3.20}{0}{3}{Reverse Proxy}{HTTPS}
+    \createServer{#1_web_dmz}{#3.30}{2}{3}{Public Web}
+
+    % Internal Firewall
+    \createFirewall{#1_int_fw}{#3.254}{0}{0}{Internal FW}
+
+    % Internal Zone
+    \createServer{#1_app_int}{#4.10}{-2}{-3}{App Server}
+    \createDatabasePrimary{#1_db_int}{#4.20}{0}{-3}{Internal DB}
+    \createNAS{#1_storage}{#4.30}{2}{-3}{File Storage}{10TB}{NFS}
+
+    % Connections
+    \draw[normal conn] (#1_internet) -- (#1_edge_fw);
+    \draw[normal conn] (#1_edge_fw) -- (#1_ips);
+    \draw[normal conn] (#1_ips) -- (#1_waf);
+    \draw[normal conn] (#1_waf) -- (#1_dmz_lb);
+    \draw[normal conn] (#1_dmz_lb) -- (#1_proxy);
+    \draw[normal conn] (#1_proxy) -- (#1_web_dmz);
+    \draw[encrypted conn] (#1_web_dmz) -- (#1_int_fw);
+    \draw[encrypted conn] (#1_int_fw) -- (#1_app_int);
+    \draw[encrypted conn] (#1_app_int) -- (#1_db_int);
+    \draw[normal conn] (#1_app_int) -- (#1_storage);
+
+    % Zones
+    \begin{scope}[on background layer]
+        \createDMZ{#1_dmz_zone}{DMZ}{(#1_dmz_lb)(#1_proxy)(#1_web_dmz)}
+        \createSubnet{#1_int_zone}{Internal Network}{#4.0/24}{(#1_app_int)(#1_db_int)(#1_storage)}{high}
+    \end{scope}
+}
+
+% ============================================================================
+% TEMPLATE: CLOUD HYBRID ARCHITECTURE
+% ============================================================================
+
+% Usage: \createHybridCloud{prefix}{onpremip}{cloudprovider}
+% cloudprovider: aws, azure, or gcp
+\newcommand{\createHybridCloud}[3]{
+    % On-Premises
+    \createServer{#1_onprem_app}{#2.10}{-6}{3}{On-Prem App}
+    \createDatabasePrimary{#1_onprem_db}{#2.20}{-6}{0}{On-Prem DB}
+    \createNAS{#1_onprem_nas}{#2.30}{-6}{-3}{Local Storage}{50TB}{NFS}
+
+    % VPN Gateway
+    \createRouter{#1_vpn_gw}{#2.1}{-3}{0}{VPN Gateway}
+
+    % Cloud Resources
+    \ifthenelse{\equal{#3}{aws}}{
+        \createAWSNode{#1_cloud}{3}{3}{AWS Cloud}{EC2, S3, RDS}
+    }{
+    \ifthenelse{\equal{#3}{azure}}{
+        \createAzureNode{#1_cloud}{3}{3}{Azure Cloud}{VMs, Blob, SQL}
+    }{
+        \createGCPNode{#1_cloud}{3}{3}{GCP Cloud}{Compute, Storage}
+    }}
+
+    \createVM{#1_cloud_app}{10.0.1.10}{3}{0}{Cloud App VM}{Cloud Host}
+    \createDatabaseReplica{#1_cloud_db}{10.0.1.20}{6}{0}{Cloud DB Replica}
+
+    % Connections
+    \draw[normal conn] (#1_onprem_app) -- (#1_onprem_db);
+    \draw[normal conn] (#1_onprem_app) -- (#1_onprem_nas);
+    \draw[encrypted conn] (#1_onprem_app) -- (#1_vpn_gw);
+    \draw[encrypted conn, dashed] (#1_vpn_gw) -- (#1_cloud);
+    \draw[normal conn] (#1_cloud) -- (#1_cloud_app);
+    \draw[encrypted conn] (#1_cloud_app) -- (#1_cloud_db);
+    \draw[encrypted conn, bend right=20] (#1_onprem_db) -- (#1_cloud_db);
+
+    % Zones
+    \begin{scope}[on background layer]
+        \createSubnet{#1_onprem}{On-Premises}{#2.0/24}{(#1_onprem_app)(#1_onprem_db)(#1_onprem_nas)(#1_vpn_gw)}{high}
+        \node[
+            subnet box,
+            draw=cloudGCP!60,
+            fill=cloudGCP!5,
+            fit={(#1_cloud)(#1_cloud_app)(#1_cloud_db)},
+            label={[fill=cloudGCP!20, rounded corners=3pt, font=\small\bfseries]above:Cloud Environment}
+        ] (#1_cloud_zone) {};
+    \end{scope}
+}
+
+% ============================================================================
+% TEMPLATE: MICROSERVICES ARCHITECTURE
+% ============================================================================
+
+% Usage: \createMicroservices{prefix}{baseip}
+\newcommand{\createMicroservices}[2]{
+    % API Gateway
+    \createLoadBalancerActive{#1_api_gw}{#2.10.1}{0}{6}{API Gateway}{weighted}
+
+    % Service Mesh
+    \createContainer{#1_auth}{#2.20.10}{-6}{3}{auth-svc}{auth:latest}
+    \createContainer{#1_user}{#2.20.11}{-3}{3}{user-svc}{user:latest}
+    \createContainer{#1_product}{#2.20.12}{0}{3}{product-svc}{product:latest}
+    \createContainer{#1_order}{#2.20.13}{3}{3}{order-svc}{order:latest}
+    \createContainer{#1_payment}{#2.20.14}{6}{3}{payment-svc}{payment:latest}
+
+    % Message Queue
+    \createServer{#1_kafka}{#2.30.10}{0}{0}{Kafka Cluster}
+
+    % Databases (per service)
+    \createDatabase{#1_auth_db}{#2.40.10}{-6}{-3}{Auth DB}
+    \createDatabase{#1_user_db}{#2.40.11}{-3}{-3}{User DB}
+    \createDatabase{#1_product_db}{#2.40.12}{0}{-3}{Product DB}
+    \createDatabase{#1_order_db}{#2.40.13}{3}{-3}{Order DB}
+
+    % Cache Layer
+    \createServer{#1_redis}{#2.50.10}{0}{-6}{Redis Cache}
+
+    % Connections
+    \draw[normal conn] (#1_api_gw) -- (#1_auth);
+    \draw[normal conn] (#1_api_gw) -- (#1_user);
+    \draw[normal conn] (#1_api_gw) -- (#1_product);
+    \draw[normal conn] (#1_api_gw) -- (#1_order);
+    \draw[normal conn] (#1_api_gw) -- (#1_payment);
+
+    \draw[normal conn] (#1_auth) -- (#1_kafka);
+    \draw[normal conn] (#1_user) -- (#1_kafka);
+    \draw[normal conn] (#1_product) -- (#1_kafka);
+    \draw[normal conn] (#1_order) -- (#1_kafka);
+    \draw[normal conn] (#1_payment) -- (#1_kafka);
+
+    \draw[encrypted conn] (#1_auth) -- (#1_auth_db);
+    \draw[encrypted conn] (#1_user) -- (#1_user_db);
+    \draw[encrypted conn] (#1_product) -- (#1_product_db);
+    \draw[encrypted conn] (#1_order) -- (#1_order_db);
+
+    \draw[normal conn] (#1_auth) -- (#1_redis);
+    \draw[normal conn] (#1_user) -- (#1_redis);
+
+    % Service Mesh
+    \begin{scope}[on background layer]
+        \createCluster{#1_services}{Microservices}{(#1_auth)(#1_user)(#1_product)(#1_order)(#1_payment)}{0}{0}
+    \end{scope}
+}
+
+% ============================================================================
+% TEMPLATE: DATA CENTER RACK LAYOUT
+% ============================================================================
+
+% Usage: \createDataCenterRack{prefix}{rackname}{baseip}{startx}{starty}
+\newcommand{\createDataCenterRack}[5]{
+    % Rack infrastructure
+    \createSwitch{#1_tor}{#3.1}{#4}{#5+4}{ToR Switch}
+
+    % Servers in rack
+    \createServer{#1_srv1}{#3.11}{#4}{#5+3}{Blade 1}
+    \createServer{#1_srv2}{#3.12}{#4}{#5+2}{Blade 2}
+    \createServer{#1_srv3}{#3.13}{#4}{#5+1}{Blade 3}
+    \createServer{#1_srv4}{#3.14}{#4}{#5}{Blade 4}
+
+    % Connections
+    \draw[normal conn] (#1_tor) -- (#1_srv1);
+    \draw[normal conn] (#1_tor) -- (#1_srv2);
+    \draw[normal conn] (#1_tor) -- (#1_srv3);
+    \draw[normal conn] (#1_tor) -- (#1_srv4);
+
+    % Rack boundary
+    \begin{scope}[on background layer]
+        \createRack{#1_rack}{#2}{(#1_tor)(#1_srv1)(#1_srv2)(#1_srv3)(#1_srv4)}{0}{0}
+    \end{scope}
+}
+
+% ============================================================================
+% TEMPLATE: IOT SMART HOME NETWORK
+% ============================================================================
+
+% Usage: \createSmartHome{prefix}{baseip}
+\newcommand{\createSmartHome}[2]{
+    % Gateway/Router
+    \createRouter{#1_gateway}{#2.1}{0}{6}{Home Gateway}
+    \createWirelessAP{#1_wap}{#2.2}{0}{3}{Home WiFi}{MyHome-5G}
+
+    % Smart Home Devices
+    \createSmartDevice{#1_thermostat}{#2.101}{-5}{0}{Thermostat}{HVAC Control}{Active}
+    \createSmartDevice{#1_camera1}{#2.102}{-3}{0}{Front Cam}{IP Camera}{Recording}
+    \createSmartDevice{#1_camera2}{#2.103}{-1}{0}{Back Cam}{IP Camera}{Recording}
+    \createIoTDevice{#1_doorbell}{#2.104}{1}{0}{Smart Doorbell}{Video Doorbell}
+    \createSensor{#1_motion1}{#2.105}{3}{0}{Motion-1}{PIR Sensor}
+    \createSensor{#1_smoke}{#2.106}{5}{0}{Smoke-Det}{Smoke Alarm}
+
+    % Mobile Devices
+    \createMobilePhone{#1_phone}{#2.201}{-3}{-3}{iPhone}{iOS 17}
+    \createTablet{#1_tablet}{#2.202}{0}{-3}{iPad}{iPadOS}
+    \createLaptop{#1_laptop}{#2.203}{3}{-3}{MacBook}{user}
+
+    % Hub/Controller
+    \createServer{#1_hub}{#2.10}{0}{-6}{Smart Hub}
+
+    % Connections
+    \draw[normal conn] (#1_gateway) -- (#1_wap);
+    \draw[normal conn, dashed, draw=wirelessTeal!60] (#1_wap) -- (#1_thermostat);
+    \draw[normal conn, dashed, draw=wirelessTeal!60] (#1_wap) -- (#1_camera1);
+    \draw[normal conn, dashed, draw=wirelessTeal!60] (#1_wap) -- (#1_camera2);
+    \draw[normal conn, dashed, draw=wirelessTeal!60] (#1_wap) -- (#1_doorbell);
+    \draw[normal conn, dashed, draw=wirelessTeal!60] (#1_wap) -- (#1_motion1);
+    \draw[normal conn, dashed, draw=wirelessTeal!60] (#1_wap) -- (#1_smoke);
+    \draw[normal conn, dashed, draw=wirelessTeal!60] (#1_wap) -- (#1_phone);
+    \draw[normal conn, dashed, draw=wirelessTeal!60] (#1_wap) -- (#1_tablet);
+    \draw[normal conn, dashed, draw=wirelessTeal!60] (#1_wap) -- (#1_laptop);
+    \draw[encrypted conn] (#1_wap) -- (#1_hub);
+
+    % Zone
+    \begin{scope}[on background layer]
+        \createSubnet{#1_iot_zone}{IoT Network}{#2.0/24}{(#1_wap)(#1_thermostat)(#1_camera1)(#1_camera2)(#1_doorbell)(#1_motion1)(#1_smoke)}{medium}
+    \end{scope}
+}
+
+% ============================================================================
+% HELPER: Auto-generate Legend for Template
+% ============================================================================
+
+\newcommand{\drawTemplateLegend}[1]{
+    \node[legend box, anchor=south west] at (-9.5,-9) {
+        \begin{minipage}{7cm}
+            \textbf{#1 Architecture} \\[3pt]
+            \tikz\draw[encrypted conn] (0,0) -- (0.8,0); Encrypted \\
+            \tikz\draw[normal conn] (0,0) -- (0.8,0); Normal \\
+            \tikz\draw[normal conn, dashed] (0,0) -- (0.8,0); Wireless/VPN \\[2pt]
+            \textbf{Zones:} \\
+            \tikz\draw[draw=clientGreen!60, fill=clientGreen!5, line width=1pt] (0,0) rectangle (0.8,0.3); High Trust \\
+            \tikz\draw[draw=threatMedium!60, fill=threatMedium!5, line width=1pt] (0,0) rectangle (0.8,0.3); Medium Trust \\
+            \tikz\draw[draw=routerOrange!70, fill=routerOrange!5, line width=1.5pt] (0,0) rectangle (0.8,0.3); DMZ
+        \end{minipage}
+    };
+}
