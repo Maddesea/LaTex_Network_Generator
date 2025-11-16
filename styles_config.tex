@@ -30,10 +30,128 @@
 \definecolor{bgLight}{RGB}{236, 240, 241}
 \definecolor{bgDark}{RGB}{44, 62, 80}
 
-% TODO: Add custom color scheme support
-% - Allow users to define custom palettes via config file
-% - Implement colorblind-friendly alternative palettes
-% - Add dark mode theme support
+% ============================================================================
+% COLOR SCHEME SYSTEM
+% ============================================================================
+
+% Current color scheme (default: standard)
+\newcommand{\currentColorScheme}{standard}
+\newcommand{\currentTheme}{light}
+
+% Command to set theme (light/dark)
+\newcommand{\setTheme}[1]{
+    \renewcommand{\currentTheme}{#1}
+    \ifthenelse{\equal{#1}{dark}}{
+        % Apply dark theme colors
+        \colorlet{bgPrimary}{bgDark}
+        \colorlet{textPrimary}{white}
+        \colorlet{textSecondary}{white!80}
+    }{
+        % Apply light theme colors
+        \colorlet{bgPrimary}{bgLight}
+        \colorlet{textPrimary}{black!90}
+        \colorlet{textSecondary}{black!70}
+    }
+}
+
+% Initialize with light theme
+\setTheme{light}
+
+% Command to load color schemes
+\newcommand{\loadColorScheme}[1]{
+    \renewcommand{\currentColorScheme}{#1}
+
+    % Standard color scheme (default)
+    \ifthenelse{\equal{#1}{standard}}{
+        \definecolor{serverBlue}{RGB}{52, 152, 219}
+        \definecolor{clientGreen}{RGB}{46, 204, 113}
+        \definecolor{routerOrange}{RGB}{230, 126, 34}
+        \definecolor{firewallRed}{RGB}{231, 76, 60}
+        \definecolor{switchPurple}{RGB}{155, 89, 182}
+        \definecolor{cloudGray}{RGB}{149, 165, 166}
+        \definecolor{threatCritical}{RGB}{192, 57, 43}
+        \definecolor{threatHigh}{RGB}{211, 84, 0}
+        \definecolor{threatMedium}{RGB}{243, 156, 18}
+        \definecolor{threatLow}{RGB}{241, 196, 15}
+        \definecolor{threatInfo}{RGB}{52, 152, 219}
+    }{}
+
+    % Dark color scheme
+    \ifthenelse{\equal{#1}{dark}}{
+        \definecolor{serverBlue}{RGB}{100, 181, 246}
+        \definecolor{clientGreen}{RGB}{129, 199, 132}
+        \definecolor{routerOrange}{RGB}{255, 167, 38}
+        \definecolor{firewallRed}{RGB}{239, 83, 80}
+        \definecolor{switchPurple}{RGB}{186, 104, 200}
+        \definecolor{cloudGray}{RGB}{189, 189, 189}
+        \definecolor{threatCritical}{RGB}{244, 67, 54}
+        \definecolor{threatHigh}{RGB}{255, 112, 67}
+        \definecolor{threatMedium}{RGB}{255, 193, 7}
+        \definecolor{threatLow}{RGB}{255, 235, 59}
+        \definecolor{threatInfo}{RGB}{100, 181, 246}
+        \setTheme{dark}
+    }{}
+
+    % Colorblind-friendly (deuteranopia/protanopia safe)
+    \ifthenelse{\equal{#1}{colorblind}}{
+        \definecolor{serverBlue}{RGB}{0, 114, 178}      % Blue
+        \definecolor{clientGreen}{RGB}{0, 158, 115}     % Bluish green
+        \definecolor{routerOrange}{RGB}{213, 94, 0}     % Vermillion
+        \definecolor{firewallRed}{RGB}{204, 121, 167}   % Reddish purple
+        \definecolor{switchPurple}{RGB}{86, 180, 233}   % Sky blue
+        \definecolor{cloudGray}{RGB}{127, 127, 127}     % Gray
+        \definecolor{threatCritical}{RGB}{213, 94, 0}   % Vermillion
+        \definecolor{threatHigh}{RGB}{230, 159, 0}      % Orange
+        \definecolor{threatMedium}{RGB}{240, 228, 66}   % Yellow
+        \definecolor{threatLow}{RGB}{0, 158, 115}       % Bluish green
+        \definecolor{threatInfo}{RGB}{0, 114, 178}      % Blue
+    }{}
+
+    % Monochrome (grayscale)
+    \ifthenelse{\equal{#1}{monochrome}}{
+        \definecolor{serverBlue}{RGB}{60, 60, 60}
+        \definecolor{clientGreen}{RGB}{100, 100, 100}
+        \definecolor{routerOrange}{RGB}{140, 140, 140}
+        \definecolor{firewallRed}{RGB}{40, 40, 40}
+        \definecolor{switchPurple}{RGB}{120, 120, 120}
+        \definecolor{cloudGray}{RGB}{180, 180, 180}
+        \definecolor{threatCritical}{RGB}{30, 30, 30}
+        \definecolor{threatHigh}{RGB}{70, 70, 70}
+        \definecolor{threatMedium}{RGB}{110, 110, 110}
+        \definecolor{threatLow}{RGB}{150, 150, 150}
+        \definecolor{threatInfo}{RGB}{190, 190, 190}
+    }{}
+
+    % High contrast (accessibility)
+    \ifthenelse{\equal{#1}{high-contrast}}{
+        \definecolor{serverBlue}{RGB}{0, 0, 255}
+        \definecolor{clientGreen}{RGB}{0, 255, 0}
+        \definecolor{routerOrange}{RGB}{255, 165, 0}
+        \definecolor{firewallRed}{RGB}{255, 0, 0}
+        \definecolor{switchPurple}{RGB}{128, 0, 128}
+        \definecolor{cloudGray}{RGB}{128, 128, 128}
+        \definecolor{threatCritical}{RGB}{139, 0, 0}
+        \definecolor{threatHigh}{RGB}{255, 69, 0}
+        \definecolor{threatMedium}{RGB}{255, 215, 0}
+        \definecolor{threatLow}{RGB}{255, 255, 0}
+        \definecolor{threatInfo}{RGB}{0, 191, 255}
+    }{}
+
+    % Tritanopia-safe color scheme
+    \ifthenelse{\equal{#1}{tritanopia}}{
+        \definecolor{serverBlue}{RGB}{227, 114, 114}    % Red
+        \definecolor{clientGreen}{RGB}{255, 187, 120}   % Orange
+        \definecolor{routerOrange}{RGB}{255, 204, 229}  % Pink
+        \definecolor{firewallRed}{RGB}{179, 88, 6}      % Dark orange
+        \definecolor{switchPurple}{RGB}{136, 204, 238}  % Sky blue
+        \definecolor{cloudGray}{RGB}{127, 127, 127}     % Gray
+        \definecolor{threatCritical}{RGB}{179, 88, 6}
+        \definecolor{threatHigh}{RGB}{227, 114, 114}
+        \definecolor{threatMedium}{RGB}{255, 187, 120}
+        \definecolor{threatLow}{RGB}{255, 204, 229}
+        \definecolor{threatInfo}{RGB}{136, 204, 238}
+    }{}
+}
 
 % ============================================================================
 % NODE STYLES
@@ -124,15 +242,386 @@
         line width=2pt,
         minimum width=2cm,
         minimum height=2cm
+    },
+
+    % ========================================================================
+    % GRADIENT VARIANTS (Premium Look)
+    % ========================================================================
+
+    % Server with gradient
+    server premium/.style={
+        base node,
+        rectangle,
+        rounded corners=3pt,
+        server gradient,
+        draw=serverBlue!80,
+        line width=1.5pt
+    },
+
+    % Client with gradient
+    client premium/.style={
+        base node,
+        rectangle,
+        rounded corners=2pt,
+        client gradient,
+        draw=clientGreen!70,
+        line width=1pt
+    },
+
+    % Router with gradient
+    router premium/.style={
+        base node,
+        trapezium,
+        trapezium left angle=70,
+        trapezium right angle=110,
+        router gradient,
+        draw=routerOrange!80,
+        line width=1.5pt
+    },
+
+    % Firewall with gradient
+    firewall premium/.style={
+        base node,
+        rectangle,
+        firewall gradient,
+        draw=firewallRed!80,
+        line width=2pt,
+        pattern=north east lines,
+        pattern color=firewallRed!30
+    },
+
+    % Switch with gradient
+    switch premium/.style={
+        base node,
+        rectangle,
+        rounded corners=1pt,
+        switch gradient,
+        draw=switchPurple!70,
+        minimum height=1cm
+    },
+
+    % Cloud with gradient
+    cloud premium/.style={
+        base node,
+        shape=cloud,
+        cloud puffs=10,
+        cloud puff arc=120,
+        aspect=2,
+        cloud gradient,
+        draw=cloudGray!70
+    },
+
+    % ========================================================================
+    % COLORBLIND-SAFE VARIANTS (With Patterns)
+    % ========================================================================
+
+    % Server with pattern for colorblind users
+    server colorblind/.style={
+        base node,
+        rectangle,
+        rounded corners=3pt,
+        fill=serverBlue!20,
+        draw=serverBlue!80,
+        line width=1.5pt,
+        postaction={pattern=dots, pattern color=serverBlue!40}
+    },
+
+    % Client with pattern
+    client colorblind/.style={
+        base node,
+        rectangle,
+        rounded corners=2pt,
+        fill=clientGreen!15,
+        draw=clientGreen!70,
+        line width=1pt,
+        postaction={pattern=horizontal lines, pattern color=clientGreen!40}
+    },
+
+    % Router with pattern
+    router colorblind/.style={
+        base node,
+        trapezium,
+        trapezium left angle=70,
+        trapezium right angle=110,
+        fill=routerOrange!20,
+        draw=routerOrange!80,
+        line width=1.5pt,
+        postaction={pattern=vertical lines, pattern color=routerOrange!40}
+    },
+
+    % Firewall with enhanced pattern
+    firewall colorblind/.style={
+        base node,
+        rectangle,
+        fill=firewallRed!15,
+        draw=firewallRed!80,
+        line width=2pt,
+        pattern=crosshatch,
+        pattern color=firewallRed!40
+    },
+
+    % Switch with pattern
+    switch colorblind/.style={
+        base node,
+        rectangle,
+        rounded corners=1pt,
+        fill=switchPurple!15,
+        draw=switchPurple!70,
+        minimum height=1cm,
+        postaction={pattern=grid, pattern color=switchPurple!40}
     }
 }
 
-% TODO: Enhanced node styling
-% - Add icon/image support inside nodes (server icons, laptop icons, etc.)
-% - Implement multi-part nodes for showing port information
-% - Add gradient fills for premium look
-% - Create animated pulse effect for active connections
-% - Add badge/label support for OS type, status indicators
+% ============================================================================
+% GRADIENT DEFINITIONS FOR PREMIUM LOOK
+% ============================================================================
+
+% Vertical gradient shadings
+\tikzset{
+    % Server gradient (blue)
+    server gradient/.style={
+        top color=serverBlue!40,
+        bottom color=serverBlue!10,
+        middle color=serverBlue!25
+    },
+
+    % Client gradient (green)
+    client gradient/.style={
+        top color=clientGreen!35,
+        bottom color=clientGreen!5,
+        middle color=clientGreen!20
+    },
+
+    % Router gradient (orange)
+    router gradient/.style={
+        top color=routerOrange!40,
+        bottom color=routerOrange!10,
+        middle color=routerOrange!25
+    },
+
+    % Firewall gradient (red)
+    firewall gradient/.style={
+        top color=firewallRed!30,
+        bottom color=firewallRed!5,
+        middle color=firewallRed!17
+    },
+
+    % Switch gradient (purple)
+    switch gradient/.style={
+        top color=switchPurple!35,
+        bottom color=switchPurple!5,
+        middle color=switchPurple!20
+    },
+
+    % Cloud gradient (gray)
+    cloud gradient/.style={
+        top color=cloudGray!40,
+        bottom color=cloudGray!10,
+        middle color=cloudGray!25
+    },
+
+    % Radial gradient for emphasis (can be applied to any node)
+    radial gradient/.style={
+        inner color=#1!20,
+        outer color=#1!5
+    },
+
+    % Metallic/glossy effect
+    metallic/.style={
+        top color=white,
+        bottom color=#1!30,
+        middle color=#1!60,
+        shading angle=135
+    }
+}
+
+% ============================================================================
+% BADGE AND LABEL SUPPORT FOR OS/STATUS INDICATORS
+% ============================================================================
+
+% Badge styles
+\tikzset{
+    % Base badge style
+    base badge/.style={
+        circle,
+        minimum size=0.6cm,
+        font=\tiny\bfseries,
+        inner sep=1pt
+    },
+
+    % OS badges
+    windows badge/.style={
+        base badge,
+        fill=blue!70,
+        text=white,
+        draw=blue!90,
+        line width=0.5pt
+    },
+
+    linux badge/.style={
+        base badge,
+        fill=orange!70,
+        text=white,
+        draw=orange!90,
+        line width=0.5pt
+    },
+
+    macos badge/.style={
+        base badge,
+        fill=gray!70,
+        text=white,
+        draw=gray!90,
+        line width=0.5pt
+    },
+
+    % Status badges
+    online badge/.style={
+        base badge,
+        fill=green!60,
+        text=white,
+        draw=green!80,
+        line width=0.5pt
+    },
+
+    offline badge/.style={
+        base badge,
+        fill=gray!60,
+        text=white,
+        draw=gray!80,
+        line width=0.5pt
+    },
+
+    warning badge/.style={
+        base badge,
+        fill=yellow!70,
+        text=black,
+        draw=orange!80,
+        line width=0.5pt
+    },
+
+    critical badge/.style={
+        base badge,
+        fill=red!70,
+        text=white,
+        draw=red!90,
+        line width=0.5pt
+    },
+
+    % Corner badge positioning helper
+    badge north east/.style={
+        anchor=south west,
+        xshift=0.1cm,
+        yshift=0.1cm
+    },
+
+    badge north west/.style={
+        anchor=south east,
+        xshift=-0.1cm,
+        yshift=0.1cm
+    },
+
+    badge south east/.style={
+        anchor=north west,
+        xshift=0.1cm,
+        yshift=-0.1cm
+    },
+
+    badge south west/.style={
+        anchor=north east,
+        xshift=-0.1cm,
+        yshift=-0.1cm
+    }
+}
+
+% Command to add a badge to a node
+% Usage: \nodeBadge{node-name}{badge-style}{position}{text}
+\newcommand{\nodeBadge}[4]{
+    \node[#2, badge #3] at (#1.#3) {#4};
+}
+
+% ============================================================================
+% ICON/IMAGE SUPPORT INSIDE NODES
+% ============================================================================
+
+% Icon placeholder styles (can be replaced with actual icons/images)
+\tikzset{
+    % Server icon style
+    server icon/.style={
+        rectangle,
+        minimum width=0.8cm,
+        minimum height=0.6cm,
+        fill=serverBlue!60,
+        draw=serverBlue!90,
+        line width=0.5pt,
+        rounded corners=1pt
+    },
+
+    % Laptop icon style
+    laptop icon/.style={
+        rectangle,
+        minimum width=0.8cm,
+        minimum height=0.5cm,
+        fill=clientGreen!60,
+        draw=clientGreen!90,
+        line width=0.5pt,
+        rounded corners=2pt,
+        append after command={
+            \pgfextra{
+                \draw[clientGreen!90, line width=0.5pt]
+                    (\tikzlastnode.south west) -- ++(0,-0.05) -- ++(\tikzlastnode.width,0);
+            }
+        }
+    },
+
+    % Phone/mobile icon style
+    phone icon/.style={
+        rectangle,
+        minimum width=0.4cm,
+        minimum height=0.7cm,
+        fill=clientGreen!60,
+        draw=clientGreen!90,
+        line width=0.5pt,
+        rounded corners=2pt
+    },
+
+    % Router icon style
+    router icon/.style={
+        rectangle,
+        minimum width=0.8cm,
+        minimum height=0.4cm,
+        fill=routerOrange!60,
+        draw=routerOrange!90,
+        line width=0.5pt,
+        append after command={
+            \pgfextra{
+                \draw[routerOrange!90] (\tikzlastnode.north) -- ++(0,0.15) circle(0.05);
+                \draw[routerOrange!90] (\tikzlastnode.north) ++(0.2,0) -- ++(0,0.15) circle(0.05);
+                \draw[routerOrange!90] (\tikzlastnode.north) ++(-0.2,0) -- ++(0,0.15) circle(0.05);
+            }
+        }
+    },
+
+    % Database icon style
+    database icon/.style={
+        cylinder,
+        shape border rotate=90,
+        minimum width=0.6cm,
+        minimum height=0.8cm,
+        fill=serverBlue!60,
+        draw=serverBlue!90,
+        line width=0.5pt,
+        aspect=0.3
+    }
+}
+
+% Command to add an icon to a node
+% Usage: \nodeIcon{x}{y}{icon-style}{optional-label}
+\newcommand{\nodeIcon}[4][]{
+    \node[#3] at (#2) {#1};
+    \ifthenelse{\equal{#4}{}}{}{
+        \node[below=0.1cm of #2, font=\tiny] {#4};
+    }
+}
 
 % ============================================================================
 % CONNECTION STYLES

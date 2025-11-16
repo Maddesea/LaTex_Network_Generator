@@ -146,6 +146,99 @@ In `network_diagram_generator.tex`:
 
 ## Advanced Features
 
+### Color Schemes and Themes
+
+The system now includes **6 built-in color schemes** with accessibility support:
+
+```latex
+% Load a color scheme at the beginning of your document
+\loadColorScheme{standard}      % Default vibrant colors
+\loadColorScheme{dark}          % Dark theme with bright accents
+\loadColorScheme{colorblind}    % Deuteranopia/protanopia safe
+\loadColorScheme{tritanopia}    % Tritanopia safe
+\loadColorScheme{monochrome}    % Grayscale for printing
+\loadColorScheme{high-contrast} % High contrast for accessibility
+```
+
+**Theme Support (Light/Dark):**
+
+```latex
+\setTheme{light}  % Light background
+\setTheme{dark}   % Dark background
+```
+
+### Node Style Variants
+
+#### Standard Nodes
+```latex
+\node[server] (srv1) at (0,0) {Web Server};
+\node[client] (pc1) at (2,2) {Workstation};
+\node[router] (r1) at (4,0) {Router};
+\node[firewall] (fw1) at (0,4) {Firewall};
+\node[switch] (sw1) at (2,0) {Switch};
+```
+
+#### Premium Nodes (with Gradients)
+```latex
+\node[server premium] (srv1) at (0,0) {Web Server};
+\node[client premium] (pc1) at (2,2) {Workstation};
+\node[router premium] (r1) at (4,0) {Router};
+```
+
+#### Colorblind-Safe Nodes (with Patterns)
+```latex
+\node[server colorblind] (srv1) at (0,0) {Web Server};
+\node[client colorblind] (pc1) at (2,2) {Workstation};
+\node[firewall colorblind] (fw1) at (0,4) {Firewall};
+```
+
+### Badge and Label Support
+
+Add **OS badges and status indicators** to nodes:
+
+```latex
+% OS Badges
+\nodeBadge{srv1}{linux badge}{north east}{L}      % Linux badge at top-right
+\nodeBadge{pc1}{windows badge}{north east}{W}     % Windows badge
+\nodeBadge{mac1}{macos badge}{north east}{M}      % macOS badge
+
+% Status Badges
+\nodeBadge{srv1}{online badge}{north west}{\checkmark}   % Online status
+\nodeBadge{srv2}{offline badge}{north west}{-}           % Offline status
+\nodeBadge{srv3}{warning badge}{north west}{!}           % Warning status
+\nodeBadge{srv4}{critical badge}{north west}{X}          % Critical status
+```
+
+**Badge Positions:** `north east`, `north west`, `south east`, `south west`
+
+### Gradient Effects
+
+```latex
+% Apply gradient fills for premium look
+\tikzset{
+    my node/.style={
+        base node,
+        server gradient,        % Use predefined gradients
+        draw=serverBlue!80
+    }
+}
+
+% Or create custom metallic effects
+\node[base node, metallic=blue] (srv) at (0,0) {Server};
+```
+
+### Icon Support
+
+Basic icon styles are available for common devices:
+
+```latex
+\node[server icon] at (0,0) {};
+\node[laptop icon] at (2,0) {};
+\node[phone icon] at (4,0) {};
+\node[router icon] at (6,0) {};
+\node[database icon] at (8,0) {};
+```
+
 ### Custom Colors
 
 Edit `styles_config.tex`:
@@ -171,13 +264,17 @@ Edit `styles_config.tex`:
 This system is designed for **multiple agents/developers** to work simultaneously on different components:
 
 ### Agent 1: Styles & Aesthetics (`styles_config.tex`)
-**Priority TODOs:**
-- [ ] Custom color scheme support via config file
-- [ ] Colorblind-friendly alternative palettes
-- [ ] Dark mode theme support
-- [ ] Gradient fills for premium look
-- [ ] Icon/image support inside nodes
-- [ ] Badge/label support for OS type and status
+**Completed Features:**
+- [x] Custom color scheme support with 6 built-in schemes
+- [x] Colorblind-friendly alternative palettes (colorblind, tritanopia)
+- [x] Dark mode theme support
+- [x] Gradient fills for premium look
+- [x] Icon/image support inside nodes
+- [x] Badge/label support for OS type and status
+
+**Remaining TODOs:**
+- [ ] Animation support for presentations (Beamer integration)
+- [ ] Export style templates for sharing
 
 ### Agent 2: Node System (`node_definitions.tex`)
 **Priority TODOs:**

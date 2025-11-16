@@ -1,0 +1,266 @@
+% example_styles_showcase.tex - Demonstrates new styling features
+% This example showcases the new Agent 1 features:
+% - Color schemes (standard, dark, colorblind, monochrome, high-contrast, tritanopia)
+% - Theme support (light/dark)
+% - Gradient fills
+% - Icon support
+% - Badge/label support for OS/status indicators
+
+\documentclass[11pt,landscape]{article}
+\usepackage[margin=0.5in]{geometry}
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric, shapes.symbols, arrows.meta, shadows, patterns, decorations.markings, positioning}
+\usepackage{xcolor}
+\usepackage{ifthen}
+
+% Include the styles configuration
+\input{styles_config.tex}
+
+\begin{document}
+
+\pagestyle{empty}
+
+% ============================================================================
+% EXAMPLE 1: Standard Color Scheme with Gradients
+% ============================================================================
+
+\section*{Example 1: Premium Gradient Styles (Standard Color Scheme)}
+
+% Load standard color scheme (default)
+\loadColorScheme{standard}
+
+\begin{center}
+\begin{tikzpicture}[scale=0.8, transform shape]
+
+    % Premium gradient nodes
+    \node[server premium] (web) at (0,0) {Web Server\\192.168.1.10};
+    \node[client premium] (client1) at (-4,-3) {Client PC\\192.168.1.100};
+    \node[router premium] (router) at (0,-3) {Router\\192.168.1.1};
+    \node[firewall premium] (fw) at (4,-3) {Firewall\\192.168.1.254};
+    \node[switch premium] (switch) at (0,-6) {Core Switch};
+
+    % Add badges to nodes
+    \nodeBadge{web}{linux badge}{north east}{L}
+    \nodeBadge{web}{online badge}{north west}{\checkmark}
+    \nodeBadge{client1}{windows badge}{north east}{W}
+    \nodeBadge{client1}{warning badge}{north west}{!}
+    \nodeBadge{fw}{online badge}{north east}{\checkmark}
+
+    % Connections
+    \draw[encrypted conn] (client1) -- (router);
+    \draw[normal conn] (router) -- (web);
+    \draw[normal conn] (router) -- (fw);
+    \draw[normal conn] (switch) -- (router);
+
+\end{tikzpicture}
+\end{center}
+
+\vspace{1cm}
+
+% ============================================================================
+% EXAMPLE 2: Colorblind-Friendly Palette
+% ============================================================================
+
+\section*{Example 2: Colorblind-Friendly Palette with Patterns}
+
+% Load colorblind color scheme
+\loadColorScheme{colorblind}
+
+\begin{center}
+\begin{tikzpicture}[scale=0.8, transform shape]
+
+    % Colorblind-safe nodes with patterns
+    \node[server colorblind] (db) at (0,0) {Database\\10.0.1.50};
+    \node[client colorblind] (app1) at (-4,-3) {App Server 1\\10.0.1.10};
+    \node[client colorblind] (app2) at (4,-3) {App Server 2\\10.0.1.11};
+    \node[router colorblind] (lb) at (0,-3) {Load Balancer\\10.0.1.1};
+    \node[firewall colorblind] (fw2) at (0,-6) {Firewall};
+
+    % Add status badges
+    \nodeBadge{db}{online badge}{north east}{\checkmark}
+    \nodeBadge{app1}{online badge}{north east}{\checkmark}
+    \nodeBadge{app2}{critical badge}{north east}{X}
+    \nodeBadge{lb}{online badge}{north east}{\checkmark}
+
+    % Connections
+    \draw[encrypted conn] (lb) -- (db);
+    \draw[normal conn] (app1) -- (lb);
+    \draw[suspicious conn] (app2) -- (lb);
+    \draw[normal conn] (fw2) -- (lb);
+
+\end{tikzpicture}
+\end{center}
+
+\vspace{1cm}
+
+% ============================================================================
+% EXAMPLE 3: Dark Theme
+% ============================================================================
+
+\section*{Example 3: Dark Color Scheme}
+
+% Load dark color scheme
+\loadColorScheme{dark}
+
+\begin{center}
+\begin{tikzpicture}[scale=0.8, transform shape, background rectangle/.style={fill=bgDark}, show background rectangle]
+
+    % Dark theme nodes
+    \node[server premium] (mail) at (0,0) {\textcolor{white}{Mail Server}};
+    \node[client premium] (user1) at (-3,-2.5) {\textcolor{white}{User 1}};
+    \node[client premium] (user2) at (3,-2.5) {\textcolor{white}{User 2}};
+    \node[cloud premium] (internet) at (0,-5) {\textcolor{white}{Internet}};
+
+    % Badges
+    \nodeBadge{mail}{linux badge}{north east}{L}
+    \nodeBadge{mail}{online badge}{north west}{\checkmark}
+    \nodeBadge{user1}{windows badge}{north east}{W}
+    \nodeBadge{user2}{macos badge}{north east}{M}
+
+    % Connections
+    \draw[encrypted conn] (user1) -- (mail);
+    \draw[encrypted conn] (user2) -- (mail);
+    \draw[encrypted conn] (mail) -- (internet);
+
+\end{tikzpicture}
+\end{center}
+
+\vspace{1cm}
+
+% ============================================================================
+% EXAMPLE 4: High Contrast for Accessibility
+% ============================================================================
+
+\section*{Example 4: High Contrast Color Scheme (Accessibility)}
+
+% Load high contrast color scheme
+\loadColorScheme{high-contrast}
+
+\begin{center}
+\begin{tikzpicture}[scale=0.8, transform shape]
+
+    % High contrast nodes
+    \node[server premium] (dns) at (0,0) {DNS Server\\8.8.8.8};
+    \node[router premium] (gateway) at (0,-3) {Gateway};
+    \node[client premium] (pc1) at (-4,-6) {PC 1};
+    \node[client premium] (pc2) at (0,-6) {PC 2};
+    \node[client premium] (pc3) at (4,-6) {PC 3};
+
+    % Status badges
+    \nodeBadge{dns}{online badge}{north east}{\checkmark}
+    \nodeBadge{gateway}{online badge}{north east}{\checkmark}
+    \nodeBadge{pc1}{online badge}{north east}{\checkmark}
+    \nodeBadge{pc2}{offline badge}{north east}{-}
+    \nodeBadge{pc3}{warning badge}{north east}{!}
+
+    % Connections
+    \draw[normal conn] (gateway) -- (dns);
+    \draw[normal conn] (pc1) -- (gateway);
+    \draw[normal conn, dashed] (pc2) -- (gateway);
+    \draw[suspicious conn] (pc3) -- (gateway);
+
+\end{tikzpicture}
+\end{center}
+
+\vspace{1cm}
+
+% ============================================================================
+% EXAMPLE 5: Monochrome/Grayscale
+% ============================================================================
+
+\section*{Example 5: Monochrome Color Scheme (Print-Friendly)}
+
+% Load monochrome color scheme
+\loadColorScheme{monochrome}
+
+\begin{center}
+\begin{tikzpicture}[scale=0.8, transform shape]
+
+    % Monochrome nodes with patterns for distinction
+    \node[server colorblind] (ftp) at (0,0) {FTP Server};
+    \node[firewall colorblind] (dmz) at (0,-3) {DMZ Firewall};
+    \node[router colorblind] (edge) at (0,-6) {Edge Router};
+    \node[cloud] (wan) at (0,-9) {WAN};
+
+    % Badges
+    \nodeBadge{ftp}{online badge}{north east}{\checkmark}
+    \nodeBadge{dmz}{online badge}{north east}{\checkmark}
+    \nodeBadge{edge}{online badge}{north east}{\checkmark}
+
+    % Connections
+    \draw[encrypted conn] (wan) -- (edge);
+    \draw[normal conn] (edge) -- (dmz);
+    \draw[normal conn] (dmz) -- (ftp);
+
+\end{tikzpicture}
+\end{center}
+
+\vspace{1cm}
+
+% ============================================================================
+% EXAMPLE 6: Tritanopia-Safe Color Scheme
+% ============================================================================
+
+\section*{Example 6: Tritanopia-Safe Color Scheme}
+
+% Load tritanopia color scheme
+\loadColorScheme{tritanopia}
+
+\begin{center}
+\begin{tikzpicture}[scale=0.8, transform shape]
+
+    % Tritanopia-safe nodes
+    \node[server premium] (api) at (0,0) {API Server};
+    \node[client premium] (mobile1) at (-3,-3) {Mobile 1};
+    \node[client premium] (mobile2) at (3,-3) {Mobile 2};
+    \node[router premium] (lb2) at (0,-6) {Load Balancer};
+
+    % Badges with OS indicators
+    \nodeBadge{mobile1}{linux badge}{north east}{A}
+    \nodeBadge{mobile2}{macos badge}{north east}{i}
+    \nodeBadge{api}{online badge}{north west}{\checkmark}
+    \nodeBadge{lb2}{online badge}{north east}{\checkmark}
+
+    % Connections
+    \draw[encrypted conn] (mobile1) -- (api);
+    \draw[encrypted conn] (mobile2) -- (api);
+    \draw[normal conn] (lb2) -- (api);
+
+\end{tikzpicture}
+\end{center}
+
+\vspace{1cm}
+
+% ============================================================================
+% LEGEND: Available Color Schemes
+% ============================================================================
+
+\section*{Available Color Schemes and Usage}
+
+\begin{itemize}
+    \item \texttt{\textbackslash loadColorScheme\{standard\}} - Default vibrant colors
+    \item \texttt{\textbackslash loadColorScheme\{dark\}} - Dark theme with bright accents
+    \item \texttt{\textbackslash loadColorScheme\{colorblind\}} - Deuteranopia/protanopia safe
+    \item \texttt{\textbackslash loadColorScheme\{tritanopia\}} - Tritanopia safe
+    \item \texttt{\textbackslash loadColorScheme\{monochrome\}} - Grayscale for printing
+    \item \texttt{\textbackslash loadColorScheme\{high-contrast\}} - High contrast for accessibility
+\end{itemize}
+
+\subsection*{Node Style Variants}
+
+\begin{itemize}
+    \item Standard: \texttt{server}, \texttt{client}, \texttt{router}, \texttt{firewall}, \texttt{switch}, \texttt{cloud}
+    \item Premium (with gradients): \texttt{server premium}, \texttt{client premium}, etc.
+    \item Colorblind (with patterns): \texttt{server colorblind}, \texttt{client colorblind}, etc.
+\end{itemize}
+
+\subsection*{Badge Support}
+
+\begin{itemize}
+    \item OS Badges: \texttt{windows badge}, \texttt{linux badge}, \texttt{macos badge}
+    \item Status Badges: \texttt{online badge}, \texttt{offline badge}, \texttt{warning badge}, \texttt{critical badge}
+    \item Usage: \texttt{\textbackslash nodeBadge\{node-name\}\{badge-style\}\{position\}\{text\}}
+    \item Positions: \texttt{north east}, \texttt{north west}, \texttt{south east}, \texttt{south west}
+\end{itemize}
+
+\end{document}
