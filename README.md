@@ -6,14 +6,17 @@ A professional, scalable network diagram generation system using LaTeX/TikZ, des
 
 ✅ **Professional Styling** - Publication-quality diagrams exceeding draw.io/Visio standards
 ✅ **Modular Architecture** - Separated concerns for parallel development
+✅ **60+ Node Types** - Servers, databases, cloud, mobile, IoT, storage, security appliances
+✅ **Pre-built Templates** - Instant 3-tier, DMZ, cloud hybrid, microservices, IoT architectures
+✅ **Bulk Creation Utilities** - Generate rows, grids, and star topologies automatically
+✅ **Advanced Visualizations** - Resource metrics, security status, OS badges, subnet boundaries
 ✅ **Scalable Output** - Support for A0 through A4 and custom page sizes
-✅ **Threat Visualization** - Built-in security threat and attack indicators
-✅ **Multiple Layout Algorithms** - Tiered, circular, grid, and force-directed options
 ✅ **Rich Connection Types** - Encrypted, suspicious, attack, and bidirectional connections
-✅ **Security Zones** - Visual subnet and security boundary representations
 ✅ **TeXLive 2024/2025 Compatible** - Uses stable, widely-supported packages
 
 ## Quick Start
+
+**⚡ New to the project? Check out [QUICKSTART.md](QUICKSTART.md) for a 5-minute tutorial!**
 
 ### Prerequisites
 
@@ -28,24 +31,61 @@ sudo dnf install texlive-scheme-full
 pdflatex --version
 ```
 
-### Compile Example Diagram
+### Option 1: Use Pre-built Templates (Fastest!)
 
-```bash
-pdflatex network_diagram_generator.tex
+```latex
+% In your .tex file
+\input{topology_templates}
+
+% Create instant architectures:
+\createThreeTierApp{myapp}{192.168}                   % 3-tier web app
+\createSecureDMZ{corp}{203.0.113}{10.0.0}{192.168.1}  % DMZ with security
+\createHybridCloud{hybrid}{172.16.0}{aws}             % Cloud hybrid
+\createMicroservices{api}{10.100}                     % Microservices
+\createSmartHome{home}{192.168.50}                    % IoT smart home
 ```
 
-This generates `network_diagram_generator.pdf` with the example network.
+### Option 2: Compile Example Diagrams
+
+```bash
+# Basic example
+pdflatex network_diagram_generator.tex
+
+# Advanced features (45+ nodes, all types)
+pdflatex example_complete_network.tex
+
+# Templates demonstration
+pdflatex example_templates.tex
+```
+
+### Option 3: Bulk Creation Utilities
+
+```latex
+% Create 5 web servers automatically
+\createNodeRow{server}{web}{192.168.10}{3}{5}{Web Server}
+
+% Create 3x3 grid of servers
+\createNodeGrid{server}{node}{192.168.20}{0}{0}{3}{3}
+
+% Create star topology (1 switch, 8 clients)
+\createStarTopology{office}{switch}{client}{192.168.1}{8}
+```
 
 ## File Structure
 
 ```
 network_diagram_generator.tex  # Main entry point
-├── styles_config.tex          # Visual styling and color schemes
-├── node_definitions.tex       # Network asset rendering
+├── styles_config.tex          # Visual styling and color schemes (20+ styles)
+├── node_definitions.tex       # Network asset rendering (60+ node types)
+├── topology_templates.tex     # Pre-built architecture templates (NEW!)
 ├── network_layout.tex         # Layout algorithms and positioning
 ├── connection_renderer.tex    # Connection drawing and flows
 ├── threat_indicators.tex      # Security threat visualization
-└── network_data.tex           # Actual network topology data
+├── network_data.tex           # Actual network topology data
+├── QUICKSTART.md              # 5-minute tutorial (NEW!)
+├── example_complete_network.tex   # Comprehensive 45+ node example
+├── example_advanced_nodes.tex     # Advanced features demo
+└── example_templates.tex      # Template usage examples (NEW!)
 ```
 
 ## Creating Your Own Diagrams

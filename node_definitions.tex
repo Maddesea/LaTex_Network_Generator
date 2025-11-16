@@ -1068,6 +1068,253 @@
     % \createClient{pc1}{192.168.1.100}{-5}{-3}{Workstation 1}
 }
 
+% ============================================================================
+% BULK NODE CREATION UTILITIES
+% ============================================================================
+
+% Create multiple identical nodes in a row
+% Usage: \createNodeRow{type}{prefix}{startip}{y}{count}{label}
+% Example: \createNodeRow{server}{web}{192.168.1}{3}{5}{Web Server}
+% Creates: web1, web2, web3, web4, web5 at y=3
+\newcommand{\createNodeRow}[6]{
+    \foreach \i in {1,...,#5} {
+        \pgfmathsetmacro{\xpos}{-#5 + 2*\i}
+        \pgfmathsetmacro{\ipoctect}{10 + \i - 1}
+        \ifthenelse{\equal{#1}{server}}{
+            \createServer{#2\i}{#3.\ipoctect}{\xpos}{#4}{#6-\i}
+        }{
+        \ifthenelse{\equal{#1}{client}}{
+            \createClient{#2\i}{#3.\ipoctect}{\xpos}{#4}{#6-\i}
+        }{
+        \ifthenelse{\equal{#1}{database}}{
+            \createDatabase{#2\i}{#3.\ipoctect}{\xpos}{#4}{#6-\i}
+        }{
+            \createServer{#2\i}{#3.\ipoctect}{\xpos}{#4}{#6-\i}
+        }}}
+    }
+}
+
+% Create a grid of nodes
+% Usage: \createNodeGrid{type}{prefix}{startip}{startx}{starty}{rows}{cols}
+\newcommand{\createNodeGrid}[7]{
+    \pgfmathsetmacro{\nodenum}{0}
+    \foreach \row in {1,...,#6} {
+        \foreach \col in {1,...,#7} {
+            \pgfmathsetmacro{\xpos}{#4 + 2*(\col-1)}
+            \pgfmathsetmacro{\ypos}{#5 - 2*(\row-1)}
+            \pgfmathsetmacro{\nodenum}{\nodenum + 1}
+            \pgfmathsetmacro{\ipoctect}{10 + \nodenum}
+            \ifthenelse{\equal{#1}{server}}{
+                \createServer{#2\nodenum}{#3.\ipoctect}{\xpos}{\ypos}{Node-\nodenum}
+            }{
+                \createClient{#2\nodenum}{#3.\ipoctect}{\xpos}{\ypos}{Node-\nodenum}
+            }
+        }
+    }
+}
+
+% Create cluster of nodes with auto-connections to central node
+% Usage: \createStarTopology{prefix}{centertype}{clienttype}{ip}{count}
+\newcommand{\createStarTopology}[5]{
+    % Central node
+    \ifthenelse{\equal{#2}{router}}{
+        \createRouter{#1_center}{#4.1}{0}{0}{Central Router}
+    }{
+    \ifthenelse{\equal{#2}{switch}}{
+        \createSwitch{#1_center}{#4.1}{0}{0}{Central Switch}
+    }{
+        \createServer{#1_center}{#4.1}{0}{0}{Central Server}
+    }}
+
+    % Satellite nodes
+    \foreach \i in {1,...,#5} {
+        \pgfmathsetmacro{\angle}{360/#5 * (\i-1)}
+        \pgfmathsetmacro{\xpos}{3*cos(\angle)}
+        \pgfmathsetmacro{\ypos}{3*sin(\angle)}
+        \pgfmathsetmacro{\ipoctect}{10 + \i}
+
+        \ifthenelse{\equal{#3}{client}}{
+            \createClient{#1_node\i}{#4.\ipoctect}{\xpos}{\ypos}{Client-\i}
+        }{
+            \createServer{#1_node\i}{#4.\ipoctect}{\xpos}{\ypos}{Server-\i}
+        }
+
+        % Connect to center
+        \draw[normal conn] (#1_center) -- (#1_node\i);
+    }
+}
+
+% ============================================================================
+% NODE TEMPLATES AND PRESETS
+% ============================================================================
+
+% Template: Typical Web Server Stack
+% Usage: \createWebServerStack{name}{ip}{x}{y}
+\newcommand{\createWebServerStack}[4]{
+    \createNodeWithServices{#1}{#2}{#3}{#4}{Web Server}{80,443}{Nginx, PHP-FPM}
+    \addOSBadge{#1}{ubuntu}
+    \addStatusIndicator{#1}{online}
+}
+
+% Template: Typical Application Server
+% Usage: \createAppServerStack{name}{ip}{x}{y}
+\newcommand{\createAppServerStack}[4]{
+    \createNodeWithServices{#1}{#2}{#3}{#4}{App Server}{8080,8443}{Tomcat, JVM}
+    \addOSBadge{#1}{linux}
+    \addStatusIndicator{#1}{online}
+}
+
+% Template: Monitoring Server
+% Usage: \createMonitoringServer{name}{ip}{x}{y}
+\newcommand{\createMonitoringServer}[4]{
+    \createNodeWithServices{#1}{#2}{#3}{#4}{Monitoring}{9090,3000}{Prometheus, Grafana}
+    \addOSBadge{#1}{ubuntu}
+}
+
+% Template: Log Server
+% Usage: \createLogServer{name}{ip}{x}{y}
+\newcommand{\createLogServer}[4]{
+    \createNodeWithServices{#1}{#2}{#3}{#4}{Log Server}{5044,9200}{Logstash, ElasticSearch}
+    \addOSBadge{#1}{linux}
+}
+
+% Template: Windows Domain Controller
+% Usage: \createDomainController{name}{ip}{x}{y}
+\newcommand{\createDomainController}[4]{
+    \createNodeWithServices{#1}{#2}{#3}{#4}{Domain Controller}{389,636,88}{AD DS, DNS, LDAP}
+    \addOSBadge{#1}{windows}
+    \addStatusIndicator{#1}{online}
+}
+
+% Template: Database Master-Slave Pair
+% Usage: \createDBMasterSlave{prefix}{masterip}{slaveip}{y}
+\newcommand{\createDBMasterSlave}[4]{
+    \createDatabasePrimary{#1_master}{#2}{-2}{#4}{DB Master}
+    \createDatabaseReplica{#1_slave}{#3}{2}{#4}{DB Slave}
+    \draw[normal conn, -{Stealth[length=3mm]}, bend left=20] (#1_master) -- (#1_slave);
+
+    \begin{scope}[on background layer]
+        \createHAPair{#1_ha}{Database HA}{(#1_master)}{(#1_slave)}
+    \end{scope}
+}
+
+% ============================================================================
+% ADVANCED VISUALIZATION HELPERS
+% ============================================================================
+
+% Add connection labels with auto-positioning
+% Usage: \labelConnection{node1}{node2}{label}
+\newcommand{\labelConnection}[3]{
+    \path (#1) -- (#2) node[midway, fill=white, inner sep=2pt, font=\tiny] {#3};
+}
+
+% Draw connection with port labels
+% Usage: \drawConnectionWithPorts{node1}{node2}{port1}{port2}
+\newcommand{\drawConnectionWithPorts}[4]{
+    \draw[normal conn] (#1) -- (#2);
+    \node[font=\tiny, fill=white, inner sep=1pt] at (#1.east) {#3};
+    \node[font=\tiny, fill=white, inner sep=1pt] at (#2.west) {#4};
+}
+
+% Highlight critical path
+% Usage: \highlightPath{node1,node2,node3}
+\newcommand{\highlightPath}[1]{
+    \foreach \n [count=\i] in {#1} {
+        \ifnum\i>1
+            \draw[draw=red!80, line width=3pt, opacity=0.3] (\prevnode) -- (\n);
+        \fi
+        \global\let\prevnode\n
+    }
+}
+
+% Add version/build info to node
+% Usage: \addVersionInfo{nodename}{version}
+\newcommand{\addVersionInfo}[2]{
+    \node[font=\tiny\ttfamily, text=black!50, anchor=north]
+        at (#1.south) [below=1pt] {v#2};
+}
+
+% Add uptime indicator
+% Usage: \addUptime{nodename}{days}
+\newcommand{\addUptime}[2]{
+    \node[font=\tiny, text=black!60, anchor=south west]
+        at (#1.south west) [below right=1pt] {Up: #2d};
+}
+
+% ============================================================================
+% DOCUMENTATION AND EXPORT HELPERS
+% ============================================================================
+
+% Generate node inventory list
+% Usage: \nodeInventory{node1,node2,node3}
+\newcommand{\nodeInventory}[1]{
+    \node[
+        rectangle,
+        draw=black!50,
+        fill=white,
+        inner sep=8pt,
+        anchor=north west,
+        font=\tiny\ttfamily
+    ] at (-9.5,9) {
+        \begin{tabular}{l}
+        \textbf{Node Inventory} \\
+        \hline
+        #1
+        \end{tabular}
+    };
+}
+
+% Add diagram title with metadata
+% Usage: \diagramTitle{title}{description}
+\newcommand{\diagramTitle}[2]{
+    \node[
+        rectangle,
+        fill=serverBlue!20,
+        draw=serverBlue!80,
+        line width=2pt,
+        rounded corners=3pt,
+        inner sep=8pt,
+        anchor=north,
+        font=\sffamily
+    ] at (0,9.5) {
+        \begin{minipage}{10cm}
+        \centering
+        \textbf{\Large #1} \\[3pt]
+        \small #2
+        \end{minipage}
+    };
+}
+
+% Add compliance badges
+% Usage: \addComplianceBadge{x}{y}{standard}
+% Standards: pci, hipaa, soc2, iso27001
+\newcommand{\addComplianceBadge}[3]{
+    \ifthenelse{\equal{#3}{pci}}{
+        \def\badgecolor{blue!70}
+        \def\badgetext{PCI-DSS}
+    }{
+    \ifthenelse{\equal{#3}{hipaa}}{
+        \def\badgecolor{green!70}
+        \def\badgetext{HIPAA}
+    }{
+    \ifthenelse{\equal{#3}{soc2}}{
+        \def\badgecolor{purple!70}
+        \def\badgetext{SOC 2}
+    }{
+        \def\badgecolor{orange!70}
+        \def\badgetext{ISO 27001}
+    }}}
+
+    \node[
+        rectangle,
+        rounded corners=2pt,
+        fill=\badgecolor,
+        text=white,
+        font=\tiny\bfseries,
+        inner sep=3pt
+    ] at (#1,#2) {\badgetext};
+}
+
 % TODO: Intelligent rendering
 % - Auto-layout algorithm to prevent overlapping nodes
 % - Force-directed graph layout for organic appearance
