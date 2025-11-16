@@ -311,6 +311,274 @@ Add OS type and status indicators to your nodes.
 
 ---
 
+## Pattern Fills for Accessibility
+
+Pattern fills provide visual differentiation beyond color alone, making diagrams accessible to colorblind users and suitable for black & white printing.
+
+### Pattern Node Styles
+
+```latex
+\node[pattern server] at (0,0) {Server};      % Vertical lines
+\node[pattern client] at (2,0) {Client};      % Horizontal lines
+\node[pattern router] at (4,0) {Router};      % Grid pattern
+\node[pattern database] at (6,0) {Database};  % Dots
+\node[pattern firewall] at (8,0) {Firewall};  % Crosshatch
+\node[pattern critical] at (10,0) {Critical}; % NE lines
+```
+
+### When to Use Patterns
+
+- **Colorblind accessibility**: Patterns work for all color vision types
+- **Black & white printing**: Maintains visual distinction
+- **High information density**: Combine with colorblind-safe colors
+- **Regulatory compliance**: Some standards require non-color coding
+
+### Pattern + Color Combination
+
+```latex
+\useColorblindSafe  % Use accessible colors
+\node[pattern server] at (0,0) {Server};  % Add pattern overlay
+```
+
+---
+
+## Beamer Presentation Support
+
+Create animated network diagrams for presentations with progressive reveals.
+
+### Basic Beamer Integration
+
+```latex
+\documentclass{beamer}
+\usepackage{tikz}
+\usetikzlibrary{shapes, arrows, shadows, decorations.markings, patterns}
+
+\input{styles_config.tex}
+
+\begin{document}
+
+\begin{frame}{Network Evolution}
+\begin{tikzpicture}
+    % Nodes appear on different slides
+    \node<1->[gradient server] (srv1) at (0,0) {Server 1};
+    \node<2->[gradient server] (srv2) at (3,0) {Server 2};
+    \node<3->[attacker] (atk) at (6,0) {Attacker};
+
+    % Connections appear progressively
+    \draw<2->[encrypted conn] (srv1) -- (srv2);
+    \draw<3->[attack conn] (atk) -- (srv2);
+\end{tikzpicture}
+\end{frame}
+
+\end{document}
+```
+
+### Animation Styles
+
+```latex
+% Pulsing effect for threats (visual emphasis)
+\node[pulse node] at (0,0) {Active Threat};
+
+% Alert highlighting
+\node[alert node] at (2,0) {Critical System};
+
+% Opacity control
+\node[dim] at (4,0) {Inactive};  % 30% opacity
+\node[reveal] at (6,0) {Active}; % 100% opacity
+```
+
+### Flow Animations
+
+```latex
+% Animated data flow with markers
+\draw[data flow] (source) -- (destination);
+
+% Custom flow animation
+\draw[flow animation] (A) -- (B);
+```
+
+### Progressive Attack Scenario Example
+
+See `examples/06_beamer_presentation.tex` for a complete attack progression demo.
+
+---
+
+## Style Templates
+
+Predefined style combinations for quick application.
+
+### Built-in Style Templates
+
+```latex
+% Corporate/professional style
+\node[corporate] at (0,0) {Enterprise Server};
+
+% Security/threat emphasis
+\node[security] at (2,0) {Compromised Host};
+
+% Modern cloud aesthetic
+\node[modern cloud] at (4,0) {Cloud Service};
+
+% Minimal clean style
+\node[minimal] at (6,0) {Simple Node};
+
+% Presentation style (large, high-visibility)
+\node[presentation] at (8,0) {Key System};
+```
+
+### Creating Custom Templates
+
+Define your own style combinations:
+
+```latex
+\tikzset{
+    my custom style/.style={
+        gradient server,
+        line width=2pt,
+        fill=blue!20,
+        minimum width=4cm
+    }
+}
+
+\node[my custom style] at (0,0) {Custom Node};
+```
+
+### Saving and Loading Templates
+
+```latex
+% Save current style settings (placeholder for future feature)
+\saveStyleTemplate{my_network_style}
+
+% Load a custom template
+\loadStyleTemplate{my_network_style}
+```
+
+---
+
+## Enhanced Legend System
+
+Create professional legends with helper commands.
+
+### Quick Legend Commands
+
+```latex
+% Pre-built legend templates
+\basicLegend         % Node types
+\connectionLegend    % Connection types
+\statusLegend        % Status indicators
+```
+
+### Custom Legends with Helpers
+
+```latex
+\node[legend box] at (0,0) {
+    \begin{tabular}{ll}
+        \legendTitle{My Network} \\
+        \legendServer \\
+        \legendClient \\
+        \legendRouter \\
+        \legendEncryptedConn \\
+        \legendOnline \\
+        \legendWarning \\
+    \end{tabular}
+};
+```
+
+### Legend Style Variants
+
+```latex
+% Compact legend for space-constrained diagrams
+\node[legend compact] at (0,0) {...};
+
+% Large legend for presentations
+\node[legend large] at (0,0) {...};
+
+% Transparent legend overlay
+\node[legend transparent] at (0,0) {...};
+```
+
+### Complete Legend Example
+
+```latex
+\node[legend box, anchor=north west] at (0,10) {
+    \begin{tabular}{ll}
+        \legendTitle{Network Components} \\
+        \legendServer \\
+        \legendClient \\
+        \legendRouter \\
+        \legendFirewall \\
+        \hline
+        \legendTitle{Connections} \\
+        \legendNormalConn \\
+        \legendEncryptedConn \\
+        \legendAttackConn \\
+        \hline
+        \legendTitle{Status} \\
+        \legendOnline \\
+        \legendWarning \\
+        \legendCritical \\
+    \end{tabular}
+};
+```
+
+---
+
+## Complete Advanced Example
+
+Combining patterns, animations, templates, and enhanced legends:
+
+```latex
+\documentclass{beamer}
+\usepackage{tikz}
+\usetikzlibrary{shapes, arrows, shadows, decorations.markings, patterns}
+
+\input{styles_config.tex}
+
+\begin{document}
+
+\begin{frame}{Enterprise Network Security}
+\begin{tikzpicture}[scale=0.9]
+
+    % Use accessible colors + patterns
+    \useColorblindSafe
+
+    % Progressive reveal with patterns
+    \node<1->[pattern firewall,
+              pin={[badge online]90:●}
+             ] (fw) at (3,4) {Firewall};
+
+    \node<2->[pattern server,
+              pin={[badge linux]45:Linux},
+              pin={[badge online]135:●}
+             ] (srv) at (0,2) {\serverIcon\\Web Server};
+
+    \node<3->[pattern critical,
+              pin={[badge critical]45:!}
+             ] (comp) at (6,2) {\laptopIcon\\Compromised\\PC};
+
+    % Connections appear progressively
+    \draw<2->[encrypted conn] (fw) -- (srv);
+    \draw<3->[attack conn] (comp) -- (srv)
+        node[midway, right, font=\tiny] {Attack};
+
+    % Enhanced legend
+    \node<1->[legend transparent, anchor=north east] at (7,4) {
+        \begin{tabular}{ll}
+            \legendTitle{Patterns} \\
+            \tikz\node[pattern server, minimum width=0.4cm, minimum height=0.3cm] {}; & Server \\
+            \tikz\node[pattern firewall, minimum width=0.4cm, minimum height=0.3cm] {}; & Firewall \\
+            \tikz\node[pattern critical, minimum width=0.4cm, minimum height=0.3cm] {}; & Critical \\
+        \end{tabular}
+    };
+
+\end{tikzpicture}
+\end{frame}
+
+\end{document}
+```
+
+---
+
 ## Tips and Best Practices
 
 1. **Color Schemes**: Choose the appropriate color scheme for your audience

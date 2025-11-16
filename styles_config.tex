@@ -504,10 +504,236 @@
 }
 
 % TODO: Badge enhancements
-% - Multi-badge support (OS + Status on same node)
-% - Animated status badges (pulsing for warnings)
-% - Badge size customization
 % - More OS types (BSD, Solaris, etc.)
+% - Badge size variants
+
+% ============================================================================
+% PATTERN FILLS FOR COLORBLIND ACCESSIBILITY
+% ============================================================================
+
+% Pattern-based node styles provide additional visual differentiation
+% beyond color alone, improving accessibility
+\tikzset{
+    % Server with vertical lines pattern
+    pattern server/.style={
+        base node,
+        rectangle,
+        rounded corners=3pt,
+        fill=serverBlue!20,
+        draw=serverBlue!80,
+        line width=1.5pt,
+        pattern=vertical lines,
+        pattern color=serverBlue!40
+    },
+
+    % Client with horizontal lines pattern
+    pattern client/.style={
+        base node,
+        rectangle,
+        rounded corners=2pt,
+        fill=clientGreen!15,
+        draw=clientGreen!70,
+        line width=1pt,
+        pattern=horizontal lines,
+        pattern color=clientGreen!40
+    },
+
+    % Router with grid pattern
+    pattern router/.style={
+        base node,
+        trapezium,
+        trapezium left angle=70,
+        trapezium right angle=110,
+        fill=routerOrange!20,
+        draw=routerOrange!80,
+        line width=1.5pt,
+        pattern=grid,
+        pattern color=routerOrange!40
+    },
+
+    % Firewall with crosshatch pattern
+    pattern firewall/.style={
+        base node,
+        rectangle,
+        fill=firewallRed!15,
+        draw=firewallRed!80,
+        line width=2pt,
+        pattern=crosshatch,
+        pattern color=firewallRed!50
+    },
+
+    % Database with dots pattern
+    pattern database/.style={
+        base node,
+        rectangle,
+        rounded corners=3pt,
+        fill=serverBlue!15,
+        draw=serverBlue!80,
+        line width=1.5pt,
+        pattern=dots,
+        pattern color=serverBlue!60
+    },
+
+    % Critical/compromised with north east lines
+    pattern critical/.style={
+        base node,
+        rectangle,
+        rounded corners=3pt,
+        fill=threatCritical!20,
+        draw=threatCritical!90,
+        line width=2pt,
+        pattern=north east lines,
+        pattern color=threatCritical!60
+    }
+}
+
+% ============================================================================
+% BEAMER ANIMATION SUPPORT
+% ============================================================================
+
+% Animation styles for Beamer presentations
+% These create visual effects that work in presentation mode
+
+% Pulsing effect for active threats (requires beamer)
+\tikzset{
+    pulse node/.style={
+        base node,
+        rectangle,
+        rounded corners=3pt,
+        fill=threatCritical!30,
+        draw=threatCritical!90,
+        line width=2pt,
+        % In Beamer, this can be animated with \animate command
+    }
+}
+
+% Styles for progressive slide builds
+\tikzset{
+    % Highlight on specific slides
+    reveal/.style={
+        % Use with \visible<2->{...} in Beamer
+        opacity=1
+    },
+
+    % Dim on specific slides
+    dim/.style={
+        opacity=0.3
+    },
+
+    % Flash/alert style
+    alert node/.style={
+        base node,
+        rectangle,
+        rounded corners=3pt,
+        fill=threatHigh!40,
+        draw=threatHigh!90,
+        line width=3pt
+    }
+}
+
+% Flow animation markers for connections
+\tikzset{
+    flow animation/.style={
+        postaction={
+            decorate,
+            decoration={
+                markings,
+                mark=between positions 0.1 and 0.9 step 0.2 with {
+                    \node[fill=connEncrypted, circle, inner sep=1.5pt] {};
+                }
+            }
+        }
+    },
+
+    data flow/.style={
+        draw=connNormal,
+        line width=1.5pt,
+        -{Stealth[length=3mm]},
+        flow animation
+    }
+}
+
+% Helper command for Beamer incremental reveals
+% Usage in Beamer: \revealNode<2->{server}{Web Server}
+\newcommand{\revealNode}[3][server]{
+    % #1 = node style (optional, default: server)
+    % #2 = node name
+    % #3 = node content
+    % This is a placeholder - actual Beamer integration requires \visible
+}
+
+% ============================================================================
+% STYLE TEMPLATE SYSTEM
+% ============================================================================
+
+% Predefined style combinations that can be easily applied
+
+% Corporate/Professional Style
+\tikzset{
+    corporate/.style={
+        gradient server,
+        blur shadow={shadow blur steps=8}
+    }
+}
+
+% Security/Threat Style
+\tikzset{
+    security/.style={
+        pattern critical,
+        line width=2.5pt
+    }
+}
+
+% Cloud/Modern Style
+\tikzset{
+    modern cloud/.style={
+        glass node,
+        minimum width=3cm
+    }
+}
+
+% Minimal/Clean Style
+\tikzset{
+    minimal/.style={
+        base node,
+        rectangle,
+        rounded corners=2pt,
+        draw=black!50,
+        fill=white,
+        line width=1pt
+    }
+}
+
+% High-Visibility Style (for presentations)
+\tikzset{
+    presentation/.style={
+        base node,
+        rectangle,
+        rounded corners=4pt,
+        line width=2.5pt,
+        minimum width=3cm,
+        minimum height=2cm,
+        font=\large\sffamily\bfseries
+    }
+}
+
+% Command to export current style settings to a custom file
+% Usage: \saveStyleTemplate{my_custom_style}
+\newcommand{\saveStyleTemplate}[1]{%
+    % This would save current color and style settings to a file
+    % Implementation requires file I/O
+    \message{Style template '#1' saved (feature placeholder)}%
+}
+
+% Command to load a custom style template
+% Usage: \loadStyleTemplate{my_custom_style}
+\newcommand{\loadStyleTemplate}[1]{%
+    \IfFileExists{style_templates/#1.style}{%
+        \input{style_templates/#1.style}%
+    }{%
+        \message{Warning: Style template '#1' not found.}%
+    }%
+}
 
 % ============================================================================
 % CONNECTION STYLES
@@ -628,14 +854,136 @@
         inner sep=5pt,
         rounded corners=2pt,
         blur shadow={shadow blur steps=3}
+    },
+
+    % Compact legend style
+    legend compact/.style={
+        rectangle,
+        draw=black!40,
+        fill=white,
+        inner sep=3pt,
+        rounded corners=1pt,
+        font=\tiny
+    },
+
+    % Large legend for presentations
+    legend large/.style={
+        rectangle,
+        draw=black!60,
+        fill=white,
+        inner sep=8pt,
+        rounded corners=3pt,
+        blur shadow={shadow blur steps=5},
+        font=\small
+    },
+
+    % Transparent legend
+    legend transparent/.style={
+        rectangle,
+        draw=black!30,
+        fill=white,
+        fill opacity=0.8,
+        text opacity=1,
+        inner sep=5pt,
+        rounded corners=2pt
     }
 }
 
-% TODO: Legend improvements
-% - Auto-generate legend based on diagram content
-% - Collapsible/expandable legend sections
-% - Position customization (corner placement options)
-% - Size scaling based on diagram complexity
+% Enhanced legend helpers
+\newcommand{\legendTitle}[1]{%
+    \textbf{#1}\\[2pt]
+}
+
+\newcommand{\legendItem}[2]{%
+    #1 & #2 \\
+}
+
+% Connection type legend entries
+\newcommand{\legendNormalConn}{%
+    \tikz\draw[normal conn] (0,0) -- (0.5,0); & Normal
+}
+
+\newcommand{\legendEncryptedConn}{%
+    \tikz\draw[encrypted conn] (0,0) -- (0.5,0); & Encrypted
+}
+
+\newcommand{\legendSuspiciousConn}{%
+    \tikz\draw[suspicious conn] (0,0) -- (0.5,0); & Suspicious
+}
+
+\newcommand{\legendAttackConn}{%
+    \tikz\draw[attack conn] (0,0) -- (0.5,0); & Attack
+}
+
+% Node type legend entries
+\newcommand{\legendServer}{%
+    \tikz\node[server, minimum width=0.5cm, minimum height=0.3cm] {}; & Server
+}
+
+\newcommand{\legendClient}{%
+    \tikz\node[client, minimum width=0.5cm, minimum height=0.3cm] {}; & Client
+}
+
+\newcommand{\legendRouter}{%
+    \tikz\node[router, minimum width=0.5cm, minimum height=0.3cm] {}; & Router
+}
+
+\newcommand{\legendFirewall}{%
+    \tikz\node[firewall, minimum width=0.5cm, minimum height=0.3cm] {}; & Firewall
+}
+
+% Status legend entries
+\newcommand{\legendOnline}{%
+    \tikz\node[badge online] {●}; & Online
+}
+
+\newcommand{\legendOffline}{%
+    \tikz\node[badge offline] {●}; & Offline
+}
+
+\newcommand{\legendWarning}{%
+    \tikz\node[badge warning] {⚠}; & Warning
+}
+
+\newcommand{\legendCritical}{%
+    \tikz\node[badge critical] {!}; & Critical
+}
+
+% Complete legend templates
+\newcommand{\basicLegend}{%
+    \node[legend box] {
+        \begin{tabular}{ll}
+            \legendTitle{Legend} \\
+            \legendServer \\
+            \legendClient \\
+            \legendRouter \\
+            \legendFirewall \\
+        \end{tabular}
+    };
+}
+
+\newcommand{\connectionLegend}{%
+    \node[legend box] {
+        \begin{tabular}{ll}
+            \legendTitle{Connections} \\
+            \legendNormalConn \\
+            \legendEncryptedConn \\
+            \legendSuspiciousConn \\
+            \legendAttackConn \\
+        \end{tabular}
+    };
+}
+
+\newcommand{\statusLegend}{%
+    \node[legend box] {
+        \begin{tabular}{ll}
+            \legendTitle{Status} \\
+            \legendOnline \\
+            \legendWarning \\
+            \legendCritical \\
+        \end{tabular}
+    };
+}
 
 % ============================================================================
 % PAGE SIZE CONFIGURATIONS

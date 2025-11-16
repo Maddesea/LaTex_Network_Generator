@@ -1,0 +1,68 @@
+% Example 2: Enterprise Network with Gradient Fills
+% Demonstrates gradient, metallic, and glass effects
+\documentclass[border=5mm]{standalone}
+\usepackage{tikz}
+\usepackage{xcolor}
+\usepackage{ifthen}
+
+\usetikzlibrary{shapes, arrows, shadows, decorations.markings, patterns}
+
+\input{../styles_config.tex}
+
+\begin{document}
+
+\begin{tikzpicture}[scale=1.1]
+
+    % Title
+    \node[font=\Large\bfseries] at (4,7) {Enterprise Data Center};
+    \node[font=\small, text=gray] at (4,6.5) {Premium Gradient Styles};
+
+    % DMZ Layer
+    \node[font=\bfseries, text=firewallRed] at (-1,5.5) {DMZ};
+    \node[gradient firewall] (fw) at (1,5.5) {Firewall\\10.0.0.1};
+    \node[gradient server] (web) at (4,5.5) {Web Server\\10.0.1.10};
+    \node[gradient server] (mail) at (7,5.5) {Mail Server\\10.0.1.20};
+
+    % Core Layer
+    \node[font=\bfseries, text=routerOrange] at (-1,3.5) {Core};
+    \node[metallic router] (core1) at (2,3.5) {Core\\Router 1};
+    \node[metallic router] (core2) at (6,3.5) {Core\\Router 2};
+
+    % Database Layer
+    \node[font=\bfseries, text=serverBlue] at (-1,1.5) {Data};
+    \node[radial server] (db1) at (2,1.5) {Database\\Primary\\10.0.2.10};
+    \node[radial server] (db2) at (6,1.5) {Database\\Replica\\10.0.2.11};
+
+    % Cloud Services
+    \node[glass node] (cloud) at (9,3.5) {Cloud\\Backup};
+
+    % Connections - DMZ to Core
+    \draw[encrypted conn] (fw) -- (core1);
+    \draw[normal conn] (web) -- (core1);
+    \draw[normal conn] (mail) -- (core2);
+
+    % Connections - Core to Database
+    \draw[encrypted conn] (core1) -- (db1);
+    \draw[encrypted conn] (core2) -- (db2);
+
+    % Database replication
+    \draw[bidirectional, draw=connEncrypted, line width=1.5pt] (db1) -- (db2)
+        node[midway, above, font=\tiny] {Replication};
+
+    % Cloud backup
+    \draw[encrypted conn] (core2) -- (cloud);
+
+    % Legend
+    \node[legend box, anchor=north west] at (-1,1) {
+        \begin{tabular}{l}
+            \textbf{Styles Used} \\[2pt]
+            Gradient Fill \\
+            Metallic Effect \\
+            Radial Gradient \\
+            Glass Effect \\
+        \end{tabular}
+    };
+
+\end{tikzpicture}
+
+\end{document}

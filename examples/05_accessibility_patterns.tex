@@ -1,0 +1,79 @@
+% Example 5: Pattern-Based Styles for Colorblind Accessibility
+% Demonstrates pattern fills that work without color
+\documentclass[border=5mm]{standalone}
+\usepackage{tikz}
+\usepackage{xcolor}
+\usepackage{ifthen}
+
+\usetikzlibrary{shapes, arrows, shadows, decorations.markings, patterns}
+
+\input{../styles_config.tex}
+
+\begin{document}
+
+% Use monochrome color scheme with patterns
+\useMonochrome
+
+\begin{tikzpicture}[scale=1.1]
+
+    % Title
+    \node[font=\Large\bfseries] at (4,7) {Pattern-Based Network Diagram};
+    \node[font=\small, text=gray] at (4,6.5) {Accessible for All Color Vision Types};
+
+    % Network using pattern fills
+    \node[pattern firewall,
+          pin={[badge online]90:●}
+         ] (fw) at (4,5.5) {Firewall\\10.0.0.1};
+
+    \node[pattern router] (router1) at (2,4) {Router 1\\10.0.1.1};
+    \node[pattern router] (router2) at (6,4) {Router 2\\10.0.1.2};
+
+    \node[pattern server] (server1) at (0,2) {Server 1\\10.0.2.10};
+    \node[pattern database] (db) at (2,2) {Database\\10.0.2.20};
+    \node[pattern server] (server2) at (4,2) {Server 2\\10.0.2.11};
+    \node[pattern critical] (comp) at (6,2) {Compromised\\10.0.2.100};
+    \node[pattern server] (server3) at (8,2) {Server 3\\10.0.2.12};
+
+    \node[pattern client] (client1) at (1,0) {Client 1};
+    \node[pattern client] (client2) at (3,0) {Client 2};
+    \node[pattern client] (client3) at (5,0) {Client 3};
+    \node[pattern client] (client4) at (7,0) {Client 4};
+
+    % Connections
+    \draw[normal conn] (fw) -- (router1);
+    \draw[normal conn] (fw) -- (router2);
+
+    \draw[encrypted conn] (router1) -- (server1);
+    \draw[encrypted conn] (router1) -- (db);
+    \draw[normal conn] (router1) -- (server2);
+    \draw[attack conn] (router2) -- (comp);
+    \draw[normal conn] (router2) -- (server3);
+
+    \draw[normal conn] (server1) -- (client1);
+    \draw[normal conn] (db) -- (client2);
+    \draw[normal conn] (server2) -- (client3);
+    \draw[suspicious conn] (comp) -- (client4);
+
+    % Pattern Legend
+    \node[legend box, anchor=north west] at (-0.5,5.5) {
+        \begin{tabular}{ll}
+            \legendTitle{Patterns} \\
+            \tikz\node[pattern server, minimum width=0.6cm, minimum height=0.4cm] {}; & Server (Vertical) \\
+            \tikz\node[pattern client, minimum width=0.6cm, minimum height=0.4cm] {}; & Client (Horizontal) \\
+            \tikz\node[pattern router, minimum width=0.6cm, minimum height=0.4cm] {}; & Router (Grid) \\
+            \tikz\node[pattern database, minimum width=0.6cm, minimum height=0.4cm] {}; & Database (Dots) \\
+            \tikz\node[pattern firewall, minimum width=0.6cm, minimum height=0.4cm] {}; & Firewall (Cross) \\
+            \tikz\node[pattern critical, minimum width=0.6cm, minimum height=0.4cm] {}; & Critical (NE Lines) \\
+        \end{tabular}
+    };
+
+    % Note
+    \node[rectangle, draw=blue, fill=blue!10, rounded corners, inner sep=5pt,
+          anchor=north east, text width=3cm, font=\small] at (8.5,5.5) {
+        \textbf{Note:} Patterns provide visual distinction independent of color,
+        making diagrams accessible for colorblind users and B\&W printing.
+    };
+
+\end{tikzpicture}
+
+\end{document}

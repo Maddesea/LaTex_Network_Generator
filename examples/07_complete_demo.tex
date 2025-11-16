@@ -1,0 +1,199 @@
+% Example 7: Complete Feature Demonstration
+% Showcases all advanced styling features in one diagram
+\documentclass[border=5mm]{standalone}
+\usepackage{tikz}
+\usepackage{xcolor}
+\usepackage{ifthen}
+
+\usetikzlibrary{shapes, arrows, shadows, decorations.markings, patterns}
+
+\input{../styles_config.tex}
+
+\begin{document}
+
+\begin{tikzpicture}[scale=1.0]
+
+    % Title with styling
+    \node[font=\Huge\bfseries] at (6,11) {Complete Feature Showcase};
+    \node[font=\large, text=gray] at (6,10.3) {Network Diagram Generator - All Features};
+
+    % ========== INTERNET LAYER ==========
+    \node[font=\bfseries, text=gray] at (-1,9) {Internet};
+    \node[cloud] (internet) at (2,9) {Internet};
+    \node[attacker] (threat) at (6,9) {Threat\\Actor};
+
+    % ========== DMZ LAYER ==========
+    \node[font=\bfseries, text=firewallRed] at (-1,7) {DMZ};
+
+    \node[gradient firewall,
+          pin={[badge online]90:●}
+         ] (fw) at (2,7) {Firewall\\10.0.0.1};
+
+    \node[gradient server,
+          pin={[badge linux]45:Linux},
+          pin={[badge online]135:●}
+         ] (web) at (6,7) {\serverIcon\\Web Server\\10.0.1.10};
+
+    \node[metallic server,
+          pin={[badge linux]45:Linux},
+          pin={[badge online]135:●}
+         ] (proxy) at (10,7) {\serverIcon\\Reverse\\Proxy\\10.0.1.5};
+
+    % ========== CORE LAYER ==========
+    \node[font=\bfseries, text=routerOrange] at (-1,5) {Core};
+
+    \node[metallic router] (core1) at (4,5) {Core\\Router 1};
+    \node[metallic router] (core2) at (8,5) {Core\\Router 2};
+
+    % ========== APPLICATION LAYER ==========
+    \node[font=\bfseries, text=serverBlue] at (-1,3) {Apps};
+
+    \node[gradient server,
+          pin={[badge windows]45:Win},
+          pin={[badge online]135:●}
+         ] (app1) at (2,3) {\serverIcon\\App Server\\10.0.2.10};
+
+    \node[gradient server,
+          pin={[badge windows]45:Win},
+          pin={[badge warning]135:⚠}
+         ] (app2) at (6,3) {\serverIcon\\App Server\\10.0.2.11};
+
+    \node[glass node] (cloud1) at (10,3) {\cloudIcon\\Cloud\\Storage};
+
+    % ========== DATA LAYER ==========
+    \node[font=\bfseries, text=serverBlue] at (-1,1) {Data};
+
+    \node[radial server,
+          pin={[badge linux]45:Linux},
+          pin={[badge online]135:●}
+         ] (db1) at (4,1) {\databaseIcon\\Database\\Primary\\10.0.3.10};
+
+    \node[radial server,
+          pin={[badge linux]45:Linux},
+          pin={[badge online]135:●}
+         ] (db2) at (8,1) {\databaseIcon\\Database\\Replica\\10.0.3.11};
+
+    % ========== CLIENT LAYER ==========
+    \node[font=\bfseries, text=clientGreen] at (-1,-1) {Clients};
+
+    \node[gradient client,
+          pin={[badge windows]315:Win},
+          pin={[badge online]225:●}
+         ] (admin) at (2,-1) {\laptopIcon\\Admin\\PC};
+
+    \node[gradient client,
+          pin={[badge macos]315:Mac},
+          pin={[badge online]225:●}
+         ] (dev) at (6,-1) {\laptopIcon\\Developer\\MacBook};
+
+    \node[gradient client,
+          pin={[badge windows]315:Win},
+          pin={[badge critical]225:!}
+         ] (comp) at (10,-1) {\laptopIcon\\User PC\\[2pt]{\color{red}\tiny COMPROMISED}};
+
+    % ========== CONNECTIONS ==========
+
+    % Internet to DMZ
+    \draw[normal conn] (internet) -- (fw);
+    \draw[attack conn] (threat) -- (fw) node[midway, above, font=\tiny] {BLOCKED};
+    \draw[normal conn] (fw) -- (web);
+    \draw[normal conn] (web) -- (proxy);
+
+    % DMZ to Core
+    \draw[encrypted conn] (fw) -- (core1);
+    \draw[encrypted conn] (proxy) -- (core2);
+
+    % Core to Apps
+    \draw[encrypted conn] (core1) -- (app1);
+    \draw[encrypted conn] (core1) -- (app2);
+    \draw[encrypted conn] (core2) -- (cloud1);
+
+    % Apps to Data
+    \draw[data flow] (app1) -- (db1);
+    \draw[data flow] (app2) -- (db1);
+
+    % Database replication
+    \draw[bidirectional, draw=connEncrypted, line width=1.5pt, dashed] (db1) -- (db2)
+        node[midway, below, font=\tiny] {Replication};
+
+    % Clients to Apps
+    \draw[encrypted conn] (admin) -- (app1);
+    \draw[encrypted conn] (dev) -- (app2);
+    \draw[suspicious conn] (comp) -- (app2);
+
+    % Attack path from compromised client
+    \draw[attack conn, bend left=20, line width=2pt] (comp) to
+        node[midway, right, font=\tiny, fill=white] {SQL Injection} (db1);
+
+    % Cloud backup
+    \draw[encrypted conn, bend right=15] (db2) -- (cloud1);
+
+    % ========== LEGENDS ==========
+
+    % Node Types Legend
+    \node[legend box, anchor=north west] at (-1.5,0.5) {
+        \begin{tabular}{ll}
+            \legendTitle{Node Types} \\
+            \legendServer \\
+            \legendClient \\
+            \legendRouter \\
+            \legendFirewall \\
+            \tikz\node[cloud, minimum width=0.5cm, minimum height=0.3cm] {}; & Cloud \\
+        \end{tabular}
+    };
+
+    % Connections Legend
+    \node[legend box, anchor=north] at (6,-2.5) {
+        \begin{tabular}{ll}
+            \legendTitle{Connections} \\
+            \legendNormalConn \\
+            \legendEncryptedConn \\
+            \legendSuspiciousConn \\
+            \legendAttackConn \\
+            \tikz\draw[data flow] (0,0) -- (0.5,0); & Data Flow \\
+        \end{tabular}
+    };
+
+    % Status Legend
+    \node[legend box, anchor=north east] at (13.5,0.5) {
+        \begin{tabular}{ll}
+            \legendTitle{Status} \\
+            \legendOnline \\
+            \legendWarning \\
+            \legendCritical \\
+        \end{tabular}
+    };
+
+    % Style Features Box
+    \node[rectangle, draw=blue!70, fill=blue!5, thick, rounded corners=3pt,
+          inner sep=8pt, text width=4cm, anchor=south east] at (13.5,-2.5) {
+        \textbf{Features Demonstrated:} \\[3pt]
+        {\footnotesize
+        ✓ Gradient fills \\
+        ✓ Metallic effects \\
+        ✓ Glass styles \\
+        ✓ Radial gradients \\
+        ✓ Built-in icons \\
+        ✓ OS badges \\
+        ✓ Status indicators \\
+        ✓ Flow animations \\
+        ✓ Enhanced legends
+        }
+    };
+
+    % Security Alert
+    \node[rectangle, draw=red, fill=red!10, thick, rounded corners,
+          inner sep=5pt, anchor=south west] at (-1.5,-2.5) {
+        \begin{tabular}{ll}
+            \multicolumn{2}{l}{\textbf{\color{red}Security Status}} \\[2pt]
+            Systems: & 12 \\
+            \legendOnline & 10 \\
+            \legendWarning & 1 \\
+            \legendCritical & 1 \\
+            Active Threats: & \textbf{\color{red}1} \\
+        \end{tabular}
+    };
+
+\end{tikzpicture}
+
+\end{document}
