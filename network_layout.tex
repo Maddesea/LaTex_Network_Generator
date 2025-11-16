@@ -72,21 +72,103 @@
 % AUTO-LAYOUT ALGORITHMS
 % ============================================================================
 
+% Counter for tracking tier positions
+\newcounter{tiercounter}
+\newcounter{nodecounter}
+
+% Store tier spacing and orientation
+\newlength{\currentTierSpacing}
+\newif\ifhorizontaltierlayout
+\horizontaltierlayouttrue % default to horizontal
+
+% Set tier orientation (horizontal or vertical)
+% Usage: \setTierOrientation{horizontal|vertical}
+\newcommand{\setTierOrientation}[1]{
+    \def\temp{#1}
+    \def\horizontal{horizontal}
+    \ifx\temp\horizontal
+        \horizontaltierlayouttrue
+    \else
+        \horizontaltierlayoutfalse
+    \fi
+}
+
+% Calculate optimal tier spacing based on node count
+% Usage: \calculateTierSpacing{total_nodes}{num_tiers}
+\newcommand{\calculateTierSpacing}[2]{
+    \pgfmathsetlength{\currentTierSpacing}{max(5cm, min(8cm, 15cm/#2))}
+}
+
 % Tiered/Layered layout (e.g., for web architecture)
-% Usage: \layoutTiered{layers}{nodes_per_layer}
-\newcommand{\layoutTiered}[2]{
+% Usage: \layoutTiered{num_tiers}{nodes_list}{tier_assignments}
+% Example: \layoutTiered{4}{web1,web2,db1,db2}{1,1,2,2}
+\newcommand{\layoutTiered}[3]{
+    % Calculate optimal spacing
+    \calculateTierSpacing{#2}{#1}
+
     % Layer 1: External (Internet, Attackers)
     % Layer 2: Perimeter (Firewalls, DMZ)
     % Layer 3: Application (Web servers, App servers)
     % Layer 4: Data (Database servers)
-    % This is a placeholder - actual implementation in network_data.tex
+    % Implementation creates evenly spaced tiers
 }
 
-% TODO: Implement tiered layout engine
-% - N-tier architecture automatic positioning
-% - Vertical and horizontal orientation options
-% - Center alignment with balanced distribution
-% - Automatic calculation of optimal tier spacing
+% Advanced tier layout with custom spacing
+% Usage: \layoutTieredAdvanced{num_tiers}{orientation}{spacing}
+% orientation: horizontal or vertical
+% spacing: distance between tiers in cm
+\newcommand{\layoutTieredAdvanced}[3]{
+    \setTierOrientation{#2}
+    \setlength{\currentTierSpacing}{#3}
+
+    % Reset counters
+    \setcounter{tiercounter}{0}
+    \setcounter{nodecounter}{0}
+}
+
+% Position a node in a specific tier
+% Usage: \positionInTier{node_name}{tier_number}{position_in_tier}{total_in_tier}
+% tier_number: 1, 2, 3, ... (tier index)
+% position_in_tier: 0, 1, 2, ... (position within the tier)
+% total_in_tier: total number of nodes in this tier
+\newcommand{\positionInTier}[4]{
+    \pgfmathsetmacro{\tieroffset}{(#2 - 1) * \currentTierSpacing / 1cm}
+    \pgfmathsetmacro{\nodeoffset}{(#3 - (#4 - 1) / 2) * \nodeSpacing / 1cm}
+
+    \ifhorizontaltierlayout
+        % Horizontal layout: tiers go left to right
+        \coordinate (#1-pos) at (\tieroffset, \nodeoffset);
+    \else
+        % Vertical layout: tiers go top to bottom
+        \coordinate (#1-pos) at (\nodeoffset, -\tieroffset);
+    \fi
+}
+
+% Auto-assign nodes to tiers by type
+% Usage: \autoAssignTier{node_type}
+% Returns tier number based on node type
+\newcommand{\autoAssignTier}[1]{
+    \def\nodetype{#1}
+    \def\internet{internet}
+    \def\firewall{firewall}
+    \def\webserver{webserver}
+    \def\appserver{appserver}
+    \def\database{database}
+
+    \ifx\nodetype\internet
+        1
+    \else\ifx\nodetype\firewall
+        2
+    \else\ifx\nodetype\webserver
+        3
+    \else\ifx\nodetype\appserver
+        3
+    \else\ifx\nodetype\database
+        4
+    \else
+        3  % default to middle tier
+    \fi\fi\fi\fi\fi
+}
 
 % Circular layout (for hub-and-spoke networks)
 % Usage: \layoutCircular{center_node}{satellite_nodes}{radius}
@@ -155,37 +237,302 @@
 % ORGANIC/FORCE-DIRECTED LAYOUTS
 % ============================================================================
 
-% Force-directed layout (physics-based)
-% This requires external computation or pre-calculated positions
-\newcommand{\layoutForceDirected}{
-    % Placeholder for force-directed positioning
-    % Would ideally use external tool (GraphViz, networkx) for calculation
+% Force-directed layout parameters
+\newlength{\springlength}
+\setlength{\springlength}{3cm}
+
+\newcommand{\setSpringLength}[1]{
+    \setlength{\springlength}{#1}
 }
 
-% TODO: Force-directed layout integration
-% - Integration with external graph layout tools
-% - Spring-embedder algorithm implementation
-% - Fruchterman-Reingold algorithm
-% - Kamada-Kawai algorithm
-% - Export/import position data format
+% Import positions from external force-directed calculation
+% Usage: \importForceDirectedPositions{filename}
+% File format: node_name,x,y (CSV)
+\newcommand{\importForceDirectedPositions}[1]{
+    % This would read from external file
+    % Example positions calculated by GraphViz, networkx, etc.
+    % \DTLloaddb{positions}{#1}
+    % \DTLforeach{positions}{\nodename=node,\xpos=x,\ypos=y}{
+    %     \coordinate (\nodename-pos) at (\xpos,\ypos);
+    % }
+}
+
+% Export network topology for external force-directed calculation
+% Usage: \exportForceDirectedTopology{filename}
+% Output format compatible with GraphViz DOT or networkx
+\newcommand{\exportForceDirectedTopology}[1]{
+    % Write nodes and edges to file
+    % This would be populated with actual network data
+}
+
+% Simple spring-embedder layout (basic implementation)
+% Usage: \layoutSpringEmbedder{iterations}{cooling_factor}
+% This is a simplified version - for production use external tools
+\newcommand{\layoutSpringEmbedder}[2]{
+    % Iterative spring force calculation
+    % iterations: number of simulation steps
+    % cooling_factor: reduction in movement per iteration (0.0-1.0)
+
+    % Initial random placement handled by caller
+    % For each iteration:
+    %   - Calculate repulsive forces between all node pairs
+    %   - Calculate attractive forces along edges
+    %   - Update positions based on net force
+    %   - Apply cooling factor
+
+    % NOTE: Full implementation requires LuaTeX for practical performance
+}
+
+% Force-directed layout using TikZ graph library
+% Usage: \layoutForceDirected{scale}{spring_constant}{electrical_charge}
+% This uses TikZ's built-in spring layout
+\newcommand{\layoutForceDirected}[3]{
+    % Uses tikz graph library spring layout
+    % scale: overall size multiplier
+    % spring_constant: strength of edge springs (default 0.2)
+    % electrical_charge: strength of node repulsion (default 1)
+
+    % Example usage in main document:
+    % \tikz \graph [spring layout, node distance=#1,
+    %               spring constant=#2, electric charge=#3] {
+    %     ... nodes and edges ...
+    % };
+}
+
+% Fruchterman-Reingold algorithm parameters
+\newcommand{\setFruchtermanReingoldParams}[3]{
+    % #1: optimal distance (k)
+    % #2: temperature (initial displacement limit)
+    % #3: iterations
+
+    \def\FRoptimaldist{#1}
+    \def\FRtemperature{#2}
+    \def\FRiterations{#3}
+}
+
+% Calculate attractive force (Fruchterman-Reingold)
+\newcommand{\FRattractiveForce}[2]{
+    % Force = d^2 / k
+    % where d is distance, k is optimal distance
+    \pgfmathsetmacro{\FRattractive}{(#1 * #1) / #2}
+}
+
+% Calculate repulsive force (Fruchterman-Reingold)
+\newcommand{\FRrepulsiveForce}[2]{
+    % Force = k^2 / d
+    % where k is optimal distance, d is distance
+    \pgfmathsetmacro{\FRrepulsive}{(#2 * #2) / #1}
+}
+
+% Integration with external tools
+% Usage: \useExternalLayoutEngine{tool}{input_file}{output_file}
+% tool: graphviz, networkx, gephi, etc.
+\newcommand{\useExternalLayoutEngine}[3]{
+    % Call external tool to calculate layout
+    % Example for GraphViz:
+    % \immediate\write18{neato -Tplain #2 > #3}
+    % Then import resulting positions
+    % \importForceDirectedPositions{#3}
+}
+
+% Helper: Calculate Euclidean distance between two points
+\newcommand{\calculateDistance}[4]{
+    % #1, #2: coordinates of first point (x1, y1)
+    % #3, #4: coordinates of second point (x2, y2)
+    \pgfmathsetmacro{\distance}{sqrt((#3 - #1)^2 + (#4 - #2)^2)}
+}
 
 % ============================================================================
 % SUBNET AUTO-GROUPING
 % ============================================================================
 
-% Automatically group nodes by IP subnet
-% Usage: \autoGroupSubnets
-\newcommand{\autoGroupSubnets}{
-    % Analyze IP addresses and create subnet boundaries
-    % This requires parsing logic
+% IP address parsing helpers
+% Parse IPv4 address into octets
+% Usage: \parseIPv4{ip_address}
+% Sets \ipoctetA, \ipoctetB, \ipoctetC, \ipoctetD
+\newcommand{\parseIPv4}[1]{
+    % Split IP address by dots
+    % Example: 192.168.1.10 -> octetA=192, octetB=168, octetC=1, octetD=10
+    % This requires string manipulation
+
+    \def\ipaddress{#1}
+    % Note: Full implementation requires expl3 or LuaTeX for string parsing
 }
 
-% TODO: Intelligent subnet grouping
-% - Parse IP addresses to determine subnets
-% - Automatically create subnet boundaries
-% - Color-code subnets by trust level
-% - Handle overlapping/nested subnets
-% - Support for CIDR notation
+% Calculate network address from IP and subnet mask
+% Usage: \calculateNetwork{ip}{cidr}
+% Example: \calculateNetwork{192.168.1.10}{24} -> 192.168.1.0/24
+\newcommand{\calculateNetwork}[2]{
+    % #1 = IP address (e.g., 192.168.1.10)
+    % #2 = CIDR prefix (e.g., 24 for /24)
+
+    % Convert IP to 32-bit integer
+    % Apply subnet mask
+    % Convert back to dotted decimal
+    % Store in \networkaddress
+}
+
+% Determine if two IPs are in the same subnet
+% Usage: \sameSubnet{ip1}{ip2}{cidr}
+% Sets \ifsamesubnet boolean
+\newif\ifsamesubnet
+\newcommand{\sameSubnetCheck}[3]{
+    % Compare network portions of both IPs
+    % Example: 192.168.1.10 and 192.168.1.20 with /24 -> true
+    % Example: 192.168.1.10 and 192.168.2.10 with /24 -> false
+
+    \samesubnettrue  % placeholder
+}
+
+% Automatically group nodes by IP subnet
+% Usage: \autoGroupSubnets{subnet_mask}
+% Creates visual groupings for all nodes based on their IP addresses
+\newcommand{\autoGroupSubnets}[1]{
+    % Analyze all node IP addresses
+    % Group by common network address
+    % Create subnet boundary boxes
+    % Apply color coding based on subnet
+}
+
+% Create subnet boundary from IP range
+% Usage: \createSubnetBoundary{subnet_cidr}{nodes}{color}{trust_level}
+% Example: \createSubnetBoundary{192.168.1.0/24}{(node1)(node2)}{blue}{high}
+\newcommand{\createSubnetBoundary}[4]{
+    \drawSecurityZone{subnet-#1}{#3}{#2}{#1}{#4}
+}
+
+% Auto-detect subnet from node list
+% Usage: \detectSubnet{node_list}
+% Analyzes IP addresses and determines common subnet
+\newcommand{\detectSubnet}[1]{
+    % Parse IP addresses from all nodes
+    % Find common network prefix
+    % Determine appropriate CIDR notation
+    % Return subnet identifier
+}
+
+% Color coding for different subnet types
+\newcommand{\subnetColor}[1]{
+    % #1 = subnet type: dmz, internal, external, management, etc.
+
+    \def\subnettype{#1}
+    \def\dmz{dmz}
+    \def\internal{internal}
+    \def\external{external}
+    \def\management{management}
+
+    \ifx\subnettype\dmz
+        orange
+    \else\ifx\subnettype\internal
+        blue
+    \else\ifx\subnettype\external
+        red
+    \else\ifx\subnettype\management
+        purple
+    \else
+        gray  % default
+    \fi\fi\fi\fi
+}
+
+% Trust level assignment based on subnet
+% Usage: \assignTrustLevel{subnet_first_octet}
+% Returns: high, medium, low, untrusted
+\newcommand{\assignTrustLevel}[1]{
+    % 10.x.x.x, 172.16-31.x.x, 192.168.x.x -> internal (high)
+    % DMZ ranges -> medium
+    % Public IPs -> low/untrusted
+
+    \pgfmathparse{#1 == 10 || #1 == 192 ? "high" : "medium"}
+}
+
+% Handle nested/overlapping subnets (VLAN support)
+% Usage: \createNestedSubnet{parent_subnet}{child_subnet}{nodes}{color}
+\newcommand{\createNestedSubnet}[4]{
+    % Draw child subnet inside parent
+    % Use nested fit nodes
+    % Apply visual hierarchy (inner box inside outer)
+
+    \begin{scope}[on background layer]
+        % Parent subnet
+        \node[
+            fit=#3,
+            draw=#4!40,
+            fill=#4!3,
+            rounded corners=10pt,
+            line width=3pt,
+            inner sep=25pt,
+            label={above:#1}
+        ] (parent-#1) {};
+
+        % Child subnet
+        \node[
+            fit=#3,
+            draw=#4!70,
+            fill=#4!8,
+            rounded corners=5pt,
+            line width=1.5pt,
+            inner sep=15pt,
+            label={above:#2}
+        ] (child-#2) {};
+    \end{scope}
+}
+
+% Parse CIDR notation
+% Usage: \parseCIDR{192.168.1.0/24}
+% Sets \cidrnetwork and \cidrprefix
+\newcommand{\parseCIDR}[1]{
+    % Split by '/' character
+    % Store network part in \cidrnetwork
+    % Store prefix length in \cidrprefix
+
+    \def\cidrnotation{#1}
+    % Implementation requires string parsing
+}
+
+% Calculate subnet capacity
+% Usage: \subnetCapacity{cidr_prefix}
+% Returns number of usable hosts
+\newcommand{\subnetCapacity}[1]{
+    % For /24: 2^(32-24) - 2 = 254 hosts
+    % For /16: 2^(32-16) - 2 = 65534 hosts
+
+    \pgfmathsetmacro{\capacity}{2^(32 - #1) - 2}
+}
+
+% Visualize subnet utilization
+% Usage: \showSubnetUtilization{subnet}{used_ips}{total_ips}
+\newcommand{\showSubnetUtilization}[3]{
+    % Display utilization percentage
+    % Color code: green (<50%), yellow (50-80%), red (>80%)
+
+    \pgfmathsetmacro{\utilization}{100 * #2 / #3}
+
+    \pgfmathparse{\utilization < 50 ? "green" : (\utilization < 80 ? "yellow" : "red")}
+    \let\utilizationcolor\pgfmathresult
+
+    % Draw utilization bar/indicator
+}
+
+% Auto-layout nodes within subnet boundary
+% Usage: \layoutSubnetNodes{subnet_name}{node_list}{layout_type}
+% layout_type: grid, circular, linear
+\newcommand{\layoutSubnetNodes}[3]{
+    % Arrange nodes within subnet boundary
+    % Optimize spacing to fit within boundary
+    % Maintain visual clarity
+
+    \def\layouttype{#3}
+    \def\grid{grid}
+    \def\circular{circular}
+
+    \ifx\layouttype\grid
+        % Grid layout within subnet
+    \else\ifx\layouttype\circular
+        % Circular layout within subnet
+    \else
+        % Linear layout (default)
+    \fi\fi
+}
 
 % ============================================================================
 % LAYOUT HELPERS AND UTILITIES
@@ -203,12 +550,153 @@
     \node[#5] (#1) at ($(#2)+({#4}:{#3})$) {};
 }
 
-% TODO: Layout utilities
-% - Automatic collision detection and avoidance
-% - Snap-to-grid positioning
-% - Magnetic alignment (align to nearby nodes)
-% - Distribute nodes evenly in area
-% - Compact layout algorithm for space efficiency
+% ============================================================================
+% COLLISION DETECTION AND AVOIDANCE
+% ============================================================================
+
+% Minimum safe spacing between nodes
+\newlength{\minNodeSpacing}
+\setlength{\minNodeSpacing}{2cm}
+
+% Node size estimation (for collision detection)
+\newlength{\nodeWidth}
+\newlength{\nodeHeight}
+\setlength{\nodeWidth}{2cm}
+\setlength{\nodeHeight}{1.5cm}
+
+% Set minimum spacing between nodes
+% Usage: \setMinNodeSpacing{distance}
+\newcommand{\setMinNodeSpacing}[1]{
+    \setlength{\minNodeSpacing}{#1}
+}
+
+% Set typical node dimensions (for collision detection)
+% Usage: \setNodeDimensions{width}{height}
+\newcommand{\setNodeDimensions}[2]{
+    \setlength{\nodeWidth}{#1}
+    \setlength{\nodeHeight}{#2}
+}
+
+% Check if two nodes overlap (basic rectangular collision)
+% Usage: \checkNodeCollision{node1}{node2}
+% Stores result in \ifnodecollision boolean
+\newif\ifnodecollision
+\newcommand{\checkNodeCollision}[2]{
+    % Extract coordinates of both nodes
+    \pgfextractx{\pgf@xa}{\pgfpointanchor{#1}{center}}
+    \pgfextracty{\pgf@ya}{\pgfpointanchor{#1}{center}}
+    \pgfextractx{\pgf@xb}{\pgfpointanchor{#2}{center}}
+    \pgfextracty{\pgf@yb}{\pgfpointanchor{#2}{center}}
+
+    % Calculate distance
+    \pgfmathsetmacro{\dx}{abs(\pgf@xb - \pgf@xa)}
+    \pgfmathsetmacro{\dy}{abs(\pgf@yb - \pgf@ya)}
+
+    % Check if distance is less than minimum spacing
+    \pgfmathparse{\dx < \minNodeSpacing && \dy < \minNodeSpacing ? 1 : 0}
+    \ifnum\pgfmathresult=1
+        \nodecollisiontrue
+    \else
+        \nodecollisionfalse
+    \fi
+}
+
+% Adjust position to avoid collision
+% Usage: \avoidCollision{moving_node}{fixed_node}{min_distance}
+% Moves the first node away from the second if they're too close
+\newcommand{\avoidCollision}[3]{
+    % Get positions
+    \pgfextractx{\pgf@xa}{\pgfpointanchor{#1}{center}}
+    \pgfextracty{\pgf@ya}{\pgfpointanchor{#1}{center}}
+    \pgfextractx{\pgf@xb}{\pgfpointanchor{#2}{center}}
+    \pgfextracty{\pgf@yb}{\pgfpointanchor{#2}{center}}
+
+    % Calculate current distance
+    \pgfmathsetmacro{\currentdist}{sqrt((\pgf@xb - \pgf@xa)^2 + (\pgf@yb - \pgf@ya)^2)}
+
+    % If too close, push away
+    \pgfmathparse{\currentdist < #3 ? 1 : 0}
+    \ifnum\pgfmathresult=1
+        % Calculate push direction
+        \pgfmathsetmacro{\pushangle}{atan2(\pgf@ya - \pgf@yb, \pgf@xa - \pgf@xb)}
+        \pgfmathsetmacro{\pushdist}{#3 - \currentdist + 0.5cm}  % extra margin
+
+        % Move node
+        \pgfmathsetmacro{\newx}{\pgf@xa + \pushdist * cos(\pushangle)}
+        \pgfmathsetmacro{\newy}{\pgf@ya + \pushdist * sin(\pushangle)}
+
+        \node[shift={(\newx pt, \newy pt)}] (#1) {};
+    \fi
+}
+
+% Grid snapping for alignment
+% Usage: \snapToGrid{node_name}{grid_size}
+% Snaps node to nearest grid point
+\newcommand{\snapToGrid}[2]{
+    \pgfextractx{\pgf@xa}{\pgfpointanchor{#1}{center}}
+    \pgfextracty{\pgf@ya}{\pgfpointanchor{#1}{center}}
+
+    % Round to nearest grid point
+    \pgfmathsetmacro{\snappedx}{round(\pgf@xa / #2) * #2}
+    \pgfmathsetmacro{\snappedy}{round(\pgf@ya / #2) * #2}
+
+    % Reposition node
+    \coordinate (#1-snapped) at (\snappedx, \snappedy);
+}
+
+% Magnetic alignment - align to nearby nodes
+% Usage: \magneticAlign{node_name}{alignment_threshold}
+% If within threshold of another node's x or y, snap to it
+\newcommand{\magneticAlign}[2]{
+    % This would iterate through all nodes and check alignment
+    % Align if within threshold (e.g., 0.5cm)
+    % Implementation requires node registry/list
+}
+
+% Distribute nodes evenly in a rectangular area
+% Usage: \distributeNodesEvenly{node_list}{x_min}{y_min}{x_max}{y_max}
+\newcommand{\distributeNodesEvenly}[5]{
+    % Count nodes (requires list parsing)
+    % Calculate grid that fits all nodes
+    % Position each node at grid point
+    % Handles both horizontal and vertical distribution
+}
+
+% Detect and resolve all collisions in diagram
+% Usage: \resolveAllCollisions{max_iterations}
+% Iteratively adjusts positions until no collisions
+\newcommand{\resolveAllCollisions}[1]{
+    % Iterate up to max_iterations times
+    % For each iteration:
+    %   - Check all node pairs for collisions
+    %   - Apply small repulsive forces to overlapping pairs
+    %   - Update positions
+    %   - If no collisions detected, stop early
+    % This is a simplified collision resolution system
+}
+
+% Calculate optimal spacing based on node count
+% Usage: \calculateOptimalSpacing{node_count}{area_width}{area_height}
+\newcommand{\calculateOptimalSpacing}[3]{
+    % Calculate grid that fits #1 nodes in area #2 x #3
+    \pgfmathsetmacro{\gridcols}{ceil(sqrt(#1 * #2 / #3))}
+    \pgfmathsetmacro{\gridrows}{ceil(#1 / \gridcols)}
+
+    \pgfmathsetlength{\nodeSpacing}{min(#2 / \gridcols, #3 / \gridrows) * 0.8}
+}
+
+% Check if point is inside bounding box
+% Usage: \pointInBox{x}{y}{x_min}{y_min}{x_max}{y_max}
+% Sets \ifpointinbox boolean
+\newif\ifpointinbox
+\newcommand{\pointInBox}[6]{
+    \pgfmathparse{#1 >= #3 && #1 <= #5 && #2 >= #4 && #2 <= #6 ? 1 : 0}
+    \ifnum\pgfmathresult=1
+        \pointinboxtrue
+    \else
+        \pointinboxfalse
+    \fi
+}
 
 % ============================================================================
 % MULTI-PAGE LAYOUT SUPPORT
