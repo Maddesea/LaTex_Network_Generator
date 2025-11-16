@@ -12,6 +12,8 @@ A professional, scalable network diagram generation system using LaTeX/TikZ, des
 ✅ **Advanced Visualizations** - Resource metrics, security status, OS badges, subnet boundaries
 ✅ **Scalable Output** - Support for A0 through A4 and custom page sizes
 ✅ **Rich Connection Types** - Encrypted, suspicious, attack, and bidirectional connections
+✅ **Security Zones** - Visual subnet and security boundary representations
+✅ **Data Import/Export** - CSV, JSON, YAML, and Nmap XML import support
 ✅ **TeXLive 2024/2025 Compatible** - Uses stable, widely-supported packages
 ### 🎨 **Visual Styling (60+ Features)**
 
@@ -208,6 +210,10 @@ network_diagram_generator.tex  # Main entry point
 ├── network_layout.tex         # Layout algorithms and positioning
 ├── connection_renderer.tex    # Connection drawing and flows
 ├── threat_indicators.tex      # Security threat visualization
+├── data_import.tex            # Data import/export functionality
+├── network_data.tex           # Actual network topology data
+└── examples/
+    └── data_import/           # CSV, JSON, YAML, Nmap examples
 ├── network_data.tex           # Actual network topology data
 ├── QUICKSTART.md              # 5-minute tutorial (NEW!)
 ├── example_complete_network.tex   # Comprehensive 45+ node example
@@ -838,6 +844,118 @@ Risk: \calculateRiskScore{80}{90}{95}{75}
     {High Trust}
 ```
 
+## Data Import/Export
+
+The system supports importing network topology data from various formats, ideal for automation and integration with existing tools.
+
+### 🆕 Auto-Positioning (No Coordinates!)
+
+The easiest way to start! Import nodes without manual positioning:
+
+```csv
+id,type,ip,label
+srv1,server,192.168.1.10,Web Server
+fw1,firewall,192.168.1.1,Firewall
+db1,server,192.168.20.10,Database
+```
+
+```latex
+\input{data_import.tex}
+\importNodesAutoPositioned{nodes-simple.csv}
+```
+
+Nodes automatically arranged in a grid layout. Perfect for rapid prototyping!
+
+### CSV Import (Traditional)
+
+Import network data with manual positioning from spreadsheet-compatible CSV files:
+
+```latex
+\input{data_import.tex}
+
+% Import all network data from CSV files
+\importNetworkFromCSV{nodes.csv}{connections.csv}{threats.csv}
+```
+
+**nodes.csv format:**
+```csv
+id,type,ip,x,y,label
+srv1,server,192.168.1.10,0,0,Web Server
+fw1,firewall,192.168.1.1,0,3,Edge Firewall
+```
+
+**connections.csv format:**
+```csv
+source,destination,label,type
+fw1,srv1,HTTPS,encrypted
+srv1,db1,,normal
+```
+
+**threats.csv format:**
+```csv
+target,type,severity,cve,description
+srv1,vulnerability,9.8,CVE-2024-1234,SQL Injection
+```
+
+### Nmap XML Import
+
+Import network discovery data directly from Nmap scans (requires LuaLaTeX):
+
+```bash
+# Run Nmap scan
+nmap -sV -O 192.168.1.0/24 -oX nmap-scan.xml
+
+# Import in LaTeX
+\input{data_import.tex}
+\importNmapXML{nmap-scan.xml}
+```
+
+Automatically extracts:
+- Discovered hosts and IP addresses
+- Open ports and services
+- Operating system detection
+- Service version information
+
+### 🆕 Nessus Vulnerability Scan Import
+
+Import vulnerability assessment data directly from Nessus scans (requires LuaLaTeX):
+
+```latex
+\input{data_import.tex}
+\importNessusXML{nessus-scan.nessus}
+```
+
+Features:
+- Automatic vulnerability severity detection (Critical/High/Medium/Low)
+- CVE and CVSS score extraction and display
+- Threat badge auto-assignment based on risk
+- Vulnerability count per host (C/H/M format)
+- Perfect for security audit and compliance reports
+
+### JSON/YAML Import
+
+Import from structured data files (requires LuaLaTeX):
+
+```latex
+% JSON format
+\importNetworkFromJSON{network.json}
+
+% YAML format (human-readable)
+\importNetworkFromYAML{network.yaml}
+```
+
+### 🆕 Auto-Subnet Zone Generation
+
+Automatically group nodes by IP subnet (requires LuaLaTeX):
+
+```latex
+\autoGenerateSubnetZones
+```
+
+Analyzes all IP addresses and creates color-coded security zones automatically!
+
+See `examples/data_import/` for complete examples and file format specifications.
+
 ## Advanced Features
 
 ### Custom Colors
@@ -960,15 +1078,24 @@ Implemented Features:
 - [x] Quick threat scenario helpers - **COMPLETED**
 - [ ] Real-time threat feed integration
 
-### Agent 6: Data Import/Export
+### Agent 6: Data Import/Export (`data_import.tex`)
+**Completed Features (v1.1):**
+- [x] JSON/YAML parser for network data input
+- [x] CSV import for bulk node creation
+- [x] Nmap XML output parser
+- [x] Nessus vulnerability scan integration ⭐ NEW
+- [x] Auto-positioning algorithm (grid layout) ⭐ NEW
+- [x] IP subnet detection and auto-grouping ⭐ NEW
+- [x] IPv4 validation and parsing ⭐ NEW
+- [x] Connection inference from port data ⭐ NEW
+- [x] Export to GraphML/DOT format
+
 **Priority TODOs:**
-- [ ] JSON/YAML parser for network data input
-- [ ] CSV import for bulk node creation
-- [ ] Nmap XML output parser
-- [ ] Nessus scan result integration
-- [ ] Export to GraphML/DOT format
 - [ ] Database connectivity for live network data
 - [ ] REST API for dynamic diagram generation
+- [ ] Enhanced JSON/YAML parsing with proper libraries
+- [ ] Force-directed auto-layout algorithm
+- [ ] SIEM integration (Splunk, ELK)
 
 ## Performance Optimization
 

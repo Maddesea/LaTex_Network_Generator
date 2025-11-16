@@ -1,0 +1,4 @@
+target,type,severity,cve,description
+web1,vulnerability,9.8,CVE-2024-1234,SQL Injection vulnerability
+ws2,malware,8.5,N/A,Ransomware detected
+fw1,vulnerability,6.5,CVE-2024-5678,Firewall configuration weakness

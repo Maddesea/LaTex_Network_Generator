@@ -1,0 +1,11 @@
+id,type,ip,label
+web1,server,192.168.10.10,Web Server
+web2,server,192.168.10.11,Web Server 2
+app1,server,192.168.20.10,App Server
+app2,server,192.168.20.11,App Server 2
+db1,server,192.168.30.10,Database Primary
+db2,server,192.168.30.11,Database Replica
+fw1,firewall,192.168.1.1,Main Firewall
+rtr1,router,192.168.1.2,Core Router
+lb1,server,192.168.10.5,Load Balancer
+cache1,server,192.168.20.5,Redis Cache

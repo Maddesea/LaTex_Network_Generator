@@ -1,0 +1,173 @@
+% example_advanced_integration.tex - Advanced integration example
+% Compile with: lualatex example_advanced_integration.tex
+% Demonstrates mixing CSV import with manual commands and advanced features
+
+\documentclass[tikz,border=10pt]{standalone}
+
+% Load required packages
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric, arrows.meta, positioning, backgrounds, fit, calc, decorations.pathmorphing, shadows}
+\usepackage{ifthen}
+
+% Include all modules from the parent directory
+\input{../../styles_config.tex}
+\input{../../node_definitions.tex}
+\input{../../network_layout.tex}
+\input{../../connection_renderer.tex}
+\input{../../threat_indicators.tex}
+\input{../../data_import.tex}
+
+\begin{document}
+\begin{tikzpicture}[
+    scale=\diagramScale,
+    every node/.style={transform shape}
+]
+
+% ============================================================================
+% ADVANCED INTEGRATION EXAMPLE
+% ============================================================================
+% This example demonstrates advanced usage combining multiple features:
+%   1. CSV bulk import for standard nodes
+%   2. Manual node creation for special cases
+%   3. Imported connections from CSV
+%   4. Manual threat overlays
+%   5. Auto-generated subnet zones
+%
+% This hybrid approach offers maximum flexibility:
+%   - Use CSV for bulk/repetitive data
+%   - Use manual commands for fine-grained control
+%   - Combine multiple data sources
+% ============================================================================
+
+\message{========================================}
+\message{Advanced Integration Example}
+\message{========================================}
+
+% ============================================================================
+% PART 1: Import bulk node data from CSV
+% ============================================================================
+\renewcommand{\renderNetworkNodes}{
+    % Import standard nodes from CSV
+    \importNodesFromCSV{nodes.csv}
+
+    % Add special nodes manually (not in CSV)
+    \createCloud{internet}{0}{8}{Internet}
+    \createAttacker{attacker1}{203.0.113.45}{-8}{8}{APT Group}
+    \createAttacker{attacker2}{198.51.100.78}{8}{8}{Botnet}
+
+    % Add annotation to imported node
+    \addNodeMetadata{web1}{nginx 1.18.0}
+    \addNodeMetadata{db1}{PostgreSQL 13.3}
+}
+
+% ============================================================================
+% PART 2: Import connections from CSV, add manual overlays
+% ============================================================================
+\renewcommand{\renderConnections}{
+    % Import standard connections from CSV
+    \importConnectionsFromCSV{connections.csv}
+
+    % Add attack connections manually
+    \drawAttackConnection{internet}{fw1}{}
+    \drawAttackConnection{attacker1}{fw1}{Port Scan}
+    \drawAttackConnection{attacker2}{web1}{DDoS}
+
+    % Add custom curved connection to avoid overlap
+    \drawCurvedConnection{internet}{rtr1}{30}{External Access}
+}
+
+% ============================================================================
+% PART 3: Import threats from CSV, add manual analysis
+% ============================================================================
+\renewcommand{\renderThreats}{
+    % Import known vulnerabilities from CSV
+    \importThreatsFromCSV{threats.csv}
+
+    % Add real-time threat intelligence manually
+    \visualizeDDoS{attacker1,attacker2}{web1}{critical}
+
+    % Mark additional nodes based on analysis
+    \addThreatBadge{fw1}{medium}
+
+    % Add custom threat annotations
+    \node[above right, threat label, fill=threatCritical]
+        at (ws2.north east) {Active Breach};
+
+    % Draw security dashboard
+    \drawSecurityDashboard{10}{8}
+}
+
+% Render everything
+\renderNetworkNodes
+
+% ============================================================================
+% PART 4: Auto-generate subnet zones from IP addresses
+% ============================================================================
+% Note: This requires LuaTeX and uses IP address parsing
+% Uncomment if using lualatex:
+% \autoGenerateSubnetZones
+
+% Manual security zones (alternative if not using LuaTeX)
+\begin{scope}[on background layer]
+    % Internet Zone
+    \node[
+        draw=cloudGray,
+        fill=cloudGray!10,
+        rounded corners=5pt,
+        inner sep=10pt,
+        fit={(internet) (attacker1) (attacker2)},
+        label={[anchor=north west, fill=cloudGray!30]north west:Internet}
+    ] {};
+
+    % DMZ Zone
+    \drawSecurityZone{dmz}{routerOrange}
+        {(fw1) (rtr1) (web1) (mail1)}
+        {DMZ}{Low Trust}
+
+    % Internal Zone
+    \drawSecurityZone{internal}{clientGreen}
+        {(fw2) (sw1) (app1) (app2) (ws1) (ws2) (ws3)}
+        {Internal Network}{Medium Trust}
+
+    % Database Zone
+    \drawSecurityZone{database}{serverBlue}
+        {(db1) (db2)}
+        {Database Tier}{High Trust}
+\end{scope}
+
+\renderConnections
+\renderThreats
+
+% ============================================================================
+% PART 5: Add comprehensive legend and metadata
+% ============================================================================
+\node[legend box, anchor=south west] at (-10,-9) {
+    \small\bfseries Advanced Integration \\[2pt]
+    \tiny
+    \textbf{Data Sources:} \\
+    • nodes.csv (bulk import) \\
+    • connections.csv (imported) \\
+    • threats.csv (imported) \\
+    • Manual overlays (attackers) \\
+    • Live threat intel (DDoS) \\[3pt]
+    \textbf{Features:} \\
+    • Hybrid manual/import \\
+    • Auto subnet detection \\
+    • Real-time threat overlay \\
+    • Custom annotations
+};
+
+% Export options example (commented out)
+% \exportToGraphML{network.graphml}
+% \exportToDOT{network.dot}
+
+% Metadata
+\node[font=\tiny, anchor=south east, text=black!60] at (10,-9) {
+    Generated: \today \\
+    Advanced Integration \\
+    Agent 6: Full Feature Set \\
+    CSV + Manual + Analysis
+};
+
+\end{tikzpicture}
+\end{document}

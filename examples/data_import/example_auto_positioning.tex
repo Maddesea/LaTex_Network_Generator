@@ -1,0 +1,105 @@
+% example_auto_positioning.tex - Demonstrates auto-positioning feature
+% Compile with: pdflatex example_auto_positioning.tex
+
+\documentclass[tikz,border=10pt]{standalone}
+
+% Load required packages
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric, arrows.meta, positioning, backgrounds, fit, calc, decorations.pathmorphing, shadows}
+\usepackage{ifthen}
+
+% Include all modules from the parent directory
+\input{../../styles_config.tex}
+\input{../../node_definitions.tex}
+\input{../../network_layout.tex}
+\input{../../connection_renderer.tex}
+\input{../../threat_indicators.tex}
+\input{../../data_import.tex}
+
+\begin{document}
+\begin{tikzpicture}[
+    scale=0.8,
+    every node/.style={transform shape}
+]
+
+% ============================================================================
+% AUTO-POSITIONING EXAMPLE
+% ============================================================================
+% This example demonstrates the auto-positioning feature where nodes are
+% automatically laid out in a grid pattern without requiring manual x,y
+% coordinate specification.
+%
+% The CSV file only needs: id, type, ip, label
+% No x,y coordinates required!
+%
+% Benefits:
+%   - Faster data entry (no manual positioning)
+%   - Consistent spacing and alignment
+%   - Easy to add/remove nodes
+%   - Perfect for rapid prototyping
+% ============================================================================
+
+\message{========================================}
+\message{Auto-Positioning Example}
+\message{========================================}
+
+% Import nodes with automatic positioning
+\renewcommand{\renderNetworkNodes}{
+    \importNodesAutoPositioned{nodes-simple.csv}
+}
+
+% Render the network
+\renderNetworkNodes
+
+% Manual connections (since they depend on network architecture)
+\renewcommand{\renderConnections}{
+    % Internet → Firewall → Router
+    \drawConnection{fw1}{rtr1}{}
+
+    % Router → Load Balancer
+    \drawConnection{rtr1}{lb1}{}
+
+    % Load Balancer → Web Servers
+    \drawConnection{lb1}{web1}{}
+    \drawConnection{lb1}{web2}{}
+
+    % Web Servers → App Servers
+    \drawEncryptedConnection{web1}{app1}{HTTPS}
+    \drawEncryptedConnection{web2}{app2}{HTTPS}
+
+    % App Servers → Cache
+    \drawConnection{app1}{cache1}{Redis}
+    \drawConnection{app2}{cache1}{Redis}
+
+    % App Servers → Database
+    \drawEncryptedConnection{app1}{db1}{TLS 1.3}
+    \drawEncryptedConnection{app2}{db1}{TLS 1.3}
+
+    % Database Replication
+    \drawConnection{db1}{db2}{Replication}
+}
+
+\renderConnections
+
+% Legend
+\node[legend box, anchor=south west] at (-2,-11) {
+    \small\bfseries Auto-Positioning \\[2pt]
+    \tiny
+    Nodes imported from: \\
+    • nodes-simple.csv \\[2pt]
+    Layout: Grid (4x3) \\
+    Spacing: Auto-calculated \\
+    Manual coords: None! \\[2pt]
+    CSV format: \\
+    id,type,ip,label
+};
+
+% Metadata
+\node[font=\tiny, anchor=south east, text=black!60] at (10,-11) {
+    Generated: \today \\
+    Auto-Positioning Module \\
+    Agent 6: v1.1 Features
+};
+
+\end{tikzpicture}
+\end{document}

@@ -1,0 +1,126 @@
+# Network Topology Definition - YAML Format
+# More human-readable alternative to JSON
+
+network:
+  name: Corporate Network
+  version: "1.0"
+  generated: "2025-11-16"
+
+nodes:
+  # Perimeter devices
+  - id: fw1
+    type: firewall
+    ip: 192.168.1.1
+    position:
+      x: 0
+      y: 5
+    label: Edge Firewall
+    properties:
+      vendor: Cisco
+      model: ASA 5506-X
+
+  - id: rtr1
+    type: router
+    ip: 192.168.1.2
+    position:
+      x: -3
+      y: 3
+    label: Core Router
+
+  # DMZ servers
+  - id: web1
+    type: server
+    ip: 192.168.10.10
+    position:
+      x: -3
+      y: 1
+    label: Web Server
+    ports:
+      - 80
+      - 443
+    services:
+      - nginx
+      - php-fpm
+
+  - id: mail1
+    type: server
+    ip: 192.168.10.20
+    position:
+      x: 3
+      y: 1
+    label: Mail Server
+    ports:
+      - 25
+      - 587
+      - 993
+
+  # Internal servers
+  - id: app1
+    type: server
+    ip: 192.168.100.10
+    position:
+      x: -4
+      y: -5
+    label: App Server 1
+
+  - id: db1
+    type: server
+    ip: 192.168.200.10
+    position:
+      x: 4
+      y: -5
+    label: DB Primary
+
+connections:
+  - source: fw1
+    destination: rtr1
+    type: normal
+    protocol: GRE
+
+  - source: rtr1
+    destination: web1
+    type: normal
+
+  - source: web1
+    destination: app1
+    type: encrypted
+    label: HTTPS
+    protocol: TLS 1.3
+
+  - source: app1
+    destination: db1
+    type: encrypted
+    label: TLS 1.3
+
+threats:
+  - target: web1
+    type: vulnerability
+    severity: 9.8
+    cve: CVE-2024-1234
+    description: SQL Injection vulnerability
+    cvss_vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+
+zones:
+  - name: dmz
+    label: DMZ
+    trust_level: low
+    color: routerOrange
+    nodes:
+      - fw1
+      - rtr1
+      - web1
+      - mail1
+
+  - name: internal
+    label: Internal Network
+    trust_level: medium
+    color: clientGreen
+    nodes:
+      - app1
+
+  - name: database
+    label: Database Tier
+    trust_level: high
+    color: serverBlue
+    nodes:
+      - db1
