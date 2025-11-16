@@ -1218,3 +1218,567 @@
 \newcommand{\listPresets}{
     Available presets: Corporate, Security, Presentation, Accessible, Dark
 }
+
+% ============================================================================
+% ENHANCED CONNECTION STYLES WITH BANDWIDTH INDICATORS
+% ============================================================================
+
+\tikzset{
+    % Bandwidth-aware connections (line thickness indicates capacity)
+    bandwidth low/.style={
+        line width=0.5pt,
+        draw=connNormal!70
+    },
+
+    bandwidth medium/.style={
+        line width=1.5pt,
+        draw=connNormal
+    },
+
+    bandwidth high/.style={
+        line width=3pt,
+        draw=connNormal!80
+    },
+
+    bandwidth ultra/.style={
+        line width=5pt,
+        draw=blue!60
+    },
+
+    % Connection with congestion indicator (red/yellow/green)
+    congestion critical/.style={
+        line width=2pt,
+        draw=red!70,
+        postaction={
+            draw=red!30,
+            line width=4pt,
+            shorten >=2pt,
+            shorten <=2pt
+        }
+    },
+
+    congestion warning/.style={
+        line width=2pt,
+        draw=yellow!70,
+        postaction={
+            draw=yellow!30,
+            line width=4pt,
+            shorten >=2pt,
+            shorten <=2pt
+        }
+    },
+
+    congestion normal/.style={
+        line width=2pt,
+        draw=green!70,
+        postaction={
+            draw=green!30,
+            line width=4pt,
+            shorten >=2pt,
+            shorten <=2pt
+        }
+    },
+
+    % VPN tunnel style (thick dashed with encryption indicators)
+    vpn tunnel/.style={
+        line width=3pt,
+        draw=green!60,
+        dashed,
+        dash pattern=on 6pt off 3pt,
+        postaction={
+            decorate,
+            decoration={
+                markings,
+                mark=between positions 0.1 and 0.9 step 0.15 with {
+                    \node[fill=green!40, circle, inner sep=1.5pt] {};
+                }
+            }
+        }
+    },
+
+    % Fiber optic style (light beam effect)
+    fiber optic/.style={
+        line width=2pt,
+        draw=cyan!80,
+        postaction={
+            draw=cyan!30,
+            line width=4pt,
+            shorten >=1pt,
+            shorten <=1pt
+        },
+        postaction={
+            draw=white,
+            line width=1pt
+        }
+    },
+
+    % Wireless connection (wave pattern)
+    wireless/.style={
+        line width=1.5pt,
+        draw=purple!60,
+        decorate,
+        decoration={
+            snake,
+            amplitude=1mm,
+            segment length=5mm
+        }
+    },
+
+    % Satellite link (dashed with satellite markers)
+    satellite/.style={
+        line width=1.5pt,
+        draw=orange!70,
+        dashed,
+        dash pattern=on 8pt off 4pt,
+        postaction={
+            decorate,
+            decoration={
+                markings,
+                mark=at position 0.5 with {
+                    \node[fill=orange!60, star, star points=5, minimum size=4pt] {};
+                }
+            }
+        }
+    },
+
+    % Load balanced connection (multiple parallel lines)
+    load balanced/.style={
+        double distance=2pt,
+        draw=blue!70,
+        line width=1pt,
+        postaction={
+            draw=blue!30,
+            line width=3pt,
+            shorten >=2pt,
+            shorten <=2pt
+        }
+    }
+}
+
+% Command to draw labeled connection with auto-positioning
+% Usage: \labeledConnection{from}{to}{style}{label}
+\newcommand{\labeledConnection}[4]{
+    \draw[#3] (#1) -- node[midway, auto, fill=white, inner sep=2pt, font=\tiny] {#4} (#2);
+}
+
+% Command to draw bandwidth connection with percentage
+% Usage: \bandwidthConnection{from}{to}{utilization}{label}
+\newcommand{\bandwidthConnection}[4]{
+    \pgfmathparse{#3 < 50 ? 1 : (#3 < 80 ? 2 : 3)}
+    \let\congestlevel\pgfmathresult
+    \ifnum\congestlevel=1
+        \draw[congestion normal] (#1) -- node[midway, auto, fill=white, inner sep=2pt, font=\tiny] {#4: #3\%} (#2);
+    \fi
+    \ifnum\congestlevel=2
+        \draw[congestion warning] (#1) -- node[midway, auto, fill=white, inner sep=2pt, font=\tiny] {#4: #3\%} (#2);
+    \fi
+    \ifnum\congestlevel=3
+        \draw[congestion critical] (#1) -- node[midway, auto, fill=white, inner sep=2pt, font=\tiny] {#4: #3\%} (#2);
+    \fi
+}
+
+% ============================================================================
+% ADDITIONAL VISUAL EFFECTS
+% ============================================================================
+
+\tikzset{
+    % Flashing alert effect (for critical nodes)
+    flash alert/.style={
+        fill=red!70,
+        draw=red!90,
+        line width=3pt,
+        blur shadow={
+            shadow blur steps=20,
+            shadow xshift=0pt,
+            shadow yshift=0pt,
+            shadow blur radius=15pt,
+            shadow color=red,
+            shadow opacity=90
+        }
+    },
+
+    % Shimmer effect (subtle glow variation)
+    shimmer/.style={
+        blur shadow={
+            shadow blur steps=10,
+            shadow xshift=0pt,
+            shadow yshift=0pt,
+            shadow blur radius=5pt,
+            shadow color=#1,
+            shadow opacity=50
+        }
+    },
+
+    % Danger zone style
+    danger zone/.style={
+        fill=red!10,
+        draw=red!60,
+        line width=2pt,
+        dashed,
+        dash pattern=on 5pt off 5pt,
+        blur shadow={shadow blur steps=5}
+    },
+
+    % Safe zone style
+    safe zone/.style={
+        fill=green!10,
+        draw=green!60,
+        line width=1.5pt,
+        dotted
+    },
+
+    % Quarantine zone style
+    quarantine zone/.style={
+        fill=yellow!15,
+        draw=orange!70,
+        line width=2pt,
+        pattern=north west lines,
+        pattern color=orange!20
+    },
+
+    % 3D-style node (raised appearance)
+    raised 3d/.style={
+        blur shadow={
+            shadow blur steps=5,
+            shadow xshift=3pt,
+            shadow yshift=-3pt,
+            shadow blur radius=2pt
+        },
+        postaction={
+            draw=white,
+            line width=1pt,
+            shorten >=0.5pt,
+            shorten <=0.5pt,
+            transform canvas={shift={(0.5pt,0.5pt)}}
+        }
+    }
+}
+
+% ============================================================================
+% ADVANCED NODE SHAPE LIBRARY
+% ============================================================================
+
+\tikzset{
+    % Database cluster (multiple cylinders)
+    database cluster/.style={
+        cylinder,
+        shape border rotate=90,
+        minimum width=1.2cm,
+        minimum height=1.5cm,
+        fill=serverBlue!30,
+        draw=serverBlue!80,
+        line width=1.5pt,
+        aspect=0.3,
+        double border=serverBlue
+    },
+
+    % Load balancer (diamond with special marking)
+    load balancer node/.style={
+        diamond,
+        minimum width=2cm,
+        minimum height=2cm,
+        fill=routerOrange!25,
+        draw=routerOrange!80,
+        line width=1.5pt,
+        glow
+    },
+
+    % Cloud service (with layers)
+    cloud service/.style={
+        cloud,
+        cloud puffs=12,
+        cloud puff arc=120,
+        aspect=2,
+        minimum width=3cm,
+        minimum height=2cm,
+        fill=cloudGray!25,
+        draw=cloudGray!80,
+        line width=1.5pt,
+        shimmer=blue
+    },
+
+    % Container (rounded rectangle with lines)
+    container node/.style={
+        rectangle,
+        rounded corners=5pt,
+        minimum width=2cm,
+        minimum height=1.5cm,
+        fill=clientGreen!20,
+        draw=clientGreen!70,
+        line width=1pt,
+        path picture={
+            \draw[clientGreen!50]
+                (path picture bounding box.north west) --
+                (path picture bounding box.north east);
+            \draw[clientGreen!50]
+                ([yshift=-3mm]path picture bounding box.north west) --
+                ([yshift=-3mm]path picture bounding box.north east);
+        }
+    },
+
+    % Virtual machine (nested boxes)
+    vm node/.style={
+        rectangle,
+        rounded corners=3pt,
+        minimum width=2cm,
+        minimum height=1.5cm,
+        fill=serverBlue!15,
+        draw=serverBlue!70,
+        line width=1pt,
+        double border=serverBlue
+    },
+
+    % IoT device (small hexagon)
+    iot device/.style={
+        regular polygon,
+        regular polygon sides=6,
+        minimum size=1.5cm,
+        fill=purple!20,
+        draw=purple!70,
+        line width=1pt
+    },
+
+    % Mobile device (rounded rectangle - portrait)
+    mobile device/.style={
+        rectangle,
+        rounded corners=3pt,
+        minimum width=1cm,
+        minimum height=1.8cm,
+        fill=clientGreen!20,
+        draw=clientGreen!70,
+        line width=1pt,
+        path picture={
+            \fill[clientGreen!40]
+                ([yshift=1mm]path picture bounding box.south)
+                circle (1.5pt);
+        }
+    }
+}
+
+% ============================================================================
+% AUTO-LEGEND GENERATION SYSTEM
+% ============================================================================
+
+% Counter for legend items
+\newcounter{legendItemCount}
+\setcounter{legendItemCount}{0}
+
+% Store legend items
+\newcommand{\legendItems}{}
+
+% Add item to legend
+% Usage: \addLegendItem{style}{label}
+\newcommand{\addLegendItem}[2]{
+    \stepcounter{legendItemCount}
+    \expandafter\gdef\expandafter\legendItems\expandafter{%
+        \legendItems
+        \node[#1, minimum width=0.8cm, minimum height=0.4cm]
+            at (0, -\value{legendItemCount}*0.6) {};
+        \node[right, font=\tiny]
+            at (0.5, -\value{legendItemCount}*0.6) {#2};
+    }
+}
+
+% Render the legend
+% Usage: \renderLegend{x}{y}{title}
+\newcommand{\renderLegend}[3]{
+    \begin{scope}[shift={(#1,#2)}]
+        \node[font=\small\bfseries] at (1, 0.3) {#3};
+        \draw[draw=black!30, fill=white, rounded corners=2pt]
+            (-0.3, 0.7) rectangle (2.5, -\value{legendItemCount}*0.6 - 0.3);
+        \legendItems
+    \end{scope}
+}
+
+% Quick legend presets
+\newcommand{\addStandardLegend}{
+    \addLegendItem{server premium}{Server}
+    \addLegendItem{client premium}{Client}
+    \addLegendItem{router premium}{Router}
+    \addLegendItem{firewall premium}{Firewall}
+    \addLegendItem{switch premium}{Switch}
+}
+
+\newcommand{\addConnectionLegend}{
+    \addLegendItem{normal conn}{Normal}
+    \addLegendItem{encrypted conn}{Encrypted}
+    \addLegendItem{suspicious conn}{Suspicious}
+    \addLegendItem{attack conn}{Attack}
+}
+
+\newcommand{\addThreatLegend}{
+    \draw[fill=threatCritical] (0, -1*0.6) circle(2pt);
+    \node[right, font=\tiny] at (0.5, -1*0.6) {Critical};
+    \draw[fill=threatHigh] (0, -2*0.6) circle(2pt);
+    \node[right, font=\tiny] at (0.5, -2*0.6) {High};
+    \draw[fill=threatMedium] (0, -3*0.6) circle(2pt);
+    \node[right, font=\tiny] at (0.5, -3*0.6) {Medium};
+    \draw[fill=threatLow] (0, -4*0.6) circle(2pt);
+    \node[right, font=\tiny] at (0.5, -4*0.6) {Low};
+}
+
+% ============================================================================
+% SMART POSITIONING HELPERS
+% ============================================================================
+
+% Calculate positions for grid layout
+% Usage: \gridPosition{row}{col}{spacing}
+\newcommand{\gridPosition}[3]{
+    (#2*#3, -#1*#3)
+}
+
+% Calculate positions for circular layout
+% Usage: \circularPosition{index}{total}{radius}
+\newcommand{\circularPosition}[3]{
+    ({#3*cos(360/#2*#1)}, {#3*sin(360/#2*#1)})
+}
+
+% Create a row of nodes
+% Usage: \nodeRow{base-name}{y}{count}{spacing}{style}{label-prefix}
+\newcommand{\nodeRow}[6]{
+    \foreach \i in {1,...,#3} {
+        \node[#5] (#1-\i) at ({(\i-1)*#4}, #2) {#6 \i};
+    }
+}
+
+% Create a column of nodes
+% Usage: \nodeColumn{base-name}{x}{count}{spacing}{style}{label-prefix}
+\newcommand{\nodeColumn}[6]{
+    \foreach \i in {1,...,#3} {
+        \node[#5] (#1-\i) at (#2, {-(\i-1)*#4}) {#6 \i};
+    }
+}
+
+% Create a grid of nodes
+% Usage: \nodeGrid{base-name}{rows}{cols}{spacing}{style}
+\newcommand{\nodeGrid}[5]{
+    \foreach \row in {1,...,#2} {
+        \foreach \col in {1,...,#3} {
+            \pgfmathtruncatemacro{\nodenum}{(\row-1)*#3+\col}
+            \node[#5] (#1-\nodenum) at \gridPosition{\row}{\col}{#4} {\nodenum};
+        }
+    }
+}
+
+% ============================================================================
+% ENHANCED BADGE POSITIONING
+% ============================================================================
+
+% Multi-badge support (stack badges)
+\newcommand{\stackBadges}[4]{
+    % #1 = node, #2 = position, #3 = badge1, #4 = badge2
+    \nodeBadge{#1}{#3}{#2}{1}
+    \pgfmathparse{equal("#2","north east") || equal("#2","north west") ? 1 : -1}
+    \let\direction\pgfmathresult
+    \node[#4, badge #2, yshift=\direction*0.7cm] at (#1.#2) {2};
+}
+
+% Badge with custom icon/text
+\newcommand{\customBadge}[4]{
+    % #1 = node, #2 = position, #3 = color, #4 = text
+    \node[base badge, fill=#3!70, text=white, draw=#3!90, badge #2] at (#1.#2) {#4};
+}
+
+% Numeric indicator badge (for counts, versions, etc.)
+\newcommand{\numericBadge}[4]{
+    % #1 = node, #2 = position, #3 = number, #4 = color
+    \node[base badge, fill=#4!70, text=white, draw=#4!90, badge #2, font=\tiny\bfseries]
+        at (#1.#2) {#3};
+}
+
+% ============================================================================
+% QUALITY OF LIFE IMPROVEMENTS
+% ============================================================================
+
+% Quick diagram setup
+\newcommand{\setupDiagram}[1]{
+    % #1 = preset name (corporate, security, presentation, accessible, dark)
+    \ifthenelse{\equal{#1}{corporate}}{\loadCorporatePreset}{}
+    \ifthenelse{\equal{#1}{security}}{\loadSecurityPreset}{}
+    \ifthenelse{\equal{#1}{presentation}}{\loadPresentationPreset}{}
+    \ifthenelse{\equal{#1}{accessible}}{\loadAccessiblePreset}{}
+    \ifthenelse{\equal{#1}{dark}}{\loadDarkPreset}{}
+}
+
+% Quick three-tier architecture
+% Usage: \threeTierSetup{x-offset}{y-spacing}
+\newcommand{\threeTierSetup}[2]{
+    % Web tier
+    \nodeRow{web}{0}{3}{#1}{server premium}{Web-}
+    % App tier
+    \nodeRow{app}{-#2}{3}{#1}{server premium}{App-}
+    % DB tier
+    \nodeRow{db}{-2*#2}{2}{#1}{database cluster}{DB-}
+
+    % Connections
+    \foreach \i in {1,2,3} {
+        \draw[encrypted conn] (web-\i) -- (app-\i);
+    }
+    \foreach \i in {1,2,3} {
+        \pgfmathtruncatemacro{\dbnode}{(\i < 3) ? \i : 2}
+        \draw[encrypted conn] (app-\i) -- (db-\dbnode);
+    }
+}
+
+% Default styling improvements
+\tikzset{
+    % Smart defaults for all nodes
+    every node/.append style={
+        font=\sffamily
+    },
+
+    % Smart defaults for connections
+    every path/.append style={
+        -{Stealth[length=3mm]}
+    }
+}
+
+% ============================================================================
+% DIAGRAM TEMPLATES
+% ============================================================================
+
+% Template: DMZ Architecture
+\newcommand{\dmzTemplate}{
+    % Public zone
+    \node[cloud premium] (internet) at (0,4) {Internet};
+    \node[firewall premium] (fw-edge) at (0,2) {Edge Firewall};
+
+    % DMZ
+    \quickServer{dmz-web}{-2,0}{Web Server}
+    \quickServer{dmz-api}{2,0}{API Server}
+
+    % Internal firewall
+    \node[firewall premium] (fw-int) at (0,-2) {Internal Firewall};
+
+    % Internal zone
+    \quickServer{int-app}{-2,-4}{App Server}
+    \node[database cluster] (int-db) at (2,-4) {Database};
+
+    % Connections
+    \draw[normal conn] (internet) -- (fw-edge);
+    \draw[encrypted conn] (fw-edge) -- (dmz-web);
+    \draw[encrypted conn] (fw-edge) -- (dmz-api);
+    \draw[encrypted conn] (dmz-web) -- (fw-int);
+    \draw[encrypted conn] (dmz-api) -- (fw-int);
+    \draw[encrypted conn] (fw-int) -- (int-app);
+    \draw[encrypted conn] (int-app) -- (int-db);
+
+    % Badges
+    \addBadges{dmz-web}{linux badge}{online badge}
+    \addBadges{dmz-api}{linux badge}{online badge}
+    \addBadges{int-app}{linux badge}{online badge}
+}
+
+% Color scheme cycling for multi-diagram documents
+\newcounter{diagramColorCycle}
+\newcommand{\nextColorScheme}{
+    \stepcounter{diagramColorCycle}
+    \pgfmathparse{mod(\value{diagramColorCycle},6)}
+    \let\schemeindex\pgfmathresult
+    \ifnum\schemeindex=0 \loadColorScheme{standard}\fi
+    \ifnum\schemeindex=1 \loadColorScheme{dark}\fi
+    \ifnum\schemeindex=2 \loadColorScheme{colorblind}\fi
+    \ifnum\schemeindex=3 \loadColorScheme{tritanopia}\fi
+    \ifnum\schemeindex=4 \loadColorScheme{monochrome}\fi
+    \ifnum\schemeindex=5 \loadColorScheme{high-contrast}\fi
+}

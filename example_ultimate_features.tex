@@ -1,0 +1,457 @@
+% example_ultimate_features.tex - Ultimate features demonstration
+% This showcases ALL Agent 1 features including the latest additions:
+% - Enhanced connection styles (8+ new types)
+% - Auto-legend generation
+% - Advanced node shapes (7+ new types)
+% - Smart positioning helpers
+% - Diagram templates
+% - Quality of life improvements
+
+\documentclass[11pt,landscape]{article}
+\usepackage[margin=0.5in]{geometry}
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric, shapes.symbols, shapes.multipart, arrows.meta, shadows, patterns, decorations.markings, decorations.pathmorphing, positioning, calc}
+\usepackage{xcolor}
+\usepackage{ifthen}
+
+% Include the styles configuration
+\input{styles_config.tex}
+
+\begin{document}
+
+\pagestyle{empty}
+
+% ============================================================================
+% EXAMPLE 1: Enhanced Connection Styles
+% ============================================================================
+
+\section*{Example 1: Enhanced Connection Styles (8 New Types)}
+
+\setupDiagram{standard}
+
+\begin{center}
+\begin{tikzpicture}[scale=0.9, transform shape]
+
+    % Nodes demonstrating different connection types
+    \quickServer{srv1}{0}{0}{Main Server}
+    \quickServer{srv2}{4}{0}{Backup Server}
+    \quickServer{srv3}{8}{0}{Remote Server}
+
+    \quickClient{cli1}{0}{-3}{Office}
+    \quickClient{cli2}{4}{-3}{Home}
+    \quickClient{cli3}{8}{-3}{Mobile}
+
+    \node[cloud service] (cloud) at (4}{-6) {Cloud};
+    \node[iot device] (iot) at (0,-6) {IoT};
+
+    % Different connection types
+    \labeledConnection{cli1}{srv1}{vpn tunnel}{VPN}
+    \labeledConnection{cli2}{srv2}{fiber optic}{10 Gbps}
+    \labeledConnection{cli3}{srv3}{wireless}{Wi-Fi 6}
+    \labeledConnection{srv1}{srv2}{load balanced}{HA Pair}
+    \labeledConnection{srv3}{cloud}{satellite}{Starlink}
+
+    % Bandwidth-aware connections with congestion
+    \bandwidthConnection{iot}{srv1}{35}{Sensor Data}
+    \bandwidthConnection{cloud}{srv2}{75}{Backup}
+    \bandwidthConnection{srv2}{srv3}{95}{Replication}
+
+\end{tikzpicture}
+\end{center}
+
+\vspace{0.5cm}
+
+% ============================================================================
+% EXAMPLE 2: Advanced Node Shapes Library
+% ============================================================================
+
+\section*{Example 2: Advanced Node Shapes (7 New Specialized Types)}
+
+\begin{center}
+\begin{tikzpicture}[scale=0.85, transform shape]
+
+    % Showcase all advanced node types
+    \node[database cluster] (db) at (0,0) {DB Cluster};
+    \node[load balancer node] (lb) at (3,0) {LB};
+    \node[cloud service] (cloud2) at (6,0) {Cloud};
+    \node[container node] (cont) at (9,0) {Container};
+
+    \node[vm node] (vm) at (0,-3) {VM};
+    \node[iot device] (iot2) at (3,-3) {IoT};
+    \node[mobile device] (mob) at (6,-3) {Mobile};
+    \node[server premium, raised 3d] (3d) at (9,-3) {3D Effect};
+
+    % Add labels
+    \node[below=0.3cm of db, font=\tiny] {Database Cluster};
+    \node[below=0.3cm of lb, font=\tiny] {Load Balancer};
+    \node[below=0.3cm of cloud2, font=\tiny] {Cloud Service};
+    \node[below=0.3cm of cont, font=\tiny] {Container};
+    \node[below=0.3cm of vm, font=\tiny] {Virtual Machine};
+    \node[below=0.3cm of iot2, font=\tiny] {IoT Device};
+    \node[below=0.3cm of mob, font=\tiny] {Mobile Device};
+    \node[below=0.3cm of 3d, font=\tiny] {3D Raised};
+
+\end{tikzpicture}
+\end{center}
+
+\vspace{0.5cm}
+
+% ============================================================================
+% EXAMPLE 3: Auto-Legend Generation
+% ============================================================================
+
+\section*{Example 3: Auto-Legend Generation System}
+
+\begin{center}
+\begin{tikzpicture}[scale=0.9, transform shape]
+
+    % Create a simple network
+    \quickServer{web}{0}{0}{Web}
+    \quickClient{pc}{-3}{-2}{Client}
+    \quickRouter{rtr}{3}{-2}{Router}
+    \quickFirewall{fw}{0}{-4}{Firewall}
+
+    \draw[encrypted conn] (pc) -- (web);
+    \draw[normal conn] (web) -- (rtr);
+    \draw[suspicious conn] (rtr) -- (fw);
+
+    % Auto-generate legend
+    \addStandardLegend
+    \renderLegend{6}{0}{Node Types}
+
+\end{tikzpicture}
+\end{center}
+
+\vspace{0.5cm}
+
+% ============================================================================
+% EXAMPLE 4: Smart Positioning Helpers
+% ============================================================================
+
+\section*{Example 4: Smart Positioning Helpers (Grid, Row, Column)}
+
+\subsection*{4a. Node Row - Web Farm}
+
+\begin{center}
+\begin{tikzpicture}[scale=0.7, transform shape]
+    \nodeRow{web}{0}{5}{3}{server premium}{Web-}
+    \node[load balancer node] (lb) at (6,2) {LB};
+    \foreach \i in {1,...,5} {
+        \draw[load balanced] (lb) -- (web-\i);
+    }
+\end{tikzpicture}
+\end{center}
+
+\subsection*{4b. Node Grid - Data Center}
+
+\begin{center}
+\begin{tikzpicture}[scale=0.6, transform shape]
+    \nodeGrid{rack}{3}{4}{2.5}{server premium}
+    \node[above=0.5cm of rack-1, font=\large\bfseries] {Data Center - 12 Servers};
+\end{tikzpicture}
+\end{center}
+
+\vspace{0.5cm}
+
+% ============================================================================
+% EXAMPLE 5: Advanced Visual Effects & Zones
+% ============================================================================
+
+\newpage
+\section*{Example 5: Advanced Visual Effects \& Security Zones}
+
+\begin{center}
+\begin{tikzpicture}[scale=0.9, transform shape]
+
+    % Draw security zones
+    \draw[safe zone] (-2,1) rectangle (2,-2);
+    \node[above right] at (-2,1) {\tiny Safe Zone};
+
+    \draw[quarantine zone] (3,1) rectangle (7,-2);
+    \node[above right] at (3,1) {\tiny Quarantine};
+
+    \draw[danger zone] (8,1) rectangle (12,-2);
+    \node[above right] at (8,1) {\tiny Danger Zone};
+
+    % Nodes in different zones
+    \node[server premium, glow] (safe) at (0,-0.5) {Secure\\Server};
+    \node[server premium, shimmer=yellow] (quar) at (5,-0.5) {Isolated\\Server};
+    \node[server premium, flash alert] (danger) at (10,-0.5) {Compromised\\Server};
+
+    % Add appropriate badges
+    \nodeBadge{safe}{security high}{north east}{H}
+    \nodeBadge{quar}{security medium}{north east}{M}
+    \nodeBadge{danger}{security low}{north east}{L}
+
+    \addCVE{danger}{CVE-2024-CRIT}{critical}{10.0}
+
+\end{tikzpicture}
+\end{center}
+
+\vspace{0.5cm}
+
+% ============================================================================
+% EXAMPLE 6: Enhanced Badge System
+% ============================================================================
+
+\section*{Example 6: Enhanced Badge System (Stacking, Custom, Numeric)}
+
+\begin{center}
+\begin{tikzpicture}[scale=0.9, transform shape]
+
+    \quickServer{srv1}{0}{0}{Production\\Server}
+    \quickServer{srv2}{5}{0}{Dev\\Server}
+    \quickServer{srv3}{10}{0}{Test\\Server}
+
+    % Stacked badges
+    \stackBadges{srv1}{north east}{linux badge}{security high}
+
+    % Custom badges
+    \customBadge{srv2}{north east}{purple}{DEV}
+    \customBadge{srv2}{north west}{green}{OK}
+
+    % Numeric badges (versions, counts, etc.)
+    \numericBadge{srv3}{north east}{v2.1}{blue}
+    \numericBadge{srv3}{north west}{99\%}{green}
+
+\end{tikzpicture}
+\end{center}
+
+\vspace{0.5cm}
+
+% ============================================================================
+% EXAMPLE 7: Quick Diagram Templates
+% ============================================================================
+
+\section*{Example 7: Quick Diagram Templates (DMZ Architecture)}
+
+\begin{center}
+\begin{tikzpicture}[scale=0.75, transform shape]
+    \dmzTemplate
+
+    % Add legend
+    \addStandardLegend
+    \addConnectionLegend
+    \renderLegend{5}{3}{Legend}
+\end{tikzpicture}
+\end{center}
+
+\vspace{0.5cm}
+
+% ============================================================================
+% EXAMPLE 8: Three-Tier Architecture (One Command!)
+% ============================================================================
+
+\section*{Example 8: Three-Tier Architecture Setup (Single Command)}
+
+\begin{center}
+\begin{tikzpicture}[scale=0.8, transform shape]
+    \threeTierSetup{4}{3}
+
+    % Add load balancer
+    \node[load balancer node] (lb) at (4,2) {Load Balancer};
+    \foreach \i in {1,2,3} {
+        \draw[load balanced] (lb) -- (web-\i);
+    }
+
+    % Add badges to show tier classification
+    \foreach \i in {1,2,3} {
+        \customBadge{web-\i}{north west}{blue}{T1}
+        \customBadge{app-\i}{north west}{orange}{T2}
+    }
+    \foreach \i in {1,2} {
+        \customBadge{db-\i}{north west}{red}{T3}
+    }
+\end{tikzpicture}
+\end{center}
+
+\vspace{0.5cm}
+
+% ============================================================================
+% EXAMPLE 9: Complete Enterprise Network with ALL Features
+% ============================================================================
+
+\newpage
+\section*{Example 9: Complete Enterprise Network - All Features Combined}
+
+\setupDiagram{presentation}
+
+\begin{center}
+\begin{tikzpicture}[scale=0.7, transform shape]
+
+    % Internet and edge
+    \node[cloud service] (inet) at (6,6) {Internet};
+    \node[firewall premium, strong glow=red] (edge-fw) at (6,4) {Edge Firewall};
+
+    % DMZ
+    \draw[quarantine zone] (-1,2.5) rectangle (5,-0.5);
+    \node[above left, font=\small\bfseries, text=orange] at (-1,2.5) {DMZ};
+
+    \node[load balancer node] (lb-dmz) at (2,2) {DMZ LB};
+    \detailedServer{dmz1}{0}{0}{web-dmz-01}{10.0.1.10}{80, 443}
+    \detailedServer{dmz2}{4}{0}{web-dmz-02}{10.0.1.11}{80, 443}
+
+    % Internal firewall
+    \node[firewall premium, double border=firewallRed] (int-fw) at (6,0) {Internal FW};
+
+    % Application tier
+    \draw[safe zone] (7.5,2.5) rectangle (14.5,-0.5);
+    \node[above left, font=\small\bfseries, text=green!70!black] at (7.5,2.5) {Internal};
+
+    \nodeRow{app}{1.5}{3}{2.5}{server premium}{App-}
+
+    % Database tier
+    \draw[safe zone, double border=green] (8,-2) rectangle (13,-5.5);
+    \node[above left, font=\small\bfseries, text=green!70!black] at (8,-2) {Secure DB Zone};
+
+    \node[database cluster] (db-primary) at (9.5,-3.5) {Primary\\DB};
+    \node[database cluster] (db-replica) at (11.5,-3.5) {Replica\\DB};
+
+    % Connections with various styles
+    \draw[normal conn] (inet) -- (edge-fw);
+    \draw[encrypted conn] (edge-fw) -- (lb-dmz);
+    \labeledConnection{lb-dmz}{dmz1}{load balanced}{HTTPS}
+    \labeledConnection{lb-dmz}{dmz2}{load balanced}{HTTPS}
+
+    \draw[encrypted conn] (dmz1) -- (int-fw);
+    \draw[encrypted conn] (dmz2) -- (int-fw);
+
+    \foreach \i in {1,2,3} {
+        \draw[encrypted conn] (int-fw) -- (app-\i);
+    }
+
+    \bandwidthConnection{app-1}{db-primary}{45}{Query}
+    \bandwidthConnection{app-2}{db-primary}{60}{Query}
+    \bandwidthConnection{app-3}{db-primary}{30}{Query}
+
+    \labeledConnection{db-primary}{db-replica}{fiber optic}{Replication}
+
+    % Security badges
+    \addBadges{dmz1}{linux badge}{online badge}
+    \addBadges{dmz2}{linux badge}{online badge}
+
+    \foreach \i in {1,2,3} {
+        \addBadges{app-\i}{linux badge}{online badge}
+        \numericBadge{app-\i}{south east}{v3.2}{blue}
+    }
+
+    \customBadge{db-primary}{north east}{green}{PRI}
+    \customBadge{db-replica}{north east}{blue}{REP}
+
+    % Add CVEs to vulnerable servers
+    \addCVE{dmz1}{CVE-2024-9876}{high}{8.1}
+
+    % Service badges
+    \addService{dmz1}{web}{:443}
+    \addService{dmz2}{web}{:443}
+    \addService{app-1}{api}{:8080}
+    \addService{db-primary}{database}{:5432}
+
+    % Legend
+    \addStandardLegend
+    \addConnectionLegend
+    \renderLegend{-3}{4}{Legend}
+
+    % Threat indicator
+    \node[attacker, strong glow=red] (hacker) at (-2,-3) {Threat\\Actor};
+    \draw[attack conn, dashed] (hacker) -- (edge-fw);
+    \addCVE{hacker}{APT29}{critical}{-}
+
+\end{tikzpicture}
+\end{center}
+
+\vspace{1cm}
+
+% ============================================================================
+% FEATURE REFERENCE
+% ============================================================================
+
+\newpage
+\section*{Complete Feature Reference}
+
+\subsection*{Connection Styles (15+ Types)}
+\begin{itemize}
+    \item \texttt{bandwidth low/medium/high/ultra} - Thickness-based capacity
+    \item \texttt{congestion normal/warning/critical} - Color-coded utilization
+    \item \texttt{vpn tunnel} - Encrypted tunnel with indicators
+    \item \texttt{fiber optic} - Light beam effect
+    \item \texttt{wireless} - Wave pattern
+    \item \texttt{satellite} - Dashed with satellite markers
+    \item \texttt{load balanced} - Parallel lines
+    \item \texttt{\textbackslash labeledConnection\{from\}\{to\}\{style\}\{label\}} - Auto-positioned labels
+    \item \texttt{\textbackslash bandwidthConnection\{from\}\{to\}\{percent\}\{label\}} - Smart congestion colors
+\end{itemize}
+
+\subsection*{Advanced Node Shapes (7+ Types)}
+\begin{itemize}
+    \item \texttt{database cluster} - Multi-cylinder with double border
+    \item \texttt{load balancer node} - Diamond with glow
+    \item \texttt{cloud service} - Enhanced cloud with shimmer
+    \item \texttt{container node} - Rounded rectangle with separator lines
+    \item \texttt{vm node} - Nested box appearance
+    \item \texttt{iot device} - Hexagon
+    \item \texttt{mobile device} - Portrait rectangle with home button
+\end{itemize}
+
+\subsection*{Visual Effects (10+ Types)}
+\begin{itemize}
+    \item \texttt{flash alert} - Intense red glow for critical alerts
+    \item \texttt{shimmer=color} - Subtle glow variation
+    \item \texttt{danger zone} - Red dashed boundary
+    \item \texttt{safe zone} - Green dotted boundary
+    \item \texttt{quarantine zone} - Yellow patterned boundary
+    \item \texttt{raised 3d} - 3D raised appearance
+\end{itemize}
+
+\subsection*{Auto-Legend System}
+\begin{itemize}
+    \item \texttt{\textbackslash addLegendItem\{style\}\{label\}} - Add legend entry
+    \item \texttt{\textbackslash renderLegend\{x\}\{y\}\{title\}} - Draw legend
+    \item \texttt{\textbackslash addStandardLegend} - Quick node legend
+    \item \texttt{\textbackslash addConnectionLegend} - Quick connection legend
+\end{itemize}
+
+\subsection*{Smart Positioning (10+ Helpers)}
+\begin{itemize}
+    \item \texttt{\textbackslash nodeRow\{name\}\{y\}\{count\}\{spacing\}\{style\}\{label\}} - Horizontal row
+    \item \texttt{\textbackslash nodeColumn\{name\}\{x\}\{count\}\{spacing\}\{style\}\{label\}} - Vertical column
+    \item \texttt{\textbackslash nodeGrid\{name\}\{rows\}\{cols\}\{spacing\}\{style\}} - Grid layout
+    \item \texttt{\textbackslash gridPosition\{row\}\{col\}\{spacing\}} - Calculate grid position
+    \item \texttt{\textbackslash circularPosition\{index\}\{total\}\{radius\}} - Calculate circular position
+\end{itemize}
+
+\subsection*{Enhanced Badges}
+\begin{itemize}
+    \item \texttt{\textbackslash stackBadges\{node\}\{pos\}\{badge1\}\{badge2\}} - Stack multiple badges
+    \item \texttt{\textbackslash customBadge\{node\}\{pos\}\{color\}\{text\}} - Custom colored badge
+    \item \texttt{\textbackslash numericBadge\{node\}\{pos\}\{number\}\{color\}} - Numeric indicator
+\end{itemize}
+
+\subsection*{Templates \& QoL}
+\begin{itemize}
+    \item \texttt{\textbackslash setupDiagram\{preset\}} - Quick preset application
+    \item \texttt{\textbackslash threeTierSetup\{x-spacing\}\{y-spacing\}} - Instant 3-tier architecture
+    \item \texttt{\textbackslash dmzTemplate} - Complete DMZ architecture
+    \item \texttt{\textbackslash nextColorScheme} - Cycle through color schemes
+\end{itemize}
+
+\subsection*{All 6 Color Schemes}
+\begin{itemize}
+    \item \texttt{standard} - Vibrant default colors
+    \item \texttt{dark} - Dark backgrounds with bright accents
+    \item \texttt{colorblind} - Deuteranopia/protanopia safe
+    \item \texttt{tritanopia} - Tritanopia safe
+    \item \texttt{monochrome} - Grayscale for printing
+    \item \texttt{high-contrast} - Maximum accessibility
+\end{itemize}
+
+\subsection*{All 5 Presets}
+\begin{itemize}
+    \item \texttt{\textbackslash loadCorporatePreset} - Professional monochrome
+    \item \texttt{\textbackslash loadSecurityPreset} - High contrast threat-focused
+    \item \texttt{\textbackslash loadPresentationPreset} - High visibility glows
+    \item \texttt{\textbackslash loadAccessiblePreset} - Colorblind patterns
+    \item \texttt{\textbackslash loadDarkPreset} - Neon dark mode
+\end{itemize}
+
+\end{document}
