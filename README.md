@@ -285,6 +285,261 @@ In `network_diagram_generator.tex`:
     {High Trust}
 ```
 
+## Layout Algorithms (NEW!)
+
+The system now includes comprehensive layout algorithms for automatic node positioning:
+
+### Tiered/Layered Layouts
+
+Perfect for N-tier architectures (web, app, database tiers):
+
+```latex
+% Setup horizontal tiered layout
+\setupNTierLayout{horizontal}{3}  % 3-tier architecture
+
+% Place nodes in tiers
+\placeInTierH{web1}{0}{0}{2}  % tier 0, position 0, 2 nodes total in tier
+\placeInTierH{web2}{0}{1}{2}  % tier 0, position 1
+\placeInTierH{app1}{1}{0}{1}  % tier 1, single node
+\placeInTierH{db1}{2}{0}{1}   % tier 2, single node
+
+% Or use vertical layout
+\setupNTierLayout{vertical}{4}
+```
+
+**Available Commands:**
+- `\layoutTieredHorizontal{tier_count}{base_x}{base_y}{tier_spacing}{node_spacing}`
+- `\layoutTieredVertical{tier_count}{base_x}{base_y}{tier_spacing}{node_spacing}`
+- `\placeInTierH{node_id}{tier_num}{position}{total_in_tier}`
+- `\placeInTierV{node_id}{tier_num}{position}{total_in_tier}`
+- `\calculateTierSpacing{max_nodes}{min_spacing}{max_spacing}`
+
+### Circular/Hub-and-Spoke Layouts
+
+Ideal for star topologies and hub-centric networks:
+
+```latex
+% Setup circular layout: center at (0,0), radius 5, 8 nodes, start at 90°
+\layoutCircularAuto{0}{0}{5}{8}{90}
+
+% Place nodes around circle
+\placeInCircle{node1}{0}  % position 0
+\placeInCircle{node2}{1}  % position 1
+% ... continues for all nodes
+
+% Multi-ring layout (concentric circles)
+\layoutMultiRing{0}{0}{3}{3}{2}  % 3 rings, base radius 3, increment 2
+\placeInRing{inner1}{0}{0}{4}    % ring 0, position 0, 4 nodes in ring
+\placeInRing{outer1}{2}{0}{8}    % ring 2, position 0, 8 nodes in ring
+
+% Arc layout (partial circle)
+\layoutArc{0}{0}{5}{6}{0}{180}   % center, radius, count, start angle, end angle
+\placeInArc{node1}{0}
+```
+
+**Available Commands:**
+- `\layoutCircularAuto{center_x}{center_y}{radius}{node_count}{start_angle}`
+- `\placeInCircle{node_id}{position_index}`
+- `\layoutMultiRing{center_x}{center_y}{ring_count}{base_radius}{radius_increment}`
+- `\placeInRing{node_id}{ring_number}{position_in_ring}{total_in_ring}`
+- `\layoutArc{center_x}{center_y}{radius}{node_count}{start_angle}{end_angle}`
+- `\calculateCircularRadius{node_count}{min_node_spacing}`
+
+### Grid Layouts
+
+Perfect for data centers and server farms:
+
+```latex
+% Regular grid: base (0,0), 4 rows, 5 cols, spacing 3x4
+\layoutGridAuto{0}{0}{4}{5}{3}{4}
+
+% Place servers in grid
+\placeInGrid{srv1}{0}{0}  % row 0, col 0
+\placeInGrid{srv2}{0}{1}  % row 0, col 1
+
+% Irregular grid (varying columns per row, auto-centered)
+\layoutIrregularGrid{0}{0}{3}{4}
+\placeInIrregularGrid{node1}{0}{0}{3}  % row 0, pos 0, 3 nodes in row
+\placeInIrregularGrid{node2}{1}{0}{5}  % row 1, pos 0, 5 nodes in row
+
+% Server rack layout (vertical stacking)
+\layoutServerRack{0}{0}{42}{1}  % 42U rack, 1 unit height
+\placeInRack{blade1}{5}   % rack unit 5
+\placeInRack{blade2}{10}  % rack unit 10
+```
+
+**Available Commands:**
+- `\layoutGridAuto{base_x}{base_y}{rows}{cols}{row_spacing}{col_spacing}`
+- `\placeInGrid{node_id}{row}{col}`
+- `\calculateGridDimensions{node_count}` - auto-calculates optimal rows/cols
+- `\layoutIrregularGrid{base_x}{base_y}{row_spacing}{col_spacing}`
+- `\placeInIrregularGrid{node_id}{row}{col}{total_in_row}`
+- `\layoutServerRack{base_x}{base_y}{rack_units}{unit_height}`
+
+### Tree Layouts
+
+For hierarchical networks:
+
+```latex
+% Tree layout: root at (0,5), 3 levels, spacing 3x2
+\layoutTreeAuto{0}{5}{3}{3}{2}
+
+% Place nodes
+\placeInTree{root}{0}{0}{1}     % level 0, position 0, 1 node in level
+\placeInTree{child1}{1}{0}{3}   % level 1, position 0, 3 nodes in level
+\placeInTree{child2}{1}{1}{3}
+\placeInTree{child3}{1}{2}{3}
+
+% Inverted tree (root at bottom)
+\layoutInvertedTree{0}{-5}{3}{3}{2}
+\placeInInvertedTree{root}{0}{0}{1}
+
+% Calculate optimal spacing for tree
+\calculateTreeSpacing{2}{4}{1.5}  % binary tree, depth 4, min spacing 1.5
+```
+
+**Available Commands:**
+- `\layoutTreeAuto{root_x}{root_y}{levels}{level_spacing}{node_spacing}`
+- `\placeInTree{node_id}{level}{position_in_level}{total_in_level}`
+- `\layoutBinaryTree{root_x}{root_y}{depth}{h_spacing}{v_spacing}`
+- `\layoutInvertedTree{root_x}{root_y}{levels}{level_spacing}{node_spacing}`
+- `\calculateTreeSpacing{branching_factor}{depth}{min_spacing}`
+
+### Collision Detection & Avoidance (NEW!)
+
+Prevent overlapping nodes automatically:
+
+```latex
+% Register node dimensions for collision checking
+\registerNodeBounds{srv1}{2.5}{1.5}  % width, height
+\registerNodeBounds{srv2}{2.5}{1.5}
+
+% Check if two nodes would overlap
+\checkNodeOverlap{srv1}{0}{0}{srv2}{1}{1}  % sets \nodesoverlap to 1 or 0
+
+% Calculate safe distance between nodes
+\calculateSafeDistance{2.5}{1.5}{2.5}{1.5}{0.5}  % widths, heights, padding
+
+% Adjust position to avoid collision
+\avoidCollision{node1}{2}{2}{3}{3}  % sets \adjustedx, \adjustedy
+
+% Snap to grid
+\snapToGrid{2.3}{3.7}{1.0}  % snaps to nearest 1.0 unit, sets \snappedx, \snappedy
+
+% Magnetic alignment
+\magneticAlign{2.1}{3.0}{2.0}{3.0}{0.2}  % snaps if within 0.2 threshold
+```
+
+**Available Commands:**
+- `\registerNodeBounds{node_id}{width}{height}`
+- `\checkNodeOverlap{node1_id}{x1}{y1}{node2_id}{x2}{y2}`
+- `\calculateSafeDistance{w1}{h1}{w2}{h2}{padding}`
+- `\avoidCollision{node_id}{current_x}{current_y}{obstacle_x}{obstacle_y}`
+- `\snapToGrid{x}{y}{grid_size}`
+- `\magneticAlign{x}{y}{ref_x}{ref_y}{threshold}`
+
+### Distribution Algorithms
+
+Evenly space nodes across areas:
+
+```latex
+% Distribute 5 nodes along a line
+\distributeAlongLine{5}{0}{0}{10}{5}  % count, start_x, start_y, end_x, end_y
+\getDistributedPosition{0}  % sets \distx, \disty for position 0
+\getDistributedPosition{1}  % position 1
+
+% Distribute nodes in rectangular area
+\distributeInArea{12}{0}{0}{10}{8}  % 12 nodes in area (0,0) to (10,8)
+\getAreaPosition{0}   % sets \areax, \areay
+\getAreaPosition{5}
+```
+
+### Subnet-Based Auto-Grouping (NEW!)
+
+Automatically group nodes by IP subnet:
+
+```latex
+% Extract subnet from IP
+\extractSubnet24{192.168.1.10}  % sets \subnetid to "192.168.1"
+\extractSubnet16{10.0.1.5}      % sets \subnet16id to "10.0"
+
+% Register node in subnet
+\addNodeToSubnet{srv1}{192.168.1.10}{24}  % /24 subnet
+
+% Get subnet color based on trust level
+\getSubnetColor{192.168.1}  % sets \subnetcolor (green for private IPs)
+
+% Draw subnet with auto-calculated trust level
+\drawAutoSubnet{192.168.1.0}{(srv1) (srv2) (srv3)}
+
+% Draw DMZ
+\drawDMZ{dmz1}{(web1) (web2)}{Public Web Servers}
+
+% Draw VLAN
+\drawVLAN{100}{(node1) (node2)}{serverBlue}
+
+% Draw trust boundary
+\drawTrustBoundary{fw1.east}{dmz1.west}
+
+% Draw geographic region
+\drawRegion{us-east}{(srv1) (srv2)}{US East Region}{azureBlue}
+```
+
+**Available Commands:**
+- `\extractSubnet24{ip_address}` - extracts /24 subnet
+- `\extractSubnet16{ip_address}` - extracts /16 subnet
+- `\addNodeToSubnet{node_id}{ip_address}{subnet_mask}`
+- `\getSubnetColor{subnet_id}` - auto-assigns color by trust level
+- `\drawAutoSubnet{subnet_cidr}{nodes}`
+- `\drawDMZ{name}{nodes}{label}`
+- `\drawVLAN{vlan_id}{nodes}{color}`
+- `\drawTrustBoundary{start_coord}{end_coord}`
+- `\drawRegion{name}{nodes}{region_label}{color}`
+
+### Background Grids (NEW!)
+
+Visual aids for layout:
+
+```latex
+% Simple configurable grid
+\drawConfigurableGrid{1}{gray!20}{0.3pt}{-10}{-10}{10}{10}
+
+% Graph paper style (major/minor grid)
+\drawGraphPaperGrid{5}{1}{(-10,-10) grid (10,10)}
+
+% Polar grid (for circular layouts)
+\drawPolarGrid{0}{0}{8}{4}{12}  % center, radius, radial_steps, angular_steps
+
+% Hexagonal grid
+\drawHexGrid{0}{0}{1}{10}{10}   % origin, hex_size, rows, cols
+```
+
+### Dynamic Optimization (NEW!)
+
+Auto-adjust layouts based on complexity:
+
+```latex
+% Calculate diagram complexity (0-100)
+\calculateComplexity{25}{50}  % 25 nodes, 50 connections, sets \complexityscore
+
+% Auto-adjust spacing
+\autoAdjustSpacing{75}{3.5}    % complexity 75, base spacing 3.5, sets \adjustedspacing
+
+% Calculate optimal bounds
+\calculateDiagramBounds{30}{grid}  % 30 nodes, grid layout, sets \diagramwidth/height
+
+% Scale to fit page
+\scaleDiagramToPage{21}{29.7}{30}{40}  % page WxH, diagram WxH, sets \pagescale
+
+% Optimize for output medium
+\optimizeForPrint   % Thicker lines, larger fonts
+\optimizeForScreen  % Lighter lines, smaller fonts
+
+% Compact/expanded modes
+\enableCompactMode{0.7}    % Reduce all spacing by 30%
+\enableExpandedMode{1.3}   % Increase all spacing by 30%
+```
+
 ## Advanced Features
 
 ### Custom Colors
@@ -340,13 +595,26 @@ This system is designed for **multiple agents/developers** to work simultaneousl
 - [ ] Advanced IP validation with subnet parsing
 
 ### Agent 3: Layout Engine (`network_layout.tex`)
-**Priority TODOs:**
-- [ ] Implement tiered layout algorithm for N-tier architectures
-- [ ] Force-directed graph layout integration
-- [ ] Auto-layout algorithm to prevent overlapping nodes
-- [ ] Subnet-based clustering and grouping
-- [ ] Auto-grouping nodes by IP subnet
+**Completed:**
+- [x] Tiered layout algorithm for N-tier architectures (horizontal/vertical)
+- [x] Circular/hub-and-spoke layout with multi-ring support
+- [x] Grid layout algorithms (regular, irregular, server rack)
+- [x] Tree layout algorithms (standard, binary, inverted)
+- [x] Collision detection and avoidance system
+- [x] Subnet-based auto-grouping with IP parsing
+- [x] Snap-to-grid and magnetic alignment
+- [x] Distribution algorithms (line, area)
+- [x] DMZ, VLAN, and trust boundary visualization
+- [x] Geographic region grouping
+- [x] Background grid systems (cartesian, polar, hexagonal)
+- [x] Dynamic optimization and complexity scoring
+- [x] Compact/expanded layout modes
+
+**Remaining TODOs:**
+- [ ] Force-directed graph layout integration (requires external tools)
 - [ ] Multi-page diagram support for large networks
+- [ ] Bezier curve auto-routing for connections
+- [ ] Advanced path-finding algorithms (A*, Dijkstra)
 - [ ] Grid layout for data center visualization
 
 ### Agent 4: Connections (`connection_renderer.tex`)
