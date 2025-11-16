@@ -1,0 +1,77 @@
+% Example 4: Multi-Cloud Architecture
+% Demonstrates glass effects and complex topology
+\documentclass[border=5mm]{standalone}
+\usepackage{tikz}
+\usepackage{xcolor}
+\usepackage{ifthen}
+
+\usetikzlibrary{shapes, arrows, shadows, decorations.markings, patterns}
+
+\input{../styles_config.tex}
+
+\begin{document}
+
+% Use high contrast for better visibility
+\useHighContrast
+
+\begin{tikzpicture}[scale=1.0]
+
+    % Title
+    \node[font=\Large\bfseries] at (4.5,8) {Multi-Cloud Infrastructure};
+
+    % On-Premise Data Center
+    \node[font=\bfseries] at (1.5,7) {On-Premise};
+    \node[gradient server] (onprem1) at (0,6) {App Server\\10.0.1.10};
+    \node[radial server] (onprem2) at (3,6) {Database\\10.0.1.20};
+
+    % AWS Cloud
+    \node[font=\bfseries, text=orange] at (1.5,4.5) {AWS};
+    \draw[draw=orange, fill=orange!5, rounded corners, thick] (-0.5,3.5) rectangle (3.5,5.2);
+    \node[glass node] (aws1) at (0.5,4.5) {\cloudIcon\\EC2\\Instance};
+    \node[glass node] (aws2) at (2.5,4.5) {\cloudIcon\\RDS\\Database};
+
+    % Azure Cloud
+    \node[font=\bfseries, text=blue] at (6,4.5) {Azure};
+    \draw[draw=blue, fill=blue!5, rounded corners, thick] (4.5,3.5) rectangle (7.5,5.2);
+    \node[glass node] (azure1) at (5.5,4.5) {\cloudIcon\\VM\\Instance};
+    \node[glass node] (azure2) at (7,4.5) {\cloudIcon\\SQL\\Database};
+
+    % GCP Cloud
+    \node[font=\bfseries, text=green!70!black] at (4.5,2) {Google Cloud};
+    \draw[draw=green!70!black, fill=green!5, rounded corners, thick] (3,1) rectangle (6,2.7);
+    \node[glass node] (gcp1) at (4.5,2) {\cloudIcon\\Compute\\Engine};
+
+    % Edge Devices
+    \node[gradient client] (edge1) at (0,0) {\laptopIcon\\User\\Device};
+    \node[gradient client] (edge2) at (3,0) {\phoneIcon\\Mobile\\App};
+    \node[gradient client] (edge3) at (6,0) {\laptopIcon\\Remote\\Worker};
+
+    % Connections - On-premise to clouds
+    \draw[encrypted conn] (onprem1) -- (aws1);
+    \draw[encrypted conn] (onprem2) -- (aws2);
+    \draw[encrypted conn] (onprem1) -- (azure1);
+    \draw[encrypted conn] (onprem2) -- (azure2);
+
+    % Cloud to cloud
+    \draw[encrypted conn, bend left=15] (aws1) -- (azure1);
+    \draw[encrypted conn] (azure1) -- (gcp1);
+    \draw[encrypted conn, bend right=15] (aws2) -- (gcp1);
+
+    % Edge to cloud
+    \draw[encrypted conn] (edge1) -- (aws1);
+    \draw[encrypted conn] (edge2) -- (gcp1);
+    \draw[encrypted conn] (edge3) -- (azure1);
+
+    % Legend
+    \node[legend box, anchor=north east] at (9,6) {
+        \begin{tabular}{l}
+            \textbf{Cloud Providers} \\[2pt]
+            {\color{orange}■} AWS \\
+            {\color{blue}■} Azure \\
+            {\color{green!70!black}■} GCP \\
+        \end{tabular}
+    };
+
+\end{tikzpicture}
+
+\end{document}

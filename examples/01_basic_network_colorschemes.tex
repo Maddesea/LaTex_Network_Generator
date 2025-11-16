@@ -1,0 +1,57 @@
+% Example 1: Basic Network with Color Schemes
+% This example demonstrates how to use different color schemes
+\documentclass[border=5mm]{standalone}
+\usepackage{tikz}
+\usepackage{xcolor}
+\usepackage{ifthen}
+
+\usetikzlibrary{shapes, arrows, shadows, decorations.markings, patterns}
+
+\input{../styles_config.tex}
+
+\begin{document}
+
+% Use colorblind-safe palette for accessibility
+\useColorblindSafe
+
+\begin{tikzpicture}[scale=1.0]
+
+    % Title
+    \node[font=\Large\bfseries] at (3,6) {Small Office Network};
+    \node[font=\small, text=gray] at (3,5.5) {Using Colorblind-Safe Palette};
+
+    % Internet
+    \node[cloud] (internet) at (3,4.5) {Internet};
+
+    % Router
+    \node[router] (router) at (3,3) {Office Router\\192.168.1.1};
+
+    % Switch
+    \node[switch] (switch) at (3,1.5) {Switch\\192.168.1.2};
+
+    % Devices
+    \node[server] (server) at (0,0) {File Server\\192.168.1.10};
+    \node[client] (pc1) at (2,0) {PC-1\\192.168.1.101};
+    \node[client] (pc2) at (4,0) {PC-2\\192.168.1.102};
+    \node[client] (pc3) at (6,0) {PC-3\\192.168.1.103};
+
+    % Connections
+    \draw[normal conn] (internet) -- (router);
+    \draw[normal conn] (router) -- (switch);
+    \draw[encrypted conn] (switch) -- (server);
+    \draw[normal conn] (switch) -- (pc1);
+    \draw[normal conn] (switch) -- (pc2);
+    \draw[normal conn] (switch) -- (pc3);
+
+    % Legend
+    \node[legend box, anchor=north west] at (-1,4.5) {
+        \begin{tabular}{l}
+            \textbf{Legend} \\[2pt]
+            \tikz\draw[encrypted conn] (0,0) -- (0.5,0); Encrypted \\
+            \tikz\draw[normal conn] (0,0) -- (0.5,0); Normal \\
+        \end{tabular}
+    };
+
+\end{tikzpicture}
+
+\end{document}

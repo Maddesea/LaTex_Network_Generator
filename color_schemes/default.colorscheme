@@ -1,0 +1,25 @@
+% Default Color Scheme
+% Network asset colors
+\definecolor{serverBlue}{RGB}{52,152,219}
+\definecolor{clientGreen}{RGB}{46,204,113}
+\definecolor{routerOrange}{RGB}{230,126,34}
+\definecolor{firewallRed}{RGB}{231,76,60}
+\definecolor{switchPurple}{RGB}{155,89,182}
+\definecolor{cloudGray}{RGB}{149,165,166}
+
+% Threat indicator colors
+\definecolor{threatCritical}{RGB}{192,57,43}
+\definecolor{threatHigh}{RGB}{211,84,0}
+\definecolor{threatMedium}{RGB}{243,156,18}
+\definecolor{threatLow}{RGB}{241,196,15}
+\definecolor{threatInfo}{RGB}{52,152,219}
+
+% Connection colors
+\definecolor{connNormal}{RGB}{127,140,141}
+\definecolor{connEncrypted}{RGB}{39,174,96}
+\definecolor{connSuspicious}{RGB}{230,126,34}
+\definecolor{connMalicious}{RGB}{192,57,43}
+
+% Background colors
+\definecolor{bgLight}{RGB}{236,240,241}
+\definecolor{bgDark}{RGB}{44,62,80}
