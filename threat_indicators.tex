@@ -119,14 +119,133 @@
           -{Stealth[length=5mm]}] (#1) -- (#2);
 }
 
-% TODO: Additional attack visualizations
-% - Phishing attack chain
-% - Privilege escalation path
-% - Lateral movement tracking
-% - Command & Control beaconing
-% - Brute force attempts (with attempt counter)
-% - Zero-day exploitation indicators
-% - Supply chain attack visualization
+% ============================================================================
+% ADDITIONAL ATTACK VISUALIZATIONS
+% ============================================================================
+
+% Phishing attack visualization
+\newcommand{\visualizePhishing}[3]{
+    % #1 = attacker
+    % #2 = victim
+    % #3 = email subject/type
+    \draw[attack conn, line width=1.5pt,
+          decoration={snake, amplitude=2pt}, decorate]
+        (#1) -- (#2)
+        node[midway, threat label, fill=threatHigh] {Phishing: #3};
+    \node[draw=threatHigh, isosceles triangle, minimum size=0.6cm,
+          fill=threatHigh!30, anchor=south] at (#2.north) {};
+}
+
+% Privilege escalation visualization
+\newcommand{\visualizePrivEsc}[3]{
+    % #1 = compromised node
+    % #2 = target privilege level
+    % #3 = method
+    \node[draw=threatHigh, line width=2pt,
+          rounded corners=3pt, inner sep=5pt,
+          fill=threatHigh!20] at (#1) {};
+    \node[above, font=\tiny\bfseries, text=threatHigh,
+          fill=yellow!30, inner sep=2pt] at (#1.north) [yshift=0.2cm] {
+        PrivEsc: #2
+    };
+    \node[below, font=\tiny, text=black!70] at (#1.south) [yshift=-0.2cm] {
+        #3
+    };
+}
+
+% Lateral movement tracking
+\newcommand{\visualizeLateralMovement}[2]{
+    % #1 = path (comma-separated nodes)
+    % #2 = technique
+    \foreach \node [count=\i, remember=\node as \lastnode] in {#1} {
+        \ifnum\i>1
+            \draw[attack conn, line width=1.5pt,
+                  decoration={markings,
+                      mark=at position 0.5 with {\arrow{Stealth[length=2mm]}}},
+                  postaction={decorate}]
+                (\lastnode) -- (\node);
+        \fi
+    }
+    \node[font=\tiny\bfseries, text=threatCritical,
+          fill=white, draw=threatCritical, rounded corners=2pt,
+          inner sep=2pt] at ($(current bounding box.north)$) [yshift=0.5cm] {
+        Lateral Movement: #2
+    };
+}
+
+% Command & Control beaconing
+\newcommand{\visualizeC2Beacon}[3]{
+    % #1 = compromised node
+    % #2 = C2 server
+    % #3 = interval
+    \draw[draw=threatCritical, line width=1pt,
+          dash pattern=on 3pt off 3pt,
+          {Stealth[length=2mm]}-{Stealth[length=2mm]}]
+        (#1) -- (#2);
+    \node[font=\tiny\ttfamily, fill=threatCritical!20,
+          draw=threatCritical, rounded corners=1pt]
+        at ($(#1)!0.5!(#2)$) {C2: #3};
+    % Beacon indicator
+    \foreach \x in {0.2,0.4,0.6,0.8} {
+        \node[circle, fill=threatCritical, inner sep=0.5pt]
+            at ($(#1)!\x!(#2)$) {};
+    }
+}
+
+% Brute force attack
+\newcommand{\visualizeBruteForce}[4]{
+    % #1 = attacker
+    % #2 = target
+    % #3 = service
+    % #4 = attempt count
+    \draw[attack conn, line width=2pt] (#1) -- (#2);
+    \node[font=\small\bfseries, text=threatHigh,
+          fill=white, draw=threatHigh, rounded corners=2pt,
+          inner sep=3pt] at ($(#1)!0.5!(#2)$) [above=5pt] {
+        Brute Force: #3
+    };
+    \node[font=\tiny, fill=threatHigh!20, inner sep=2pt]
+        at ($(#1)!0.5!(#2)$) [below=3pt] {
+        Attempts: #4
+    };
+}
+
+% Zero-day exploitation
+\newcommand{\visualizeZeroDay}[3]{
+    % #1 = target node
+    % #2 = vulnerability
+    % #3 = impact
+    \node[draw=threatCritical, line width=3pt,
+          star, star points=8,
+          minimum size=1.5cm,
+          fill=threatCritical!30] at (#1) {};
+    \node[above, font=\small\bfseries, text=white,
+          fill=threatCritical, rounded corners=3pt,
+          inner sep=3pt] at (#1.north) [yshift=0.8cm] {
+        ZERO-DAY
+    };
+    \node[below, font=\tiny\ttfamily, text=threatCritical]
+        at (#1.south) [yshift=-0.5cm] {
+        #2 | Impact: #3
+    };
+}
+
+% Supply chain attack
+\newcommand{\visualizeSupplyChain}[3]{
+    % #1 = compromised supplier
+    % #2 = affected nodes (comma-separated)
+    % #3 = vector
+    \node[draw=threatCritical, line width=2pt,
+          rounded corners=3pt, inner sep=6pt,
+          fill=threatCritical!20] at (#1) {};
+    \foreach \target in {#2} {
+        \draw[attack conn, line width=1.5pt] (#1) -- (\target);
+    }
+    \node[above, font=\small\bfseries, text=threatCritical,
+          fill=yellow!40, inner sep=3pt] at (#1.north) [yshift=0.5cm] {
+        Supply Chain Attack: #3
+    };
+}
 
 % ============================================================================
 % THREAT TIMELINE AND PROGRESSION
@@ -140,12 +259,84 @@
     % Draw progression with current stage highlighted
 }
 
-% TODO: Attack progression visualization
-% - MITRE ATT&CK framework mapping
-% - Kill chain stage indicators
-% - Time-based attack timeline
-% - Infection spread animation
-% - Attack vector tree visualization
+% ============================================================================
+% MITRE ATT&CK FRAMEWORK VISUALIZATION
+% ============================================================================
+
+% Draw MITRE ATT&CK tactic badge
+% Usage: \addMITRETactic{nodename}{tactic}{technique_id}
+\newcommand{\addMITRETactic}[3]{
+    % Tactics: Initial Access, Execution, Persistence, Privilege Escalation,
+    % Defense Evasion, Credential Access, Discovery, Lateral Movement,
+    % Collection, Command and Control, Exfiltration, Impact
+    \node[font=\tiny\ttfamily\bfseries, text=white,
+          fill=threatCritical, rounded corners=2pt,
+          inner sep=2pt, anchor=north west]
+        at (#1.north west) [xshift=-0.2cm, yshift=0.2cm] {
+        #2 | #3
+    };
+}
+
+% Visualize kill chain progression
+% Usage: \drawKillChainStage{x}{y}{current_stage}
+\newcommand{\drawKillChainStage}[3]{
+    \node[font=\small\bfseries, anchor=north west] at (#1,#2) {
+        \begin{tabular}{l}
+            \textbf{Cyber Kill Chain} \\
+            \hline
+            \textcolor{#3>=1?threatCritical:black!40}{1. Reconnaissance} \\
+            \textcolor{#3>=2?threatCritical:black!40}{2. Weaponization} \\
+            \textcolor{#3>=3?threatCritical:black!40}{3. Delivery} \\
+            \textcolor{#3>=4?threatHigh:black!40}{4. Exploitation} \\
+            \textcolor{#3>=5?threatHigh:black!40}{5. Installation} \\
+            \textcolor{#3>=6?threatMedium:black!40}{6. C2} \\
+            \textcolor{#3>=7?threatMedium:black!40}{7. Actions} \\
+        \end{tabular}
+    };
+}
+
+% Advanced kill chain with visual progress
+% Usage: \visualizeKillChain{x}{y}{stages_completed}
+\newcommand{\visualizeKillChain}[3]{
+    \def\stages{{Recon, Weapon, Deliver, Exploit, Install, C2, Action}}
+    \def\ypos{#2}
+
+    \node[font=\small\bfseries] at (#1, \ypos + 0.5) {Attack Kill Chain};
+
+    \foreach \stage [count=\i from 0] in {Recon, Weapon, Deliver, Exploit, Install, C2, Action} {
+        \pgfmathsetmacro{\completed}{ifthenelse(\i<#3,1,0)}
+        \pgfmathsetmacro{\yoffset}{\ypos - \i * 0.6}
+
+        \ifnum\completed=1
+            \def\stagecolor{threatCritical}
+            \def\stagefill{threatCritical!30}
+            \def\checkmark{✓}
+        \else
+            \def\stagecolor{black!30}
+            \def\stagefill{white}
+            \def\checkmark{}
+        \fi
+
+        \node[draw=\stagecolor, fill=\stagefill,
+              rounded corners=2pt, minimum width=3cm,
+              minimum height=0.5cm, font=\small]
+            at (#1, \yoffset) {\i+1. \stage \checkmark};
+    }
+}
+
+% MITRE ATT&CK technique mapping
+% Usage: \mapMITRETechnique{nodename}{technique}{subtechnique}{description}
+\newcommand{\mapMITRETechnique}[4]{
+    \node[draw=threatHigh, fill=threatHigh!15,
+          rounded corners=2pt, font=\tiny\ttfamily,
+          inner sep=3pt, anchor=south]
+        at (#1.south) [yshift=-0.8cm] {
+        \begin{tabular}{l}
+            \textbf{#2.#3} \\
+            #4
+        \end{tabular}
+    };
+}
 
 % ============================================================================
 % SECURITY ZONES AND BOUNDARIES
@@ -209,13 +400,122 @@
         at (#1.north east) {#2:#3};
 }
 
-% TODO: Vulnerability management
-% - CVE database integration
-% - CVSS scoring visualization
-% - Exploit availability indicators
-% - Patch availability status
-% - Vulnerability age indicators
-% - Risk prioritization markers
+% ============================================================================
+% ENHANCED VULNERABILITY MANAGEMENT
+% ============================================================================
+
+% Advanced CVE visualization with CVSS v3 scoring
+% Usage: \markCVEAdvanced{node}{cve}{cvss_base}{cvss_temporal}{exploit_available}
+\newcommand{\markCVEAdvanced}[5]{
+    \pgfmathsetmacro{\cvsscolor}{ifthenelse(#3>=9,0,ifthenelse(#3>=7,1,ifthenelse(#3>=4,2,3)))}
+
+    \ifnum\cvsscolor=0
+        \def\severitycolor{threatCritical}
+        \def\severitytext{CRITICAL}
+    \else\ifnum\cvsscolor=1
+        \def\severitycolor{threatHigh}
+        \def\severitytext{HIGH}
+    \else\ifnum\cvsscolor=2
+        \def\severitycolor{threatMedium}
+        \def\severitytext{MEDIUM}
+    \else
+        \def\severitycolor{threatLow}
+        \def\severitytext{LOW}
+    \fi\fi\fi
+
+    \node[draw=\severitycolor, fill=\severitycolor!20,
+          rounded corners=3pt, inner sep=4pt,
+          font=\tiny\ttfamily, anchor=south west,
+          minimum width=2.5cm]
+        at (#1.south west) [yshift=-1.2cm] {
+        \begin{tabular}{l}
+            \textbf{#2} \\
+            Base: #3 | Temp: #4 \\
+            \textbf{\severitytext} \\
+            \ifthenelse{\equal{#5}{yes}}{
+                \textcolor{threatCritical}{⚠ Exploit Available}
+            }{
+                \textcolor{clientGreen}{No Public Exploit}
+            }
+        \end{tabular}
+    };
+}
+
+% CVSS score visualization bar
+% Usage: \drawCVSSBar{x}{y}{score}
+\newcommand{\drawCVSSBar}[3]{
+    \pgfmathsetmacro{\barwidth}{#3/10*3}
+    \pgfmathsetmacro{\barcolor}{ifthenelse(#3>=9,0,ifthenelse(#3>=7,1,ifthenelse(#3>=4,2,3)))}
+
+    \ifnum\barcolor=0
+        \def\scorecolor{threatCritical}
+    \else\ifnum\barcolor=1
+        \def\scorecolor{threatHigh}
+    \else\ifnum\barcolor=2
+        \def\scorecolor{threatMedium}
+    \else
+        \def\scorecolor{threatLow}
+    \fi\fi\fi
+
+    % Background bar
+    \draw[fill=black!10] (#1,#2) rectangle +(3,0.3);
+    % Score bar
+    \draw[fill=\scorecolor] (#1,#2) rectangle +(\barwidth,0.3);
+    % Score text
+    \node[font=\tiny\bfseries, anchor=west] at (#1+3.2,#2+0.15) {
+        CVSS: #3
+    };
+}
+
+% Vulnerability aging indicator
+% Usage: \markVulnerabilityAge{node}{cve}{days_old}
+\newcommand{\markVulnerabilityAge}[3]{
+    \pgfmathsetmacro{\agecolor}{ifthenelse(#3>90,0,ifthenelse(#3>30,1,2))}
+
+    \ifnum\agecolor=0
+        \def\agealert{threatCritical}
+        \def\agestatus{AGED}
+    \else\ifnum\agecolor=1
+        \def\agealert{threatMedium}
+        \def\agestatus{OLD}
+    \else
+        \def\agealert{threatLow}
+        \def\agestatus{NEW}
+    \fi\fi
+
+    \node[font=\tiny, fill=\agealert!20, draw=\agealert,
+          rounded corners=1pt, inner sep=2pt]
+        at (#1.north east) [xshift=0.3cm] {
+        #2: #3d (\agestatus)
+    };
+}
+
+% Patch availability indicator
+% Usage: \markPatchStatus{node}{patch_available}{vendor_response}
+\newcommand{\markPatchStatus}[3]{
+    \ifthenelse{\equal{#2}{yes}}{
+        \def\patchcolor{clientGreen}
+        \def\patchtext{PATCH AVAILABLE}
+    }{
+    \ifthenelse{\equal{#2}{partial}}{
+        \def\patchcolor{threatMedium}
+        \def\patchtext{WORKAROUND ONLY}
+    }{
+        \def\patchcolor{threatCritical}
+        \def\patchtext{NO PATCH}
+    }}
+
+    \node[font=\tiny\bfseries, fill=\patchcolor!20,
+          draw=\patchcolor, rounded corners=2pt,
+          inner sep=2pt, anchor=south east]
+        at (#1.south east) {
+        \patchtext
+    };
+    \node[font=\tiny, text=black!70, anchor=north east]
+        at (#1.south east) [yshift=-0.3cm] {
+        Vendor: #3
+    };
+}
 
 % ============================================================================
 % THREAT ACTOR VISUALIZATION
@@ -242,12 +542,118 @@
     };
 }
 
-% TODO: Threat intelligence integration
-% - IOC (Indicators of Compromise) visualization
-% - TTP (Tactics, Techniques, Procedures) mapping
-% - Threat actor attribution with confidence levels
-% - Threat feed integration
-% - Reputation scoring for IPs/domains
+% ============================================================================
+% ENHANCED THREAT INTELLIGENCE & IOC TRACKING
+% ============================================================================
+
+% Advanced IOC visualization
+% Usage: \markIOCAdvanced{node}{ioc_type}{value}{threat_score}{source}
+% IOC types: ip, domain, hash, url, email
+\newcommand{\markIOCAdvanced}[5]{
+    \pgfmathsetmacro{\ioccolor}{ifthenelse(#4>=80,0,ifthenelse(#4>=50,1,2))}
+
+    \ifnum\ioccolor=0
+        \def\iocthreat{threatCritical}
+        \def\iocrating{MALICIOUS}
+    \else\ifnum\ioccolor=1
+        \def\iocthreat{threatMedium}
+        \def\iocrating{SUSPICIOUS}
+    \else
+        \def\iocthreat{threatLow}
+        \def\iocrating{UNKNOWN}
+    \fi\fi
+
+    \node[draw=\iocthreat, fill=\iocthreat!15,
+          rounded corners=2pt, font=\tiny\ttfamily,
+          inner sep=3pt, anchor=south,
+          minimum width=3cm]
+        at (#1.south) [yshift=-1cm] {
+        \begin{tabular}{l}
+            \textbf{IOC: #2} \\
+            #3 \\
+            Score: #4/100 (\iocrating) \\
+            Source: #5
+        \end{tabular}
+    };
+}
+
+% Threat feed indicator
+% Usage: \addThreatFeed{node}{feed_name}{indicators_matched}
+\newcommand{\addThreatFeed}[3]{
+    \node[font=\tiny\bfseries, text=threatHigh,
+          fill=yellow!40, draw=threatHigh,
+          rounded corners=2pt, inner sep=2pt,
+          anchor=north east]
+        at (#1.north east) [xshift=0.5cm] {
+        Feed: #2 | Matches: #3
+    };
+}
+
+% TTP (Tactics, Techniques, Procedures) mapping
+% Usage: \mapTTP{nodename}{tactic}{technique}{procedure}
+\newcommand{\mapTTP}[4]{
+    \node[draw=threatHigh, fill=threatHigh!10,
+          rounded corners=3pt, font=\tiny,
+          inner sep=4pt, anchor=west,
+          minimum width=3.5cm]
+        at (#1.east) [xshift=0.5cm] {
+        \begin{tabular}{l}
+            \textbf{TTP Analysis} \\
+            \hline
+            Tactic: #2 \\
+            Technique: #3 \\
+            Procedure: #4
+        \end{tabular}
+    };
+}
+
+% IP Reputation scoring
+% Usage: \markIPReputation{node}{ip}{reputation}{category}
+% Reputation: 0-100 (0=malicious, 100=clean)
+\newcommand{\markIPReputation}[4]{
+    \pgfmathsetmacro{\repcolor}{ifthenelse(#3<30,0,ifthenelse(#3<70,1,2))}
+
+    \ifnum\repcolor=0
+        \def\reputationcolor{threatCritical}
+        \def\reputationstatus{MALICIOUS}
+    \else\ifnum\repcolor=1
+        \def\reputationcolor{threatMedium}
+        \def\reputationstatus{SUSPICIOUS}
+    \else
+        \def\reputationcolor{clientGreen}
+        \def\reputationstatus{CLEAN}
+    \fi\fi
+
+    \node[font=\tiny\ttfamily, fill=\reputationcolor!20,
+          draw=\reputationcolor, rounded corners=2pt,
+          inner sep=3pt]
+        at (#1.south) [yshift=-0.6cm] {
+        \begin{tabular}{c}
+            #2 \\
+            Rep: #3/100 \\
+            \textbf{\reputationstatus} \\
+            #4
+        \end{tabular}
+    };
+}
+
+% Enhanced threat actor attribution
+% Usage: \markAdvancedThreatActor{node}{apt_name}{confidence}{motivation}{capabilities}
+\newcommand{\markAdvancedThreatActor}[5]{
+    \node[draw=threatCritical, fill=threatCritical!15,
+          rounded corners=3pt, font=\tiny,
+          inner sep=4pt, anchor=north,
+          minimum width=4cm]
+        at (#1.north) [yshift=1.5cm] {
+        \begin{tabular}{ll}
+            \multicolumn{2}{c}{\textbf{\large #2}} \\
+            \hline
+            Confidence: & #3\% \\
+            Motivation: & #4 \\
+            Capability: & #5 \\
+        \end{tabular}
+    };
+}
 
 % ============================================================================
 % SECURITY POSTURE OVERVIEW

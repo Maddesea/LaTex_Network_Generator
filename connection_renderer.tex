@@ -48,12 +48,75 @@
     \draw[normal conn, bidirectional] (#1) -- node[above, font=\tiny] {#3} (#2);
 }
 
-% TODO: Enhanced connection types
-% - VPN tunnel connections with special styling
-% - Wireless connections with wave pattern
-% - Fiber optic connections with light effects
-% - Serial/legacy connections with different line style
-% - Satellite links with orbital arc paths
+% ============================================================================
+% SPECIALIZED CONNECTION TYPES
+% ============================================================================
+
+% VPN tunnel connection
+% Usage: \drawVPNTunnel{from}{to}{protocol}
+\newcommand{\drawVPNTunnel}[3]{
+    \draw[draw=vpnGreen, line width=2pt, dashed,
+          dash pattern=on 5pt off 3pt,
+          -{Stealth[length=3mm]}]
+        (#1) -- node[above, font=\tiny\ttfamily, fill=white] {#3} (#2);
+    \draw[draw=vpnGreen!30, line width=4pt,
+          dash pattern=on 5pt off 3pt]
+        (#1) -- (#2);
+}
+
+% Wireless connection (with wave pattern)
+% Usage: \drawWirelessConnection{from}{to}{ssid}
+\newcommand{\drawWirelessConnection}[3]{
+    \draw[draw=iotGreen, line width=1.5pt,
+          decoration={snake, amplitude=1.5pt, segment length=8pt},
+          decorate,
+          -{Stealth[length=3mm]}]
+        (#1) -- node[above, font=\tiny, fill=white] {WiFi: #3} (#2);
+}
+
+% Fiber optic connection (with light effect)
+% Usage: \drawFiberConnection{from}{to}{speed}
+\newcommand{\drawFiberConnection}[3]{
+    \draw[draw=azureBlue, line width=2pt,
+          -{Stealth[length=3mm]}]
+        (#1) -- node[above, font=\tiny] {Fiber: #3} (#2);
+    \draw[draw=azureBlue!30, line width=4pt]
+        (#1) -- (#2);
+    % Light effect
+    \draw[draw=white, line width=0.5pt, opacity=0.7]
+        (#1) -- (#2);
+}
+
+% Serial/legacy connection
+% Usage: \drawSerialConnection{from}{to}{baudrate}
+\newcommand{\drawSerialConnection}[3]{
+    \draw[draw=black!60, line width=1pt,
+          dash pattern=on 2pt off 1pt,
+          -{Stealth[length=2mm]}]
+        (#1) -- node[above, font=\tiny\ttfamily] {Serial: #3} (#2);
+}
+
+% Satellite link
+% Usage: \drawSatelliteLink{from}{to}{latency}
+\newcommand{\drawSatelliteLink}[3]{
+    \draw[draw=routerOrange, line width=1.5pt,
+          -{Stealth[length=3mm]}]
+        (#1) to[bend left=45]
+        node[above, font=\tiny] {Satellite: #3ms} (#2);
+    % Satellite indicator at peak
+    \node[star, star points=4, fill=routerOrange, minimum size=0.3cm]
+        at ($(#1)!0.5!(#2) + (0,2)$) {};
+}
+
+% Cross-connect/direct connection
+% Usage: \drawCrossConnect{from}{to}{type}
+\newcommand{\drawCrossConnect}[3]{
+    \draw[draw=switchPurple, line width=2.5pt,
+          double,
+          double distance=1pt,
+          -{Stealth[length=3mm]}]
+        (#1) -- node[above, font=\tiny\bfseries] {#3} (#2);
+}
 
 % ============================================================================
 % ADVANCED CONNECTION RENDERING
@@ -179,11 +242,95 @@
         };
 }
 
-% TODO: Label improvements
-% - Auto-positioning to avoid overlaps
-% - Expandable detail boxes on hover
-% - Time-series data for connection metrics
-% - Alert indicators for anomalous connections
+% ============================================================================
+% CONNECTION HEALTH AND QUALITY INDICATORS
+% ============================================================================
+
+% Draw connection health status
+% Usage: \drawConnectionHealth{from}{to}{health}{label}
+% Health: good, degraded, poor, down
+\newcommand{\drawConnectionHealth}[4]{
+    \ifthenelse{\equal{#3}{good}}{
+        \def\healthcolor{clientGreen}
+        \def\healthwidth{1.5pt}
+    }{
+    \ifthenelse{\equal{#3}{degraded}}{
+        \def\healthcolor{threatMedium}
+        \def\healthwidth{2pt}
+    }{
+    \ifthenelse{\equal{#3}{poor}}{
+        \def\healthcolor{threatHigh}
+        \def\healthwidth{2.5pt}
+    }{
+        \def\healthcolor{threatCritical}
+        \def\healthwidth{3pt}
+    }}}
+
+    \draw[draw=\healthcolor, line width=\healthwidth,
+          -{Stealth[length=3mm]}]
+        (#1) -- node[above, font=\tiny, fill=white] {#4} (#2);
+}
+
+% Connection with QoS indicators
+% Usage: \drawConnectionWithQoS{from}{to}{priority}{label}
+% Priority: critical, high, normal, low
+\newcommand{\drawConnectionWithQoS}[4]{
+    \ifthenelse{\equal{#3}{critical}}{
+        \def\qoscolor{threatCritical}
+        \def\qoslabel{CRITICAL QoS}
+    }{
+    \ifthenelse{\equal{#3}{high}}{
+        \def\qoscolor{routerOrange}
+        \def\qoslabel{HIGH QoS}
+    }{
+    \ifthenelse{\equal{#3}{normal}}{
+        \def\qoscolor{serverBlue}
+        \def\qoslabel{NORMAL}
+    }{
+        \def\qoscolor{cloudGray}
+        \def\qoslabel{LOW QoS}
+    }}}
+
+    \draw[draw=\qoscolor, line width=2pt,
+          -{Stealth[length=3mm]}]
+        (#1) -- node[above, font=\tiny] {#4} (#2);
+    \node[font=\tiny\bfseries, text=\qoscolor, fill=white, inner sep=1pt]
+        at ($(#1)!0.5!(#2)$) [below=2pt] {\qoslabel};
+}
+
+% Connection with SLA monitoring
+% Usage: \drawConnectionWithSLA{from}{to}{uptime}{sla_target}{label}
+\newcommand{\drawConnectionWithSLA}[5]{
+    \pgfmathsetmacro{\slamet}{ifthenelse(#3>=#4,1,0)}
+    \ifnum\slamet=1
+        \def\slacolor{clientGreen}
+        \def\slastatus{SLA Met}
+    \else
+        \def\slacolor{threatCritical}
+        \def\slastatus{SLA Breach}
+    \fi
+
+    \draw[draw=\slacolor, line width=1.5pt,
+          -{Stealth[length=3mm]}]
+        (#1) -- node[above, font=\tiny] {#5} (#2);
+    \node[font=\tiny, fill=\slacolor!20, draw=\slacolor,
+          rounded corners=1pt, inner sep=2pt]
+        at ($(#1)!0.5!(#2)$) [below=3pt] {#3\% (\slastatus)};
+}
+
+% Multi-metric connection label
+% Usage: \drawConnectionMetrics{from}{to}{bandwidth}{latency}{loss}{jitter}
+\newcommand{\drawConnectionMetrics}[6]{
+    \draw[normal conn] (#1) -- (#2);
+    \node[font=\tiny\ttfamily, fill=white, draw=black!30,
+          rounded corners=2pt, inner sep=3pt, align=left]
+        at ($(#1)!0.5!(#2)$) {
+        BW: #3 Mbps \\
+        Latency: #4 ms \\
+        Loss: #5\% \\
+        Jitter: #6 ms
+    };
+}
 
 % ============================================================================
 % CONNECTION FILTERING AND LAYERS
