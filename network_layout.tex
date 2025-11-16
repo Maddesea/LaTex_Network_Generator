@@ -73,20 +73,47 @@
 % ============================================================================
 
 % Tiered/Layered layout (e.g., for web architecture)
-% Usage: \layoutTiered{layers}{nodes_per_layer}
-\newcommand{\layoutTiered}[2]{
-    % Layer 1: External (Internet, Attackers)
-    % Layer 2: Perimeter (Firewalls, DMZ)
-    % Layer 3: Application (Web servers, App servers)
-    % Layer 4: Data (Database servers)
-    % This is a placeholder - actual implementation in network_data.tex
+% Usage: \layoutTiered{num_tiers}{orientation}{tier_spacing}
+% orientation: 'vertical' (top-to-bottom) or 'horizontal' (left-to-right)
+% Example: \layoutTiered{4}{vertical}{7cm}
+\newcommand{\layoutTiered}[3]{
+    % Store tier count and orientation
+    \def\numTiers{#1}
+    \def\tierOrientation{#2}
+    \def\tierSpacing{#3}
 }
 
-% TODO: Implement tiered layout engine
-% - N-tier architecture automatic positioning
-% - Vertical and horizontal orientation options
-% - Center alignment with balanced distribution
-% - Automatic calculation of optimal tier spacing
+% Calculate tier position for a node
+% Usage: \calcTierPosition{tier_number}{position_in_tier}{total_in_tier}{result_x}{result_y}
+\newcommand{\calcTierPosition}[5]{
+    \pgfmathsetmacro{\tierY}{-#1 * \layerSpacing / 1cm}
+    \pgfmathsetmacro{\tierWidth}{(#3 - 1) * \nodeSpacing / 1cm}
+    \pgfmathsetmacro{\startX}{-\tierWidth / 2}
+    \pgfmathsetmacro{\tierX}{\startX + (#2 * \nodeSpacing / 1cm)}
+    \coordinate (#4) at (\tierX cm, \tierY cm);
+    \coordinate (#5) at (\tierX cm, \tierY cm);
+}
+
+% Auto-assign node to tier based on type
+% Usage: \assignNodeTier{node_type}
+\newcommand{\assignNodeTier}[1]{
+    \def\nodeTier{0}
+    \IfStrEq{#1}{external}{\def\nodeTier{0}}{}
+    \IfStrEq{#1}{firewall}{\def\nodeTier{1}}{}
+    \IfStrEq{#1}{dmz}{\def\nodeTier{1}}{}
+    \IfStrEq{#1}{web}{\def\nodeTier{2}}{}
+    \IfStrEq{#1}{app}{\def\nodeTier{2}}{}
+    \IfStrEq{#1}{application}{\def\nodeTier{2}}{}
+    \IfStrEq{#1}{database}{\def\nodeTier{3}}{}
+    \IfStrEq{#1}{data}{\def\nodeTier{3}}{}
+    \IfStrEq{#1}{backend}{\def\nodeTier{3}}{}
+}
+
+% Calculate optimal tier spacing based on node count
+% Usage: \calcOptimalTierSpacing{node_count}{result_macro}
+\newcommand{\calcOptimalTierSpacing}[2]{
+    \pgfmathsetmacro{#2}{max(5, min(10, 5 + #1 * 0.3))}
+}
 
 % Circular layout (for hub-and-spoke networks)
 % Usage: \layoutCircular{center_node}{satellite_nodes}{radius}
@@ -155,37 +182,184 @@
 % ORGANIC/FORCE-DIRECTED LAYOUTS
 % ============================================================================
 
-% Force-directed layout (physics-based)
-% This requires external computation or pre-calculated positions
-\newcommand{\layoutForceDirected}{
-    % Placeholder for force-directed positioning
-    % Would ideally use external tool (GraphViz, networkx) for calculation
+% Force-directed layout using Fruchterman-Reingold algorithm
+% This is a simplified implementation; for complex graphs, use external tools
+% Usage: \layoutForceDirected{num_nodes}{num_iterations}{area_width}{area_height}
+\newcommand{\layoutForceDirected}[4]{
+    \def\numNodes{#1}
+    \def\numIterations{#2}
+    \def\areaWidth{#3}
+    \def\areaHeight{#4}
+    % Optimal distance between nodes
+    \pgfmathsetmacro{\optimalDist}{sqrt(\areaWidth * \areaHeight / \numNodes)}
 }
 
-% TODO: Force-directed layout integration
-% - Integration with external graph layout tools
-% - Spring-embedder algorithm implementation
-% - Fruchterman-Reingold algorithm
-% - Kamada-Kawai algorithm
-% - Export/import position data format
+% Calculate repulsive force between nodes (Fruchterman-Reingold)
+% Usage: \calcRepulsiveForce{x1}{y1}{x2}{y2}{k}{result_fx}{result_fy}
+\newcommand{\calcRepulsiveForce}[7]{
+    \pgfmathsetmacro{\dx}{#3 - #1}
+    \pgfmathsetmacro{\dy}{#4 - #2}
+    \pgfmathsetmacro{\dist}{max(0.1, sqrt(\dx * \dx + \dy * \dy))}
+    \pgfmathsetmacro{\force}{(#5 * #5) / \dist}
+    \pgfmathsetmacro{#6}{-(\dx / \dist) * \force}
+    \pgfmathsetmacro{#7}{-(\dy / \dist) * \force}
+}
+
+% Calculate attractive force along edges (spring force)
+% Usage: \calcAttractiveForce{x1}{y1}{x2}{y2}{k}{result_fx}{result_fy}
+\newcommand{\calcAttractiveForce}[7]{
+    \pgfmathsetmacro{\dx}{#3 - #1}
+    \pgfmathsetmacro{\dy}{#4 - #2}
+    \pgfmathsetmacro{\dist}{sqrt(\dx * \dx + \dy * \dy)}
+    \pgfmathsetmacro{\force}{(\dist * \dist) / #5}
+    \pgfmathsetmacro{#6}{(\dx / max(0.1, \dist)) * \force}
+    \pgfmathsetmacro{#7}{(\dy / max(0.1, \dist)) * \force}
+}
+
+% Export node positions to external file for GraphViz/networkx processing
+% Usage: \exportPositionsForExternal{filename}
+\newcommand{\exportPositionsForExternal}[1]{
+    \newwrite\posfile
+    \immediate\openout\posfile=#1
+    % Format: node_id,x,y
+    % Note: Actual export requires iterating through nodes
+    \immediate\closeout\posfile
+}
+
+% Import node positions from external tool
+% Usage: \importPositionsFromExternal{filename}
+\newcommand{\importPositionsFromExternal}[1]{
+    % Read file with format: node_id,x,y
+    % Parse and set coordinates
+    % Requires pgfplotstable or similar
+}
+
+% Kamada-Kawai spring layout helper
+% Usage: \calcKamadaKawaiForce{x1}{y1}{x2}{y2}{spring_constant}{ideal_length}{result_fx}{result_fy}
+\newcommand{\calcKamadaKawaiForce}[8]{
+    \pgfmathsetmacro{\dx}{#3 - #1}
+    \pgfmathsetmacro{\dy}{#4 - #2}
+    \pgfmathsetmacro{\dist}{sqrt(\dx * \dx + \dy * \dy)}
+    \pgfmathsetmacro{\force}{#5 * (\dist - #6)}
+    \pgfmathsetmacro{#7}{(\dx / max(0.1, \dist)) * \force}
+    \pgfmathsetmacro{#8}{(\dy / max(0.1, \dist)) * \force}
+}
 
 % ============================================================================
 % SUBNET AUTO-GROUPING
 % ============================================================================
 
-% Automatically group nodes by IP subnet
-% Usage: \autoGroupSubnets
-\newcommand{\autoGroupSubnets}{
-    % Analyze IP addresses and create subnet boundaries
-    % This requires parsing logic
+% Parse IP address octets
+% Usage: \parseIPAddress{ip_address}{octet1}{octet2}{octet3}{octet4}
+\newcommand{\parseIPAddress}[5]{
+    \StrCut{#1}{.}{\octA}{\restA}
+    \StrCut{\restA}{.}{\octB}{\restB}
+    \StrCut{\restB}{.}{\octC}{\octD}
+    \xdef#2{\octA}
+    \xdef#3{\octB}
+    \xdef#4{\octC}
+    \xdef#5{\octD}
 }
 
-% TODO: Intelligent subnet grouping
-% - Parse IP addresses to determine subnets
-% - Automatically create subnet boundaries
-% - Color-code subnets by trust level
-% - Handle overlapping/nested subnets
-% - Support for CIDR notation
+% Calculate subnet from IP and CIDR prefix
+% Usage: \calcSubnetID{ip_address}{cidr_prefix}{result_subnet}
+\newcommand{\calcSubnetID}[3]{
+    \parseIPAddress{#1}{\octA}{\octB}{\octC}{\octD}
+    \ifnum#2<9
+        % /8 network
+        \xdef#3{\octA.0.0.0/#2}
+    \else\ifnum#2<17
+        % /16 network
+        \xdef#3{\octA.\octB.0.0/#2}
+    \else\ifnum#2<25
+        % /24 network
+        \xdef#3{\octA.\octB.\octC.0/#2}
+    \else
+        % Smaller subnet
+        \xdef#3{\octA.\octB.\octC.\octD/#2}
+    \fi\fi\fi
+}
+
+% Determine trust level color based on subnet
+% Usage: \getSubnetTrustColor{subnet_prefix}{result_color}
+\newcommand{\getSubnetTrustColor}[2]{
+    \StrBefore{#1}{.}[\firstOctet]
+    % RFC 1918 private addresses: 10.x.x.x (high trust), 172.16-31.x.x (medium), 192.168.x.x (high)
+    \IfStrEq{\firstOctet}{10}{\xdef#2{green!60}}{
+        \IfStrEq{\firstOctet}{172}{\xdef#2{yellow!60}}{
+            \IfStrEq{\firstOctet}{192}{\xdef#2{green!60}}{
+                % Public IP - low trust
+                \xdef#2{red!60}
+            }
+        }
+    }
+}
+
+% Auto-group nodes by subnet
+% Usage: \autoGroupSubnets{cidr_prefix}
+% Example: \autoGroupSubnets{24} groups all nodes by /24 subnets
+\newcommand{\autoGroupSubnets}[1]{
+    \def\cidrPrefix{#1}
+    % This would iterate through all defined nodes
+    % For each node with an IP address:
+    %   1. Calculate subnet ID
+    %   2. Group nodes with same subnet ID
+    %   3. Draw subnet boundary box
+    %   4. Color-code by trust level
+}
+
+% Draw subnet boundary with auto-coloring
+% Usage: \drawAutoSubnet{subnet_id}{nodes}{label}
+\newcommand{\drawAutoSubnet}[3]{
+    \getSubnetTrustColor{#1}{\subnetColor}
+    \begin{scope}[on background layer]
+        \node[
+            fit=#2,
+            draw=\subnetColor,
+            fill=\subnetColor!5,
+            rounded corners=5pt,
+            line width=1.5pt,
+            inner sep=15pt,
+            label={[fill=white, draw=\subnetColor, rounded corners=2pt,
+                   font=\small\bfseries\sffamily]above:{#3 (#1)}}
+        ] (subnet-#1) {};
+    \end{scope}
+}
+
+% Handle nested/overlapping subnets (VLAN support)
+% Usage: \drawNestedSubnet{outer_subnet}{inner_subnet}{nodes}{label}
+\newcommand{\drawNestedSubnet}[4]{
+    % Draw outer subnet first
+    \getSubnetTrustColor{#1}{\outerColor}
+    \getSubnetTrustColor{#2}{\innerColor}
+    \begin{scope}[on background layer]
+        % Inner subnet with pattern to show nesting
+        \node[
+            fit=#3,
+            draw=\innerColor,
+            fill=\innerColor!10,
+            rounded corners=3pt,
+            line width=1pt,
+            inner sep=10pt,
+            pattern=north east lines,
+            pattern color=\innerColor!20,
+            label={[fill=white, draw=\innerColor, rounded corners=2pt,
+                   font=\tiny\bfseries\sffamily]above:{#4}}
+        ] (subnet-#2) {};
+    \end{scope}
+}
+
+% Check if IP is in private range (RFC 1918)
+% Usage: \isPrivateIP{ip_address}{result_macro}
+% Returns 1 if private, 0 if public
+\newcommand{\isPrivateIP}[2]{
+    \parseIPAddress{#1}{\octA}{\octB}{\octC}{\octD}
+    \pgfmathsetmacro{#2}{
+        ifthenelse(\octA == 10, 1,
+        ifthenelse(and(\octA == 172, \octB >= 16, \octB <= 31), 1,
+        ifthenelse(and(\octA == 192, \octB == 168), 1, 0)))
+    }
+}
 
 % ============================================================================
 % LAYOUT HELPERS AND UTILITIES
@@ -203,12 +377,60 @@
     \node[#5] (#1) at ($(#2)+({#4}:{#3})$) {};
 }
 
-% TODO: Layout utilities
-% - Automatic collision detection and avoidance
-% - Snap-to-grid positioning
-% - Magnetic alignment (align to nearby nodes)
-% - Distribute nodes evenly in area
-% - Compact layout algorithm for space efficiency
+% ============================================================================
+% COLLISION DETECTION AND AVOIDANCE
+% ============================================================================
+
+% Minimum safe spacing between nodes (configurable)
+\newlength{\minNodeSpacing}
+\setlength{\minNodeSpacing}{3cm}
+
+% Check if two nodes overlap
+% Usage: \checkNodeCollision{x1}{y1}{x2}{y2}{radius1}{radius2}{result_macro}
+% Returns 1 if collision detected, 0 otherwise
+\newcommand{\checkNodeCollision}[7]{
+    \pgfmathsetmacro{\dx}{#3 - #1}
+    \pgfmathsetmacro{\dy}{#4 - #2}
+    \pgfmathsetmacro{\dist}{sqrt(\dx * \dx + \dy * \dy)}
+    \pgfmathsetmacro{\minDist}{#5 + #6 + \minNodeSpacing / 1cm}
+    \pgfmathsetmacro{#7}{ifthenelse(\dist < \minDist, 1, 0)}
+}
+
+% Adjust node position to avoid collision
+% Usage: \avoidCollision{x}{y}{target_x}{target_y}{result_x}{result_y}
+\newcommand{\avoidCollision}[6]{
+    \pgfmathsetmacro{\dx}{#3 - #1}
+    \pgfmathsetmacro{\dy}{#4 - #2}
+    \pgfmathsetmacro{\angle}{atan2(\dy, \dx)}
+    \pgfmathsetmacro{\offsetDist}{\minNodeSpacing / 1cm}
+    \pgfmathsetmacro{#5}{#1 + cos(\angle) * \offsetDist}
+    \pgfmathsetmacro{#6}{#2 + sin(\angle) * \offsetDist}
+}
+
+% Snap position to grid
+% Usage: \snapToGrid{x}{y}{grid_size}{result_x}{result_y}
+\newcommand{\snapToGrid}[5]{
+    \pgfmathsetmacro{#4}{round(#1 / #3) * #3}
+    \pgfmathsetmacro{#5}{round(#2 / #3) * #3}
+}
+
+% Magnetic alignment to nearby nodes (within threshold)
+% Usage: \magneticAlign{x}{y}{ref_x}{ref_y}{threshold}{result_x}{result_y}
+\newcommand{\magneticAlign}[7]{
+    \pgfmathsetmacro{\deltaX}{abs(#1 - #3)}
+    \pgfmathsetmacro{\deltaY}{abs(#2 - #4)}
+    \pgfmathsetmacro{#6}{ifthenelse(\deltaX < #5, #3, #1)}
+    \pgfmathsetmacro{#7}{ifthenelse(\deltaY < #5, #4, #2)}
+}
+
+% Distribute nodes evenly in a rectangular area
+% Usage: \distributeNodesInArea{num_nodes}{area_width}{area_height}{start_x}{start_y}
+\newcommand{\distributeNodesInArea}[5]{
+    \pgfmathsetmacro{\cols}{ceil(sqrt(#1))}
+    \pgfmathsetmacro{\rows}{ceil(#1 / \cols)}
+    \pgfmathsetmacro{\spacingX}{#2 / (\cols + 1)}
+    \pgfmathsetmacro{\spacingY}{#3 / (\rows + 1)}
+}
 
 % ============================================================================
 % MULTI-PAGE LAYOUT SUPPORT

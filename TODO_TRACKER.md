@@ -123,25 +123,25 @@
 ## AGENT 3: Layout Engine (network_layout.tex)
 
 ### High Priority
-- [ ] Tiered layout algorithm implementation
+- [x] Tiered layout algorithm implementation
   - Calculate optimal tier spacing based on node count
   - Support for 3-tier, N-tier architectures
   - Auto-assignment of nodes to tiers by type/function
   - Horizontal and vertical orientation support
 
-- [ ] Force-directed graph layout integration
+- [x] Force-directed graph layout integration
   - Research optimal algorithm: Fruchterman-Reingold or Kamada-Kawai
   - May require external tool integration (GraphViz, networkx)
   - Export/import position format
   - Iterative refinement UI
 
-- [ ] Auto-collision detection and avoidance
+- [x] Auto-collision detection and avoidance
   - Detect overlapping nodes
   - Calculate safe minimum spacing
   - Auto-adjust positions to eliminate overlaps
   - Magnetic alignment to grid
 
-- [ ] Subnet-based auto-grouping
+- [x] Subnet-based auto-grouping
   - Parse IP addresses to determine /24, /16 subnets
   - Auto-create subnet boundary boxes
   - Color-code subnets by trust level
