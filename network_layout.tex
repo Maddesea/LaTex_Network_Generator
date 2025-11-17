@@ -96,7 +96,9 @@
 % Calculate optimal tier spacing based on node count
 % Usage: \calculateTierSpacing{total_nodes}{num_tiers}
 \newcommand{\calculateTierSpacing}[2]{
-    \pgfmathsetlength{\currentTierSpacing}{max(5cm, min(8cm, 15cm/#2))}
+    % Prevent division by zero
+    \pgfmathsetmacro{\safetiers}{max(#2, 1)}
+    \pgfmathsetlength{\currentTierSpacing}{max(5cm, min(8cm, 15cm/\safetiers))}
 }
 
 % Tiered/Layered layout (e.g., for web architecture)
@@ -233,7 +235,9 @@
 % Usage: \positionSatelliteArc{node_name}{index}{total}{radius}{start_angle}{arc_span}
 \newcommand{\positionSatelliteArc}[6]{
     % Calculate angle within the arc
-    \pgfmathsetmacro{\nodeangle}{#5 + (#6 / (#3 - 1)) * #2}
+    % Handle edge case where total = 1 to avoid division by zero
+    \pgfmathsetmacro{\divisor}{max(#3 - 1, 1)}
+    \pgfmathsetmacro{\nodeangle}{#5 + (#6 / \divisor) * #2}
 
     % Position node
     \coordinate (#1-pos) at (\nodeangle:#4);
@@ -331,8 +335,11 @@
 % aspect_ratio: width/height (e.g., 1.5 for 3:2, 1.0 for square)
 \newcommand{\autoGridDimensions}[2]{
     % Calculate columns and rows to approximate aspect ratio
-    \pgfmathsetmacro{\gridcols}{ceil(sqrt(#1 * #2))}
-    \pgfmathsetmacro{\gridrows}{ceil(#1 / \gridcols)}
+    % Ensure node count is at least 1
+    \pgfmathsetmacro{\safecount}{max(#1, 1)}
+    \pgfmathsetmacro{\gridcols}{ceil(sqrt(\safecount * #2))}
+    \pgfmathsetmacro{\safecols}{max(\gridcols, 1)}
+    \pgfmathsetmacro{\gridrows}{ceil(\safecount / \safecols)}
 }
 
 % Irregular grid layout (varying columns per row)
@@ -720,8 +727,10 @@
     \fi
 
     % Calculate horizontal spread based on level and children count
-    \pgfmathsetmacro{\levelwidth}{pow(1.8, 4 - #3) * \treeNodeSpacing / 1cm}
-    \pgfmathsetmacro{\childspacing}{\levelwidth / max(#5 - 1, 1)}
+    % Ensure power doesn't go negative
+    \pgfmathsetmacro{\levelwidth}{pow(1.8, max(4 - #3, 1)) * \treeNodeSpacing / 1cm}
+    \pgfmathsetmacro{\divisor}{max(#5 - 1, 1)}
+    \pgfmathsetmacro{\childspacing}{\levelwidth / \divisor}
     \pgfmathsetmacro{\xoffset}{-\levelwidth/2 + #4 * \childspacing}
 
     \coordinate (#1-pos) at ($(#2-pos) + (\xoffset cm, \yoffset cm)$);
@@ -1087,8 +1096,9 @@
 \newcommand{\subnetCapacity}[1]{
     % For /24: 2^(32-24) - 2 = 254 hosts
     % For /16: 2^(32-16) - 2 = 65534 hosts
-
-    \pgfmathsetmacro{\capacity}{2^(32 - #1) - 2}
+    % Validate CIDR prefix (must be between 0 and 32)
+    \pgfmathsetmacro{\validprefix}{max(0, min(32, #1))}
+    \pgfmathsetmacro{\capacity}{max(0, 2^(32 - \validprefix) - 2)}
 }
 
 % Visualize subnet utilization
@@ -1180,12 +1190,13 @@
     \pgfextractx{\pgf@xb}{\pgfpointanchor{#2}{center}}
     \pgfextracty{\pgf@yb}{\pgfpointanchor{#2}{center}}
 
-    % Calculate distance
-    \pgfmathsetmacro{\dx}{abs(\pgf@xb - \pgf@xa)}
-    \pgfmathsetmacro{\dy}{abs(\pgf@yb - \pgf@ya)}
+    % Calculate Euclidean distance (proper collision detection)
+    \pgfmathsetmacro{\dx}{\pgf@xb / 1pt - \pgf@xa / 1pt}
+    \pgfmathsetmacro{\dy}{\pgf@yb / 1pt - \pgf@ya / 1pt}
+    \pgfmathsetmacro{\distance}{sqrt(\dx * \dx + \dy * \dy) / 28.453}  % convert pt to cm
 
     % Check if distance is less than minimum spacing
-    \pgfmathparse{\dx < \minNodeSpacing && \dy < \minNodeSpacing ? 1 : 0}
+    \pgfmathparse{\distance < \minNodeSpacing / 1cm ? 1 : 0}
     \ifnum\pgfmathresult=1
         \nodecollisiontrue
     \else
@@ -1196,6 +1207,7 @@
 % Adjust position to avoid collision
 % Usage: \avoidCollision{moving_node}{fixed_node}{min_distance}
 % Moves the first node away from the second if they're too close
+% Note: This creates a new coordinate #1-adjusted, does not modify the original node
 \newcommand{\avoidCollision}[3]{
     % Get positions
     \pgfextractx{\pgf@xa}{\pgfpointanchor{#1}{center}}
@@ -1204,20 +1216,30 @@
     \pgfextracty{\pgf@yb}{\pgfpointanchor{#2}{center}}
 
     % Calculate current distance
-    \pgfmathsetmacro{\currentdist}{sqrt((\pgf@xb - \pgf@xa)^2 + (\pgf@yb - \pgf@ya)^2)}
+    \pgfmathsetmacro{\dx}{\pgf@xa / 1pt - \pgf@xb / 1pt}
+    \pgfmathsetmacro{\dy}{\pgf@ya / 1pt - \pgf@yb / 1pt}
+    \pgfmathsetmacro{\currentdist}{sqrt(\dx * \dx + \dy * \dy) / 28.453}  % convert pt to cm
 
     % If too close, push away
     \pgfmathparse{\currentdist < #3 ? 1 : 0}
     \ifnum\pgfmathresult=1
-        % Calculate push direction
-        \pgfmathsetmacro{\pushangle}{atan2(\pgf@ya - \pgf@yb, \pgf@xa - \pgf@xb)}
-        \pgfmathsetmacro{\pushdist}{#3 - \currentdist + 0.5cm}  % extra margin
+        % Calculate push direction (avoid division by zero for overlapping nodes)
+        \pgfmathsetmacro{\distcheck}{abs(\dx) + abs(\dy)}
+        \pgfmathparse{\distcheck > 0.01 ? 1 : 0}
+        \ifnum\pgfmathresult=1
+            \pgfmathsetmacro{\pushangle}{atan2(\dy, \dx)}
+            \pgfmathsetmacro{\pushdist}{#3 - \currentdist + 0.5}  % extra margin in cm
 
-        % Move node
-        \pgfmathsetmacro{\newx}{\pgf@xa + \pushdist * cos(\pushangle)}
-        \pgfmathsetmacro{\newy}{\pgf@ya + \pushdist * sin(\pushangle)}
+            % Calculate new position (create adjusted coordinate, don't redefine node)
+            \pgfmathsetmacro{\newx}{\pgf@xa / 1cm + \pushdist * cos(\pushangle)}
+            \pgfmathsetmacro{\newy}{\pgf@ya / 1cm + \pushdist * sin(\pushangle)}
 
-        \node[shift={(\newx pt, \newy pt)}] (#1) {};
+            \coordinate (#1-adjusted) at (\newx cm, \newy cm);
+        \else
+            % Nodes exactly overlapping - push in arbitrary direction
+            \pgfmathsetmacro{\newx}{\pgf@xa / 1cm + #3}
+            \coordinate (#1-adjusted) at (\newx cm, \pgf@ya / 1cm);
+        \fi
     \fi
 }
 
@@ -1271,10 +1293,15 @@
 % Usage: \calculateOptimalSpacing{node_count}{area_width}{area_height}
 \newcommand{\calculateOptimalSpacing}[3]{
     % Calculate grid that fits #1 nodes in area #2 x #3
-    \pgfmathsetmacro{\gridcols}{ceil(sqrt(#1 * #2 / #3))}
-    \pgfmathsetmacro{\gridrows}{ceil(#1 / \gridcols)}
+    % Protect against division by zero and invalid values
+    \pgfmathsetmacro{\safecount}{max(#1, 1)}
+    \pgfmathsetmacro{\safeheight}{max(#3, 1)}
+    \pgfmathsetmacro{\gridcols}{ceil(sqrt(\safecount * #2 / \safeheight))}
+    \pgfmathsetmacro{\safecols}{max(\gridcols, 1)}
+    \pgfmathsetmacro{\gridrows}{ceil(\safecount / \safecols)}
+    \pgfmathsetmacro{\saferows}{max(\gridrows, 1)}
 
-    \pgfmathsetlength{\nodeSpacing}{min(#2 / \gridcols, #3 / \gridrows) * 0.8}
+    \pgfmathsetlength{\nodeSpacing}{min(#2 / \safecols, \safeheight / \saferows) * 0.8}
 }
 
 % Check if point is inside bounding box
@@ -1494,7 +1521,9 @@
     \setcounter{connectioncount}{#2}
 
     % Complexity based on nodes + connection density
-    \pgfmathsetmacro{\complexity}{min(10, (#1 / 10) + (#2 / #1))}
+    % Protect against division by zero
+    \pgfmathsetmacro{\safenodes}{max(#1, 1)}
+    \pgfmathsetmacro{\complexity}{min(10, (\safenodes / 10) + (#2 / \safenodes))}
 }
 
 % Auto-adjust spacing based on complexity
@@ -1511,12 +1540,13 @@
     % Calculate complexity
     \calculateComplexityScore{#1}{#2}
 
-    % Adjust spacing
-    \pgfmathsetmacro{\complexityscore}{min(10, (#1 / 10) + (#2 / #1))}
+    % Adjust spacing (protect against division by zero)
+    \pgfmathsetmacro{\safenodes}{max(#1, 1)}
+    \pgfmathsetmacro{\complexityscore}{min(10, (\safenodes / 10) + (#2 / \safenodes))}
     \autoAdjustSpacing{\complexityscore}
 
     % Apply collision avoidance if needed
-    \pgfmathparse{#2 > #1 * 2 ? 1 : 0}
+    \pgfmathparse{#2 > \safenodes * 2 ? 1 : 0}
     \ifnum\pgfmathresult=1
         % High connection density - enable collision avoidance
     \fi
@@ -1973,7 +2003,9 @@
 % Dynamic spacing based on diagram density
 % Usage: \autoSpacing{node_count}{area}
 \newcommand{\autoSpacing}[2]{
-    \pgfmathsetmacro{\density}{#1 / #2}
+    % Protect against division by zero
+    \pgfmathsetmacro{\safearea}{max(#2, 1)}
+    \pgfmathsetmacro{\density}{#1 / \safearea}
     \pgfmathparse{\density > 2 ? "tight" : (\density > 0.5 ? "comfortable" : "loose")}
     \let\spacingmode\pgfmathresult
 
@@ -2199,7 +2231,9 @@
 % Calculate layout density
 % Usage: \calculateDensity{area}
 \newcommand{\calculateDensity}[1]{
-    \pgfmathsetmacro{\density}{\value{nodecount} / #1}
+    % Protect against division by zero
+    \pgfmathsetmacro{\safearea}{max(#1, 1)}
+    \pgfmathsetmacro{\density}{\value{nodecount} / \safearea}
 }
 
 % Measure diagram bounds
