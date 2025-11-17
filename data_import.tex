@@ -83,9 +83,14 @@
             local content = file:read("*all")
             file:close()
 
-            -- For production use, consider using a proper JSON library
-            -- This is a simplified implementation
-            tex.print("\\message{JSON file loaded: " .. filename .. "}")
+            -- NOTE: Full JSON parsing not yet implemented
+            -- For production use, install a proper JSON library like lunajson:
+            --   luarocks install lunajson
+            -- Then replace this stub with: local json = require("lunajson")
+
+            tex.print("\\PackageWarning{data_import}{JSON parsing is not fully implemented. " ..
+                     "Use CSV import for production. See data_import.tex line 76 for implementation notes.}{}")
+            tex.print("\\message{JSON file loaded but not parsed: " .. filename .. "}")
         end
 
         -- Parse and create nodes from JSON
@@ -98,7 +103,9 @@
             --   ]
             -- }
 
-            -- Implementation would parse JSON and call LaTeX commands
+            -- TODO: Implementation requires proper JSON library (lunajson)
+            -- Once implemented, should call iputils.registerNode() for each node
+            tex.print("\\PackageWarning{data_import}{JSON node parsing not implemented}{}")
         end
     }
 
@@ -184,6 +191,8 @@
     \IfStrEq{\nodetype}{attacker}{%
         \createAttacker{#2}{#3}{#4}{#5}{#6}%
     }{}%
+    % Register node for subnet zone generation
+    \registerNodeForSubnet{#2}{#3}%
 }
 
 % Import connections from CSV file
@@ -390,6 +399,9 @@
                              host.ip .. "}{" .. x .. "}{" .. y .. "}{" ..
                              label .. "}")
                 end
+
+                -- Register node for subnet zone generation
+                iputils.registerNode(nodeId, host.ip)
             end
 
             tex.print("\\message{Imported " .. hostCount .. " hosts from Nmap XML}")
@@ -426,10 +438,14 @@
             local content = file:read("*all")
             file:close()
 
-            -- Simple YAML parsing (for production, use proper YAML library)
-            -- This handles basic key-value pairs and lists
+            -- NOTE: Full YAML parsing not yet implemented
+            -- For production use, install a proper YAML library like lyaml:
+            --   luarocks install lyaml
+            -- Then replace this stub with: local yaml = require("lyaml")
 
-            tex.print("\\message{YAML file loaded: " .. filename .. "}")
+            tex.print("\\PackageWarning{data_import}{YAML parsing is not fully implemented. " ..
+                     "Use CSV import for production. See data_import.tex line 420 for implementation notes.}{}")
+            tex.print("\\message{YAML file loaded but not parsed: " .. filename .. "}")
         end
 
         function yaml.loadNetwork(filename)
@@ -447,6 +463,8 @@
             --     type: encrypted
             --     label: HTTPS
 
+            -- TODO: Implementation requires proper YAML library (lyaml)
+            -- Once implemented, should call iputils.registerNode() for each node
             yaml.parse(filename)
         end
     }
@@ -642,11 +660,18 @@
         }%
     }
 
+    \newcommand{\registerNodeForSubnet}[2]{%
+        % #1=nodeId, #2=ip
+        % Register node for automatic subnet zone generation
+        \directlua{iputils.registerNode("#1", "#2")}%
+    }
+
     \newcommand{\autoGenerateSubnetZones}{%
         \directlua{iputils.generateSubnetZones()}%
     }
 \else
     \newcommand{\validateIPAddress}[1]{true}
+    \newcommand{\registerNodeForSubnet}[2]{}% No-op if LuaTeX not available
     \newcommand{\autoGenerateSubnetZones}{}
 \fi
 
@@ -788,6 +813,9 @@
                         tex.print("\\addThreatBadge{" .. nodeId .. "}{" ..
                                  threatBadge .. "}")
                     end
+
+                    -- Register node for subnet zone generation
+                    iputils.registerNode(nodeId, hostIP)
                 end
             end
 
@@ -899,20 +927,33 @@
 % Example: Import with auto-positioning
 % \importNodesAutoPositioned{data/nodes-simple.csv}
 
-% Example: Import from Nmap XML
+% Example: Import from Nmap XML (LuaTeX required)
 % \importNmapXML{data/nmap-scan.xml}
 
-% Example: Import from Nessus
+% Example: Import from Nessus (LuaTeX required)
 % \importNessusXML{data/nessus-scan.nessus}
 
-% Example: Import from JSON
+% Example: Import from JSON (LuaTeX required - NOT YET FULLY IMPLEMENTED)
 % \importNetworkFromJSON{data/network.json}
 
-% Example: Import from YAML
+% Example: Import from YAML (LuaTeX required - NOT YET FULLY IMPLEMENTED)
 % \importNetworkFromYAML{data/network.yaml}
 
-% Example: Auto-generate subnet zones
+% Example: Auto-generate subnet zones (LuaTeX required)
+% NOTE: Subnet zones are automatically generated when using:
+%   - CSV import (importNodesFromCSV, importNodesAutoPositioned)
+%   - Nmap import (importNmapXML)
+%   - Nessus import (importNessusXML)
+% All imported nodes are automatically registered by IP subnet.
+% To draw the subnet zones, call:
 % \autoGenerateSubnetZones
+%
+% Example workflow:
+% \importNodesFromCSV{nodes.csv}
+% \importConnectionsFromCSV{connections.csv}
+% \begin{scope}[on background layer]
+%   \autoGenerateSubnetZones  % Automatically groups nodes by /24 subnet
+% \end{scope}
 
 % Example: Export to GraphML
 % \exportToGraphML{output/network.graphml}
@@ -921,19 +962,26 @@
 % TODO: Future Enhancements
 % ============================================================================
 
-% Medium Priority:
+% High Priority - Core Functionality:
+% - [x] CSV import with validation - IMPLEMENTED
 % - [x] Nessus scan integration (.nessus file parser) - IMPLEMENTED
+% - [x] Nmap XML import - IMPLEMENTED
 % - [x] Auto-position calculation for imported nodes - IMPLEMENTED
 % - [x] Subnet detection from IP addresses - IMPLEMENTED
+% - [x] Auto-registration of nodes for subnet tracking - IMPLEMENTED v1.2
 % - [x] Service-to-node-type mapping - IMPLEMENTED
+% - [ ] Enhanced JSON/YAML with proper library (lunajson/lyaml) - STUB ONLY
+%       Current implementation is a stub with warnings
+
+% Medium Priority - Extended Features:
 % - [ ] Database connectivity (SQL queries)
 % - [ ] REST API for dynamic generation
 % - [ ] Vulnerability enrichment from CVE databases
-% - [ ] Enhanced JSON/YAML with proper library (lunajson/lyaml)
 % - [ ] Force-directed auto-layout algorithm
 % - [ ] Subnet-aware hierarchical positioning
+% - [ ] Graph analysis metrics (centrality, clustering)
 
-% Low Priority:
+% Low Priority - Integration & Scalability:
 % - [ ] SIEM log integration (Splunk, ELK)
 % - [ ] Network monitoring data (Nagios, Zabbix)
 % - [ ] Asset discovery tools (Lansweeper)
@@ -959,5 +1007,24 @@
 %        - IP subnet detection and grouping
 %        - Connection inference from ports
 %        - Enhanced validation
+%
+% v1.2 - Bug fixes and improvements (2024-11-17)
+%        CRITICAL BUG FIXES:
+%        - Fixed subnet zone generation (was passing node ID instead of IP)
+%        - Fixed connection type default fallback logic
+%        - Improved CSV parser robustness (empty line handling)
+%        - Added whitespace trimming to all CSV parsers
+%
+%        NEW FEATURES:
+%        - Added automatic node registration for subnet tracking
+%        - Integrated iputils.registerNode() into all import functions
+%        - Added \registerNodeForSubnet LaTeX command
+%        - Subnet zones now work automatically with CSV, Nmap, Nessus imports
+%
+%        IMPROVEMENTS:
+%        - Better error messages for JSON/YAML stubs
+%        - Added implementation notes for JSON/YAML parsers
+%        - Enhanced documentation with subnet zone usage examples
+%        - Updated TODO list to reflect current implementation status
 
 \endinput
