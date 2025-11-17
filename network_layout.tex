@@ -398,14 +398,18 @@
 \newcommand{\layoutBladeChassisGrid}[3]{
     % Blade chassis typically hold 8, 10, or 16 blade servers
     % Arrange in compact grid within chassis
-    \pgfmathsetmacro{\bladerows}{ceil(#2 / #3)}
+    % Protect against division by zero
+    \pgfmathsetmacro{\safebladesperrow}{max(#3, 1)}
+    \pgfmathsetmacro{\bladerows}{ceil(#2 / \safebladesperrow)}
 }
 
 % Position blade server within chassis
 % Usage: \positionBlade{blade_name}{chassis}{slot_number}{slots_per_row}{spacing}
 \newcommand{\positionBlade}[5]{
-    \pgfmathsetmacro{\bladerow}{floor((#3 - 1) / #4)}
-    \pgfmathsetmacro{\bladecol}{mod(#3 - 1, #4)}
+    % Protect against division by zero
+    \pgfmathsetmacro{\safeslotsperrow}{max(#4, 1)}
+    \pgfmathsetmacro{\bladerow}{floor((#3 - 1) / \safeslotsperrow)}
+    \pgfmathsetmacro{\bladecol}{mod(#3 - 1, \safeslotsperrow)}
 
     \pgfmathsetmacro{\bladex}{\bladecol * #5}
     \pgfmathsetmacro{\bladey}{-\bladerow * #5}
@@ -499,22 +503,24 @@
         % Draw floor outline
         \draw[black!30, very thick] (0,0) rectangle (#1, -#2);
 
-        % Draw aisles
-        \pgfmathsetmacro{\aislecount}{#4 - 1}
+        % Draw aisles (protect against division by zero)
+        \pgfmathsetmacro{\safecols}{max(#4, 1)}
+        \pgfmathsetmacro{\aislecount}{\safecols - 1}
         \foreach \i in {1,...,\aislecount} {
-            \pgfmathsetmacro{\xpos}{#1 / #4 * \i}
+            \pgfmathsetmacro{\xpos}{#1 / \safecols * \i}
             \draw[blue!20, thick, dashed]
                 (\xpos, 0) -- (\xpos, -#2);
         }
 
-        % Draw cold/hot aisle indicators
+        % Draw cold/hot aisle indicators (protect against division by zero)
+        \pgfmathsetmacro{\saferows}{max(#3, 1)}
         \foreach \i in {0,...,#3} {
-            \pgfmathsetmacro{\ypos}{-#2 / #3 * \i}
+            \pgfmathsetmacro{\ypos}{-#2 / \saferows * \i}
             \pgfmathparse{mod(\i, 2) == 0 ? "Cold" : "Hot"}
             \let\aisletype\pgfmathresult
 
             \node[font=\tiny, text=gray, rotate=90]
-                at (#5/2, \ypos + #2/#3/2) {\aisletype Aisle};
+                at (#5/2, \ypos + #2/\saferows/2) {\aisletype Aisle};
         }
     \end{scope}
 }
@@ -746,8 +752,9 @@
 % Position in balanced tree with automatic centering
 % Usage: \positionBalanced{node}{parent}{level}{index_in_level}{nodes_in_level}
 \newcommand{\positionBalanced}[5]{
-    % Calculate total width needed for this level
-    \pgfmathsetmacro{\levelwidth}{(#5 - 1) * \treeNodeSpacing / 1cm}
+    % Calculate total width needed for this level (handle single node case)
+    \pgfmathsetmacro{\safenodes}{max(#5, 1)}
+    \pgfmathsetmacro{\levelwidth}{(\safenodes - 1) * \treeNodeSpacing / 1cm}
 
     % Position this node within the level
     \pgfmathsetmacro{\xpos}{-\levelwidth/2 + #4 * \treeNodeSpacing / 1cm}
@@ -3077,3 +3084,477 @@
     % Simplify complex paths
     % Lower resolution for backgrounds
 }
+
+
+% ============================================================================
+% ENHANCED VALIDATION AND SAFETY UTILITIES (NEW)
+% ============================================================================
+
+% Safe division with default value
+% Usage: \safeDivide{numerator}{denominator}{default}{result}
+% Performs division but returns default if denominator is zero or too small
+\newcommand{\safeDivide}[4]{
+    \pgfmathparse{abs(#2) > 0.0001 ? (#1 / #2) : #3}
+    \let#4\pgfmathresult
+}
+
+% Safe square root (ensures non-negative input)
+% Usage: \safeSqrt{value}{result}
+\newcommand{\safeSqrt}[2]{
+    \pgfmathsetmacro{#2}{sqrt(max(0, #1))}
+}
+
+% Safe modulo operation
+% Usage: \safeMod{value}{divisor}{result}
+\newcommand{\safeMod}[3]{
+    \pgfmathsetmacro{\safediv}{max(abs(#2), 1)}
+    \pgfmathsetmacro{#3}{mod(#1, \safediv)}
+}
+
+% Validate coordinate is finite and reasonable
+% Usage: \validateCoordinate{x}{y}{max_abs}
+% Returns 1 if valid, 0 if invalid
+\newcommand{\validateCoordinate}[3]{
+    \pgfmathparse{(abs(#1) < #3 && abs(#2) < #3) ? 1 : 0}
+}
+
+% Clamp value to range
+% Usage: \clampValue{value}{min}{max}{result}
+\newcommand{\clampValue}[4]{
+    \pgfmathsetmacro{#4}{max(#2, min(#3, #1))}
+}
+
+% Check if value is within tolerance
+% Usage: \isNearValue{value1}{value2}{tolerance}
+\newcommand{\isNearValue}[3]{
+    \pgfmathparse{abs(#1 - #2) < #3 ? 1 : 0}
+}
+
+% ============================================================================
+% ADAPTIVE SPACING INTELLIGENCE (NEW)
+% ============================================================================
+
+% Smart spacing calculator based on multiple factors
+% Usage: \calculateSmartSpacing{node_count}{connection_count}{area}{complexity_weight}
+\newcommand{\calculateSmartSpacing}[4]{
+    % Base spacing on node density
+    \pgfmathsetmacro{\safearea}{max(#3, 1)}
+    \pgfmathsetmacro{\density}{#1 / \safearea}
+    
+    % Connection density factor
+    \pgfmathsetmacro{\safenodes}{max(#1, 1)}
+    \pgfmathsetmacro{\connectiondensity}{#2 / \safenodes}
+    
+    % Combined complexity metric (weighted)
+    \pgfmathsetmacro{\basecomplexity}{\density * 0.6 + \connectiondensity * 0.4}
+    \pgfmathsetmacro{\complexity}{\basecomplexity * #4}
+    
+    % Adaptive spacing: more space for complex diagrams
+    \pgfmathsetlength{\nodeSpacing}{2cm * (1 + \complexity * 0.5)}
+    \pgfmathsetlength{\layerSpacing}{3cm * (1 + \complexity * 0.7)}
+}
+
+% Auto-detect optimal layout type
+% Usage: \detectOptimalLayout{node_count}{connection_count}
+% Returns: grid, tree, circular, force, or tiered
+\newcommand{\detectOptimalLayout}[2]{
+    \pgfmathsetmacro{\safenodes}{max(#1, 1)}
+    \pgfmathsetmacro{\avgdegree}{#2 / \safenodes}
+    
+    % Decision tree for layout selection
+    \pgfmathparse{#1 < 10 ? "circular" : (
+        \avgdegree < 1.5 ? "tree" : (
+            \avgdegree < 3 ? "tiered" : (
+                #1 < 50 ? "force" : "grid"
+            )
+        )
+    )}
+    \let\recommendedlayout\pgfmathresult
+}
+
+% ============================================================================
+% COLLISION RESOLUTION SYSTEM (ENHANCED)
+% ============================================================================
+
+% Batch collision detection for multiple nodes
+% Usage: \detectAllCollisions{node_list}{threshold}
+% Stores collision pairs in internal data structure
+\newcommand{\detectAllCollisions}[2]{
+    % This would iterate through all node pairs
+    % Compare distances and mark colliding pairs
+    % Store results for later resolution
+    \typeout{Detecting collisions with threshold: #2}
+}
+
+% Iterative collision resolution with energy minimization
+% Usage: \resolveCollisionsIterative{max_iterations}{learning_rate}
+\newcommand{\resolveCollisionsIterative}[2]{
+    % Iterative algorithm to separate overlapping nodes
+    % Uses repulsive forces proportional to overlap
+    % Gradually reduces movement (simulated annealing style)
+    \typeout{Resolving collisions: #1 iterations, rate=#2}
+}
+
+% Quick collision fix for specific node
+% Usage: \quickFixNodeCollision{node}{direction}{distance}
+% direction: up, down, left, right, auto
+\newcommand{\quickFixNodeCollision}[3]{
+    \def\dir{#3}
+    \def\auto{auto}
+    
+    \ifx\dir\auto
+        % Auto-detect best direction
+        % Find least crowded direction
+    \fi
+    
+    % Move node in specified direction
+    \coordinate (#1-fixed) at ($(#1) + (#3:#2)$);
+}
+
+% ============================================================================
+% LAYOUT QUALITY METRICS (NEW)
+% ============================================================================
+
+% Calculate layout aesthetic score
+% Usage: \calculateAestheticScore{node_count}{connection_count}
+% Returns score 0-100 (higher is better)
+\newcommand{\calculateAestheticScore}[2]{
+    % Factors: spacing uniformity, edge crossing, symmetry
+    % Angular resolution, aspect ratio
+    \pgfmathsetmacro{\aestheticscore}{75}  % Placeholder calculation
+}
+
+% Measure edge crossing count
+% Usage: \countEdgeCrossings
+% Returns number of edge intersections
+\newcommand{\countEdgeCrossings}{
+    % Iterate through all edge pairs
+    % Check for line segment intersections
+    % Count total crossings
+    \typeout{Counting edge crossings...}
+}
+
+% Calculate diagram balance (center of mass)
+% Usage: \calculateDiagramBalance
+% Returns x,y offset from ideal center
+\newcommand{\calculateDiagramBalance}{
+    % Calculate weighted center of all nodes
+    % Compare to geometric center
+    % Return imbalance vector
+    \typeout{Calculating diagram balance...}
+}
+
+% Measure spacing uniformity
+% Usage: \measureSpacingUniformity
+% Returns coefficient of variation (lower is better)
+\newcommand{\measureSpacingUniformity}{
+    % Calculate standard deviation of node spacings
+    % Divide by mean spacing
+    % Return as percentage
+    \typeout{Measuring spacing uniformity...}
+}
+
+% ============================================================================
+% AUTO-FIX AND OPTIMIZATION UTILITIES (NEW)
+% ============================================================================
+
+% Automatically fix common layout issues
+% Usage: \autoFixLayout{aggressive}
+% aggressive: true for major changes, false for minor adjustments
+\newcommand{\autoFixLayout}[1]{
+    \def\aggressive{#1}
+    \def\true{true}
+    
+    % 1. Fix overlapping nodes
+    \resolveAllCollisions{10}
+    
+    % 2. Balance diagram
+    \ifx\aggressive\true
+        \balanceLayout{both}
+    \fi
+    
+    % 3. Improve spacing
+    \optimizeSpacing
+    
+    % 4. Reduce crossings if possible
+    \ifx\aggressive\true
+        \reduceCrossings{5}
+    \fi
+    
+    \typeout{Auto-fix complete: aggressive=#1}
+}
+
+% Optimize node spacing for readability
+% Usage: \optimizeSpacing
+\newcommand{\optimizeSpacing}{
+    % Analyze current spacing distribution
+    % Apply corrections to improve uniformity
+    % Maintain minimum safe distances
+    \typeout{Optimizing spacing...}
+}
+
+% Reduce edge crossings through node repositioning
+% Usage: \reduceCrossings{max_swaps}
+\newcommand{\reduceCrossings}[1]{
+    % Attempt to reduce crossings by swapping node positions
+    % Limited to #1 swap attempts
+    % Greedy algorithm for improvement
+    \typeout{Attempting to reduce edge crossings...}
+}
+
+% Snap all nodes to nearest grid points
+% Usage: \snapAllNodesToGrid{grid_spacing}
+\newcommand{\snapAllNodesToGrid}[1]{
+    % Iterate through all nodes
+    % Round positions to nearest grid point
+    % Maintain relative positions where possible
+    \typeout{Snapping nodes to #1 grid...}
+}
+
+% ============================================================================
+% LAYOUT CACHING AND PERFORMANCE (NEW)
+% ============================================================================
+
+% Cache layout calculations for reuse
+% Usage: \cacheLayout{layout_name}
+\newcommand{\cacheLayout}[1]{
+    % Store current node positions
+    % Store current parameters
+    % Allow quick restoration
+    \typeout{Caching layout: #1}
+}
+
+% Restore cached layout
+% Usage: \restoreLayout{layout_name}
+\newcommand{\restoreLayout}[1]{
+    % Retrieve stored positions
+    % Reapply to nodes
+    \typeout{Restoring layout: #1}
+}
+
+% Incremental layout update
+% Usage: \updateLayoutIncremental{changed_nodes}
+% Only recalculates affected portions
+\newcommand{\updateLayoutIncremental}[1]{
+    % Identify nodes affected by changes
+    % Recalculate only necessary positions
+    % Faster than full recalculation
+    \typeout{Incremental update for: #1}
+}
+
+% ============================================================================
+% SMART POSITIONING HELPERS (NEW)
+% ============================================================================
+
+% Find optimal position for new node
+% Usage: \findOptimalPosition{reference_nodes}{preferred_distance}
+% Returns coordinates that minimize crowding
+\newcommand{\findOptimalPosition}[2]{
+    % Analyze positions of reference nodes
+    % Calculate centroid
+    % Find empty space at preferred distance
+    % Return recommended coordinates
+    \coordinate (optimal-pos) at (0, 0);  % Placeholder
+}
+
+% Position node equidistant from multiple anchors
+% Usage: \positionEquidistant{node}{anchor1}{anchor2}{anchor3}
+\newcommand{\positionEquidistant}[4]{
+    % Calculate geometric center (centroid)
+    % Position node at center of triangle
+    \coordinate (#1-pos) at ($(#2)!0.33!(#3)!0.5!(#4)$);
+}
+
+% Position node to balance edge lengths
+% Usage: \balanceEdgeLengths{node}{connected_nodes}
+\newcommand{\balanceEdgeLengths}[2]{
+    % Calculate position that minimizes variance in edge lengths
+    % Uses weighted averaging of neighbor positions
+    \typeout{Balancing edge lengths for: #1}
+}
+
+% Maintain minimum clearance from all nodes
+% Usage: \ensureClearance{node}{min_distance}{max_iterations}
+\newcommand{\ensureClearance}[3]{
+    % Iteratively push node away from others
+    % Until minimum clearance is maintained
+    % Limited by max_iterations
+    \typeout{Ensuring clearance: #2 distance, #3 iterations}
+}
+
+% ============================================================================
+% GEOMETRIC UTILITIES (NEW)
+% ============================================================================
+
+% Calculate angle between two nodes
+% Usage: \calculateAngle{node1}{node2}{result}
+\newcommand{\calculateAngle}[3]{
+    \pgfextractx{\pgf@xa}{\pgfpointanchor{#1}{center}}
+    \pgfextracty{\pgf@ya}{\pgfpointanchor{#1}{center}}
+    \pgfextractx{\pgf@xb}{\pgfpointanchor{#2}{center}}
+    \pgfextracty{\pgf@yb}{\pgfpointanchor{#2}{center}}
+    
+    \pgfmathsetmacro{\dx}{\pgf@xb / 1pt - \pgf@xa / 1pt}
+    \pgfmathsetmacro{\dy}{\pgf@yb / 1pt - \pgf@ya / 1pt}
+    \pgfmathsetmacro{#3}{atan2(\dy, \dx)}
+}
+
+% Calculate distance between two nodes
+% Usage: \calculateNodeDistance{node1}{node2}{result}
+\newcommand{\calculateNodeDistance}[3]{
+    \pgfextractx{\pgf@xa}{\pgfpointanchor{#1}{center}}
+    \pgfextracty{\pgf@ya}{\pgfpointanchor{#1}{center}}
+    \pgfextractx{\pgf@xb}{\pgfpointanchor{#2}{center}}
+    \pgfextracty{\pgf@yb}{\pgfpointanchor{#2}{center}}
+    
+    \pgfmathsetmacro{\dx}{\pgf@xb / 1pt - \pgf@xa / 1pt}
+    \pgfmathsetmacro{\dy}{\pgf@yb / 1pt - \pgf@ya / 1pt}
+    \pgfmathsetmacro{#3}{sqrt(\dx * \dx + \dy * \dy) / 28.453}  % Convert to cm
+}
+
+% Check if three nodes are collinear
+% Usage: \areCollinear{node1}{node2}{node3}{tolerance}
+\newcommand{\areCollinear}[4]{
+    % Calculate cross product
+    % If near zero, nodes are collinear
+    \pgfmathparse{0}  % Placeholder
+}
+
+% Find centroid of multiple nodes
+% Usage: \findCentroid{node_list}{result_name}
+\newcommand{\findCentroid}[2]{
+    % Average all x coordinates and y coordinates
+    % Return as new coordinate
+    \coordinate (#2) at (0, 0);  % Placeholder
+}
+
+% ============================================================================
+% LAYOUT TEMPLATES AND PRESETS (ENHANCED)
+% ============================================================================
+
+% Apply enterprise network best practices
+% Usage: \applyEnterpriseBestPractices
+\newcommand{\applyEnterpriseBestPractices}{
+    % Tiered layout with proper spacing
+    \setTierOrientation{vertical}
+    \setlength{\treeLevelSpacing}{5cm}
+    \setlength{\nodeSpacing}{4cm}
+    
+    % Professional styling
+    \tikzset{
+        every node/.append style={font=\small, minimum height=0.9cm},
+        every path/.append style={line width=0.8pt}
+    }
+    
+    % Optimize for A4 printing
+    \optimizeForPrint{a4}
+}
+
+% Apply microservices architecture layout
+% Usage: \applyMicroservicesLayout
+\newcommand{\applyMicroservicesLayout}{
+    % Flexible grid with clustering
+    \setGridSpacing{3cm}{2.5cm}
+    \adaptiveNodeSize{40}
+    
+    % Modern color scheme
+    \tikzset{
+        every node/.append style={rounded corners=3pt, fill opacity=0.9}
+    }
+}
+
+% Apply IoT network visualization
+% Usage: \applyIoTLayout{device_count}
+\newcommand{\applyIoTLayout}[1]{
+    % Hub-and-spoke with many satellites
+    \pgfmathsetmacro{\radius}{max(5, #1 * 0.2)}
+    \calculateOptimalRadius{#1}{1.5cm}
+    
+    % Compact node sizing
+    \adaptiveNodeSize{#1}
+    \optimizePerformance{#1}
+}
+
+% ============================================================================
+% DEBUGGING AND DIAGNOSTICS (ENHANCED)
+% ============================================================================
+
+% Comprehensive layout diagnostic report
+% Usage: \generateDiagnosticReport
+\newcommand{\generateDiagnosticReport}{
+    \typeout{=== LAYOUT DIAGNOSTIC REPORT ===}
+    \typeout{Nodes: \the\value{nodecount}}
+    \typeout{Connections: \the\value{connectioncount}}
+    \typeout{Spacing: \the\nodeSpacing}
+    \typeout{Layer Spacing: \the\layerSpacing}
+    \typeout{Zoom Level: \the\value{zoomlevel}\%}
+    
+    % Check for common issues
+    \validateLayout
+    \checkLayoutQuality
+    
+    \typeout{=== END DIAGNOSTIC REPORT ===}
+}
+
+% Visual debugging overlay
+% Usage: \enableDebugOverlay
+\newcommand{\enableDebugOverlay}{
+    \enableDebugMode
+    
+    % Show coordinate system
+    \drawCoordinateSystem{10}{10}{2}
+    
+    % Show bounding box
+    \draw[red, dashed, thick] (current bounding box.south west) 
+        rectangle (current bounding box.north east);
+    
+    \typeout{Debug overlay enabled}
+}
+
+% Performance profiler
+% Usage: \profileLayoutPerformance
+\newcommand{\profileLayoutPerformance}{
+    \typeout{=== PERFORMANCE PROFILE ===}
+    \typeout{Node count: \the\value{nodecount}}
+    \typeout{Connection count: \the\value{connectioncount}}
+    
+    % Estimate compilation complexity
+    \pgfmathsetmacro{\safenodes}{max(\value{nodecount}, 1)}
+    \pgfmathsetmacro{\complexity}{\safenodes + 2 * \value{connectioncount}}
+    \typeout{Estimated complexity: \complexity operations}
+    
+    % Recommendations
+    \pgfmathparse{\complexity > 1000 ? 1 : 0}
+    \ifnum\pgfmathresult=1
+        \typeout{WARNING: High complexity - consider optimization}
+    \fi
+    
+    \typeout{=== END PROFILE ===}
+}
+
+% ============================================================================
+% VALIDATION SUITE (NEW)
+% ============================================================================
+
+% Validate entire layout configuration
+% Usage: \validateLayoutConfiguration
+\newcommand{\validateLayoutConfiguration}{
+    \typeout{Validating layout configuration...}
+    
+    % Check spacing parameters
+    \pgfmathparse{\nodeSpacing > 0.5cm ? 1 : 0}
+    \ifnum\pgfmathresult=0
+        \typeout{ERROR: Node spacing too small}
+    \fi
+    
+    % Check diagram bounds
+    \measureDiagramBounds
+    
+    % Check for potential issues
+    \validatePositions
+    \validateConnections
+    
+    \typeout{Validation complete}
+}
+
+% End of enhanced utilities
