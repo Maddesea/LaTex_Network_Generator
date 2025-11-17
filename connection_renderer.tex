@@ -151,7 +151,7 @@
     % Line width based on bandwidth (logarithmic scale)
     \pgfmathsetmacro{\linewidth}{0.5 + ln(max(1, #3))/2}
     % Color based on utilization percentage
-    \pgfmathsetmacro{\util}{#4}
+    \pgfmathtruncatemacro{\util}{#4}
     \ifnum\util<50
         \def\connColor{green!60!black}
     \else
@@ -594,7 +594,7 @@
 % Port-based filtering
 % Usage: \drawConnectionIfPort{from}{to}{port}{target_port}{label}
 \newcommand{\drawConnectionIfPort}[5]{
-    \pgfmathsetmacro{\portmatch}{ifthenelse(#3==#4,1,0)}
+    \pgfmathtruncatemacro{\portmatch}{ifthenelse(#3==#4,1,0)}
     \ifnum\portmatch=1
         \draw[normal conn, -{Stealth[length=2.5mm]}] (#1) -- (#2)
             node[midway, above, font=\tiny] {#5};
@@ -604,7 +604,7 @@
 % Bandwidth threshold filtering
 % Usage: \drawConnectionIfBandwidth{from}{to}{bandwidth}{threshold}{label}
 \newcommand{\drawConnectionIfBandwidth}[5]{
-    \pgfmathsetmacro{\bwcheck}{ifthenelse(#3>=#4,1,0)}
+    \pgfmathtruncatemacro{\bwcheck}{ifthenelse(#3>=#4,1,0)}
     \ifnum\bwcheck=1
         \pgfmathsetmacro{\linewidth}{0.5 + ln(max(1, #3))/2}
         \draw[draw=connNormal, line width=\linewidth pt, -{Stealth[length=3mm]}]
@@ -1000,9 +1000,9 @@
 % Connection with health indicator
 % Usage: \drawConnectionWithHealth{from}{to}{health_pct}{label}
 \newcommand{\drawConnectionWithHealth}[4]{
-    \pgfmathsetmacro{\health}{#3}
+    \pgfmathtruncatemacro{\health}{#3}
     % Color based on health
-    \pgfmathsetmacro{\healthval}{\health}
+    \pgfmathtruncatemacro{\healthval}{\health}
     \ifnum\healthval>75
         \def\healthColor{green!70}
     \else
@@ -1077,7 +1077,7 @@
 % Connection with packet loss indicator
 % Usage: \drawConnectionWithLoss{from}{to}{loss_pct}{label}
 \newcommand{\drawConnectionWithLoss}[4]{
-    \pgfmathsetmacro{\loss}{#3}
+    \pgfmathtruncatemacro{\loss}{#3}
     \ifnum\loss>10
         \def\lossColor{red!70}
     \else
@@ -1098,7 +1098,7 @@
 % Connection with jitter visualization
 % Usage: \drawConnectionWithJitter{from}{to}{jitter_ms}{label}
 \newcommand{\drawConnectionWithJitter}[4]{
-    \pgfmathsetmacro{\jitter}{#3}
+    \pgfmathtruncatemacro{\jitter}{#3}
     \ifnum\jitter>50
         \def\jitterAmp{0.8mm}
         \def\jitterColor{red!70}
@@ -1122,7 +1122,7 @@
 % SLA compliance indicator
 % Usage: \drawSLAConnection{from}{to}{sla_pct}{label}
 \newcommand{\drawSLAConnection}[4]{
-    \pgfmathsetmacro{\sla}{#3}
+    \pgfmathtruncatemacro{\sla}{#3}
     \ifnum\sla>99
         \def\slaColor{green!70}
         \def\slaStatus{COMPLIANT}
@@ -1592,7 +1592,7 @@
 % Connection age indicator
 % Usage: \drawConnectionByAge{from}{to}{days_old}{label}
 \newcommand{\drawConnectionByAge}[4]{
-    \pgfmathsetmacro{\age}{#3}
+    \pgfmathtruncatemacro{\age}{#3}
     \ifnum\age<7
         \def\ageColor{green!70}
         \def\ageDesc{New}
@@ -1720,7 +1720,7 @@
 % Capacity exhaustion warning
 % Usage: \drawExhaustionWarning{from}{to}{days_until_full}{label}
 \newcommand{\drawExhaustionWarning}[4]{
-    \pgfmathsetmacro{\days}{#3}
+    \pgfmathtruncatemacro{\days}{#3}
     \ifnum\days<30
         \def\warnColor{red!80}
         \def\warnLevel{URGENT}
@@ -1753,7 +1753,7 @@
 % Connection with cost per month
 % Usage: \drawCostConnection{from}{to}{monthly_cost}{label}
 \newcommand{\drawCostConnection}[4]{
-    \pgfmathsetmacro{\cost}{#3}
+    \pgfmathtruncatemacro{\cost}{#3}
     \ifnum\cost<100
         \def\costColor{green!70}
     \else
@@ -1777,7 +1777,7 @@
 % ROI indicator connection
 % Usage: \drawROIConnection{from}{to}{roi_pct}{payback_months}{label}
 \newcommand{\drawROIConnection}[5]{
-    \pgfmathsetmacro{\roi}{#3}
+    \pgfmathtruncatemacro{\roi}{#3}
     \ifnum\roi>100
         \def\roiColor{green!70}
         \def\roiStatus{Excellent}
@@ -1900,7 +1900,7 @@
 % Performance baseline comparison
 % Usage: \drawBaselineConnection{from}{to}{current}{baseline}{delta}{label}
 \newcommand{\drawBaselineConnection}[6]{
-    \pgfmathsetmacro{\diff}{#5}
+    \pgfmathtruncatemacro{\diff}{#5}
     \ifnum\diff>10
         \def\baseColor{red!70}
         \def\baseStatus{Degraded}
