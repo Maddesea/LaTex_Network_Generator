@@ -1,0 +1,51 @@
+% Test file for threat_indicators.tex bug fixes
+\documentclass[tikz,border=10pt]{standalone}
+
+\usepackage{tikz}
+\usepackage{ifthen}
+\usepackage{xcolor}
+\usepackage{calc}
+\usepackage{xstring}
+\usepackage{colortbl}
+
+\usetikzlibrary{
+    positioning,
+    shapes.geometric,
+    shapes.multipart,
+    arrows.meta,
+    decorations.pathmorphing,
+    decorations.markings,
+    backgrounds,
+    fit,
+    calc,
+    shadows.blur,
+    patterns
+}
+
+% Load required modules
+\input{styles_config}
+\input{node_definitions}
+\input{threat_indicators}
+
+\begin{document}
+\begin{tikzpicture}[scale=1.0, transform shape, font=\sffamily]
+
+    % Create a test node
+    \createServer{srv1}{192.168.1.10}{0}{0}{Test Server}
+
+    % Test the first bug fix - drawThreatIndicator with 'low' level
+    % This would have failed with the \def\threatsize}{0.3} bug
+    \drawThreatIndicator{-2}{2}{low}{Low Threat}
+
+    % Test another threat level
+    \drawThreatIndicator{2}{2}{critical}{Critical}
+
+    % Test the second bug fix - drawKillChainCompact
+    % This would have failed with the \def\barWidth}{6} bug
+    \drawKillChainCompact{-3}{-2}{3}
+
+    % Add a label
+    \node[below, font=\small] at (0,-4) {Test: Agent 5 Bug Fixes};
+
+\end{tikzpicture}
+\end{document}

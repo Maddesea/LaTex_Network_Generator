@@ -39,7 +39,7 @@
     }{
     \ifthenelse{\equal{#3}{low}}{
         \def\threatcolor{threatLow}
-        \def\threatsize}{0.3}
+        \def\threatsize{0.3}
     }{
         \def\threatcolor{threatInfo}
         \def\threatsize{0.25}
@@ -229,7 +229,7 @@
 % Compact kill chain progress bar
 % Usage: \drawKillChainCompact{x}{y}{current_stage}
 \newcommand{\drawKillChainCompact}[3]{
-    \def\barWidth}{6}
+    \def\barWidth{6}
     \def\barHeight{0.4}
     \pgfmathsetmacro{\progress}{(#3/7)*\barWidth}
 
