@@ -126,11 +126,71 @@
         node[midway, above, font=\tiny, fill=blue!10, inner sep=1pt] {#3 (BT)};
 }
 
-% TODO: Additional special connection types
-% - LoRaWAN for IoT
-% - NFC for proximity connections
-% - Infrared connections
-% - Optical wireless (Li-Fi)
+% LoRaWAN connection for IoT (long-range, low-power)
+% Usage: \drawLoRaWANConnection{from}{to}{spreading_factor}{label}
+\newcommand{\drawLoRaWANConnection}[4]{
+    \draw[draw=green!60!blue, line width=1pt,
+          dash pattern=on 4pt off 2pt on 1pt off 2pt,
+          -{Stealth[length=2.5mm]},
+          decoration={markings,
+              mark=between positions 0.2 and 0.8 step 0.3 with {
+                  \node[circle, draw=green!60!blue, fill=green!20,
+                        font=\tiny, inner sep=0.5pt] {L};
+              }}, postaction={decorate}]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny, fill=white, inner sep=1pt] {#4}
+        node[midway, below, font=\tiny\ttfamily, fill=green!15, inner sep=1pt] {LoRaWAN SF#3};
+}
+
+% NFC connection (near-field communication, very short range)
+% Usage: \drawNFCConnection{from}{to}{label}
+\newcommand{\drawNFCConnection}[3]{
+    \draw[draw=purple!70, line width=1.5pt,
+          decoration={coil, amplitude=1mm, segment length=2mm},
+          decorate, {Stealth[length=2.5mm]}-{Stealth[length=2.5mm]}]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny\bfseries, fill=white, inner sep=2pt] {#3}
+        node[midway, below, font=\tiny, fill=purple!15, inner sep=1pt] {NFC (<10cm)};
+}
+
+% Infrared connection (line-of-sight optical)
+% Usage: \drawInfraredConnection{from}{to}{label}
+\newcommand{\drawInfraredConnection}[3]{
+    \draw[draw=red!60, line width=1pt,
+          decoration={expanding waves, angle=20, segment length=2mm},
+          decorate, -{Stealth[length=2.5mm]}]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny, fill=white, inner sep=1pt] {#3}
+        node[midway, below, font=\tiny, fill=red!15, inner sep=1pt] {IR (LOS)};
+}
+
+% Li-Fi connection (optical wireless, visible light communication)
+% Usage: \drawLiFiConnection{from}{to}{speed}{label}
+\newcommand{\drawLiFiConnection}[4]{
+    \draw[draw=yellow!80!orange, line width=2pt, -{Stealth[length=3mm]}]
+        (#1) -- (#2);
+    % Add light beam effect
+    \draw[draw=yellow!50, line width=1pt, opacity=0.6, -{Stealth[length=2.5mm]}]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny\bfseries, fill=white, inner sep=2pt] {#4}
+        node[midway, below, font=\tiny, fill=yellow!20, inner sep=1pt] {Li-Fi: #3 Mbps};
+}
+
+% Zigbee connection (IoT mesh network)
+% Usage: \drawZigbeeConnection{from}{to}{label}
+\newcommand{\drawZigbeeConnection}[3]{
+    \draw[draw=teal!70, line width=1pt,
+          dash pattern=on 3pt off 1.5pt,
+          -{Stealth[length=2.5mm]},
+          decoration={markings,
+              mark=between positions 0.25 and 0.75 step 0.25 with {
+                  \node[diamond, draw=teal!70, fill=teal!20,
+                        font=\tiny, inner sep=0.5pt, minimum size=3pt] {};
+              }}, postaction={decorate}]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny, fill=white, inner sep=1pt] {#3}
+        node[midway, below, font=\tiny, fill=teal!15, inner sep=1pt] {Zigbee};
+}
 
 % ============================================================================
 % ADVANCED CONNECTION RENDERING
@@ -417,12 +477,117 @@
         }];
 }
 
-% TODO: Flow visualization enhancements
-% - Real-time traffic animation (if rendering to animated format)
-% - Packet visualization with different colors per protocol
-% - Congestion indicators (red/yellow traffic markers)
-% - Flow direction with multiple arrows
-% - Throughput heatmap coloring
+% Congestion indicator connection (traffic light style markers)
+% Usage: \drawCongestionConnection{from}{to}{congestion_level}{label}
+% congestion_level: low, medium, high, critical
+\newcommand{\drawCongestionConnection}[4]{
+    \ifthenelse{\equal{#3}{critical}}{
+        \def\congColor{red!80}
+        \def\congMarker{$\blacksquare$}
+        \def\congText{CRITICAL}
+    }{
+        \ifthenelse{\equal{#3}{high}}{
+            \def\congColor{red!60}
+            \def\congMarker{$\blacktriangle$}
+            \def\congText{HIGH}
+        }{
+            \ifthenelse{\equal{#3}{medium}}{
+                \def\congColor{yellow!80!orange}
+                \def\congMarker{$\bullet$}
+                \def\congText{MEDIUM}
+            }{
+                \def\congColor{green!60}
+                \def\congMarker{$\circ$}
+                \def\congText{LOW}
+            }
+        }
+    }
+    \draw[draw=\congColor, line width=1.5pt, -{Stealth[length=3mm]},
+          decoration={markings,
+              mark=between positions 0.2 and 0.8 step 0.2 with {
+                  \node[font=\tiny, text=\congColor] {\congMarker};
+              }}, postaction={decorate}]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny\bfseries, fill=white, inner sep=2pt] {#4}
+        node[midway, below, font=\tiny, fill=\congColor!15, inner sep=1pt] {\congText};
+}
+
+% Multi-protocol flow with color-coded packets
+% Usage: \drawMultiProtocolFlow{from}{to}{tcp_pct}{udp_pct}{label}
+\newcommand{\drawMultiProtocolFlow}[5]{
+    % Base connection
+    \draw[draw=connNormal, line width=1.5pt, -{Stealth[length=3mm]}]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny\bfseries, fill=white, inner sep=2pt] {#5};
+    % TCP packets (blue)
+    \pgfmathtruncatemacro{\tcppct}{#3}
+    \ifnum\tcppct>0
+        \draw[draw=blue!70, line width=0.5pt,
+              decoration={markings,
+                  mark=between positions 0.1 and 0.9 step 0.15 with {
+                      \node[rectangle, draw=blue!70, fill=blue!20,
+                            font=\tiny, inner sep=0.3pt, minimum size=2pt] {};
+                  }}, postaction={decorate}]
+            (#1) -- (#2);
+    \fi
+    % UDP packets (green)
+    \pgfmathtruncatemacro{\udppct}{#4}
+    \ifnum\udppct>0
+        \draw[draw=green!70, line width=0.5pt,
+              decoration={markings,
+                  mark=between positions 0.15 and 0.95 step 0.15 with {
+                      \node[circle, draw=green!70, fill=green!20,
+                            font=\tiny, inner sep=0.3pt, minimum size=2pt] {};
+                  }}, postaction={decorate}]
+            (#1) -- (#2);
+    \fi
+    % Protocol breakdown
+    \node[below=4pt, font=\tiny\ttfamily, fill=white, inner sep=1pt]
+        at ($(#1)!0.5!(#2)$) {TCP:#3\% | UDP:#4\%};
+}
+
+% Directional flow with multiple arrows (emphasizes direction)
+% Usage: \drawDirectionalFlow{from}{to}{intensity}{label}
+\newcommand{\drawDirectionalFlow}[4]{
+    \pgfmathtruncatemacro{\arrows}{min(5, max(1, #3))}
+    \draw[draw=connNormal, line width=1.5pt,
+          decoration={markings,
+              mark=between positions 0.15 and 0.85 step {0.7/\arrows} with {
+                  \arrow{Stealth[length=2.5mm, fill=connNormal]}
+              }}, postaction={decorate}]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny, fill=white, inner sep=1pt] {#4};
+}
+
+% Throughput heatmap connection (color-coded by throughput)
+% Usage: \drawThroughputHeatmap{from}{to}{throughput_mbps}{max_capacity}{label}
+\newcommand{\drawThroughputHeatmap}[5]{
+    \pgfmathsetmacro{\ratio}{100*#3/#4}
+    \pgfmathtruncatemacro{\ratiopct}{\ratio}
+    \ifnum\ratiopct<25
+        \def\heatColor{blue!60}
+        \def\heatLevel{Cold}
+    \else
+        \ifnum\ratiopct<50
+            \def\heatColor{green!60}
+            \def\heatLevel{Warm}
+        \else
+            \ifnum\ratiopct<75
+                \def\heatColor{yellow!80!orange}
+                \def\heatLevel{Hot}
+            \else
+                \def\heatColor{red!70}
+                \def\heatLevel{Critical}
+            \fi
+        \fi
+    \fi
+    \pgfmathsetmacro{\linewidth}{0.5 + 3*\ratio/100}
+    \draw[draw=\heatColor, line width=\linewidth pt, -{Stealth[length=3mm]}]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny\bfseries, fill=white, inner sep=2pt] {#5}
+        node[midway, below, font=\tiny, fill=\heatColor!15, inner sep=1pt]
+            {#3/#4 Mbps (\ratiopct\%) - \heatLevel};
+}
 
 % ============================================================================
 % CONNECTION RENDERING ENGINE
@@ -527,11 +692,113 @@
         };
 }
 
-% TODO: Label improvements
-% - Auto-positioning to avoid overlaps
-% - Expandable detail boxes on hover
-% - Time-series data for connection metrics
-% - Alert indicators for anomalous connections
+% Smart label positioning (auto-chooses above/below based on position)
+% Usage: \drawConnectionSmartLabel{from}{to}{label}{sublabel}
+\newcommand{\drawConnectionSmartLabel}[4]{
+    \path let \p1 = (#1), \p2 = (#2) in
+        \pgfextra{
+            \pgfmathsetmacro{\dy}{\y2-\y1}
+            \ifdim\dy pt>0pt
+                \def\mainpos{above}
+                \def\subpos{below}
+            \else
+                \def\mainpos{below}
+                \def\subpos{above}
+            \fi
+        };
+    \draw[normal conn, -{Stealth[length=2.5mm]}] (#1) -- (#2)
+        node[midway, \mainpos, font=\tiny\bfseries, fill=white, inner sep=2pt] {#3}
+        node[midway, \subpos, font=\tiny, fill=gray!10, inner sep=1pt] {#4};
+}
+
+% Label with alert indicator for anomalies
+% Usage: \drawConnectionWithAlert{from}{to}{alert_type}{message}{label}
+% alert_type: info, warning, critical
+\newcommand{\drawConnectionWithAlert}[5]{
+    \ifthenelse{\equal{#3}{critical}}{
+        \def\alertColor{red!80}
+        \def\alertSymbol{!!!}
+    }{
+        \ifthenelse{\equal{#3}{warning}}{
+            \def\alertColor{yellow!80!orange}
+            \def\alertSymbol{!!}
+        }{
+            \def\alertColor{blue!70}
+            \def\alertSymbol{i}
+        }
+    }
+    \draw[draw=\alertColor, line width=1.5pt, -{Stealth[length=3mm]}]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny\bfseries, fill=white, inner sep=2pt] {#5};
+    \node[circle, draw=\alertColor, fill=\alertColor!20,
+          font=\tiny\bfseries, inner sep=1pt, minimum size=8pt]
+        at ($(#1)!0.5!(#2)$) {\alertSymbol};
+    \node[below=10pt, font=\tiny, fill=\alertColor!15, inner sep=2pt,
+          rounded corners=2pt, align=center]
+        at ($(#1)!0.5!(#2)$) {#4};
+}
+
+% Detailed connection info box
+% Usage: \drawConnectionInfoBox{from}{to}{title}{info_lines}{label}
+\newcommand{\drawConnectionInfoBox}[5]{
+    \draw[normal conn, -{Stealth[length=2.5mm]}] (#1) -- (#2)
+        node[midway, above, font=\tiny\bfseries, fill=white, inner sep=2pt] {#5};
+    \node[rectangle, draw=blue!70, fill=blue!5, rounded corners=3pt,
+          font=\tiny, inner sep=3pt, align=left, anchor=south]
+        at ($(#1)!0.5!(#2) + (0,0.6)$) {
+            \textbf{#3}\\
+            #4
+        };
+}
+
+% Connection with offset label (for overlapping connections)
+% Usage: \drawConnectionOffsetLabel{from}{to}{x_offset}{y_offset}{label}
+\newcommand{\drawConnectionOffsetLabel}[5]{
+    \draw[normal conn, -{Stealth[length=2.5mm]}] (#1) -- (#2);
+    \node[font=\tiny, fill=white, inner sep=2pt, rounded corners=1pt]
+        at ($(#1)!0.5!(#2) + (#3,#4)$) {#5};
+}
+
+% ============================================================================
+% CONNECTION UTILITY FUNCTIONS
+% ============================================================================
+
+% Calculate connection distance
+% Usage: \getConnectionDistance{from}{to}{\result}
+\newcommand{\getConnectionDistance}[3]{
+    \path let \p1 = (#1), \p2 = (#2) in
+        \pgfextra{
+            \pgfmathsetmacro{\dx}{\x2-\x1}
+            \pgfmathsetmacro{\dy}{\y2-\y1}
+            \pgfmathsetmacro{#3}{sqrt(\dx*\dx+\dy*\dy)/28.4527} % Convert to cm
+        };
+}
+
+% Check if connection is horizontal or vertical
+% Usage: \isConnectionOrthogonal{from}{to}{\result}
+% Returns 1 if connection is mostly horizontal or vertical, 0 otherwise
+\newcommand{\isConnectionOrthogonal}[3]{
+    \path let \p1 = (#1), \p2 = (#2) in
+        \pgfextra{
+            \pgfmathsetmacro{\dx}{abs(\x2-\x1)}
+            \pgfmathsetmacro{\dy}{abs(\y2-\y1)}
+            \pgfmathsetmacro{\ratio}{min(\dx,\dy)/max(\dx,\dy)}
+            \ifdim\ratio pt<0.2pt
+                \pgfmathtruncatemacro{#3}{1}
+            \else
+                \pgfmathtruncatemacro{#3}{0}
+            \fi
+        };
+}
+
+% Duplicate connection detector (marks parallel connections with offset)
+% Usage: \drawParallelConnection{from}{to}{offset}{label}
+\newcommand{\drawParallelConnection}[4]{
+    \draw[normal conn, -{Stealth[length=2.5mm]},
+          transform canvas={shift={(0,#3)}}]
+        (#1) -- (#2)
+        node[midway, above, font=\tiny, fill=white, inner sep=1pt] {#4};
+}
 
 % ============================================================================
 % CONNECTION FILTERING AND LAYERS
