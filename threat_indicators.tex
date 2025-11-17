@@ -148,8 +148,7 @@
     \def\chainSpacing{0.15}
 
     % Define stage names and colors
-    \def\stageNames{{"Recon", "Weaponize", "Deliver", "Exploit", "Install", "C2", "Actions"}}
-    \def\stageColors{{gray!60, gray!60, orange!60, red!60, red!80, purple!60, red!90}}
+    % Note: Arrays are handled via conditionals below
 
     % Draw title
     \node[above, font=\normalsize\bfseries] at (#1+3.5*(\chainWidth+\chainSpacing),#2+\chainHeight+0.2)
@@ -157,8 +156,38 @@
 
     % Draw each stage
     \foreach \i in {0,...,6} {
-        \pgfmathparse{\stageNames[\i]}
-        \edef\stageName{\pgfmathresult}
+        % Set stage name based on index
+        \pgfmathparse{\i == 0 ? 1 : 0}
+        \ifnum\pgfmathresult=1
+            \def\stageName{Recon}
+        \else
+            \pgfmathparse{\i == 1 ? 1 : 0}
+            \ifnum\pgfmathresult=1
+                \def\stageName{Weaponize}
+            \else
+                \pgfmathparse{\i == 2 ? 1 : 0}
+                \ifnum\pgfmathresult=1
+                    \def\stageName{Deliver}
+                \else
+                    \pgfmathparse{\i == 3 ? 1 : 0}
+                    \ifnum\pgfmathresult=1
+                        \def\stageName{Exploit}
+                    \else
+                        \pgfmathparse{\i == 4 ? 1 : 0}
+                        \ifnum\pgfmathresult=1
+                            \def\stageName{Install}
+                        \else
+                            \pgfmathparse{\i == 5 ? 1 : 0}
+                            \ifnum\pgfmathresult=1
+                                \def\stageName{C2}
+                            \else
+                                \def\stageName{Actions}
+                            \fi
+                        \fi
+                    \fi
+                \fi
+            \fi
+        \fi
         \pgfmathsetmacro{\xpos}{#1 + \i*(\chainWidth+\chainSpacing)}
 
         % Determine if stage is completed, current, or pending
@@ -415,15 +444,17 @@
 % Mark vulnerable node with CVE
 % Usage: \markVulnerability{node}{cve}{cvss_score}
 \newcommand{\markVulnerability}[3]{
-    \pgfmathsetmacro{\severity}{#3/10}
-    \ifthenelse{\lengthtest{\severity pt > 0.7 pt}}{
+    \pgfmathparse{#3 > 7.0 ? 1 : 0}
+    \ifnum\pgfmathresult=1
         \def\vulncolor{threatCritical}
-    }{
-    \ifthenelse{\lengthtest{\severity pt > 0.4 pt}}{
-        \def\vulncolor{threatMedium}
-    }{
-        \def\vulncolor{threatLow}
-    }}
+    \else
+        \pgfmathparse{#3 > 4.0 ? 1 : 0}
+        \ifnum\pgfmathresult=1
+            \def\vulncolor{threatMedium}
+        \else
+            \def\vulncolor{threatLow}
+        \fi
+    \fi
     
     \node[draw=\vulncolor, line width=2pt, rectangle,
           rounded corners=2pt, inner sep=3pt, fill=\vulncolor!20,
@@ -752,13 +783,42 @@
     \def\stageHeight{0.6}
     \def\stageSpacing{0.1}
 
-    % Define stages
-    \def\stages{{"Recon", "Weaponize", "Deliver", "Exploit", "Install", "C2", "Execute"}}
+    % Define stages - handled via conditionals below
 
     % Draw each stage
     \foreach \i in {0,...,6} {
-        \pgfmathparse{\stages[\i]}
-        \edef\stageName{\pgfmathresult}
+        % Set stage name based on index
+        \pgfmathparse{\i == 0 ? 1 : 0}
+        \ifnum\pgfmathresult=1
+            \def\stageName{Recon}
+        \else
+            \pgfmathparse{\i == 1 ? 1 : 0}
+            \ifnum\pgfmathresult=1
+                \def\stageName{Weaponize}
+            \else
+                \pgfmathparse{\i == 2 ? 1 : 0}
+                \ifnum\pgfmathresult=1
+                    \def\stageName{Deliver}
+                \else
+                    \pgfmathparse{\i == 3 ? 1 : 0}
+                    \ifnum\pgfmathresult=1
+                        \def\stageName{Exploit}
+                    \else
+                        \pgfmathparse{\i == 4 ? 1 : 0}
+                        \ifnum\pgfmathresult=1
+                            \def\stageName{Install}
+                        \else
+                            \pgfmathparse{\i == 5 ? 1 : 0}
+                            \ifnum\pgfmathresult=1
+                                \def\stageName{C2}
+                            \else
+                                \def\stageName{Execute}
+                            \fi
+                        \fi
+                    \fi
+                \fi
+            \fi
+        \fi
         \pgfmathsetmacro{\xpos}{#1 + \i*(\stageWidth+\stageSpacing)}
 
         % Highlight current stage
@@ -1140,7 +1200,7 @@
             \textbf{IG2 (Foundational)} & #4/35 \\
             \textbf{IG3 (Organizational)} & #5/18 \\
             \hline
-            \textbf{Total Implemented} & \textbf{#3 + #4 + #5} \\
+            \textbf{Total Implemented} & \textbf{\pgfmathparse{#3+#4+#5}\pgfmathprintnumber[fixed, precision=0]{\pgfmathresult}} \\
             \textbf{Coverage} & \pgfmathparse{((#3+#4+#5)/69)*100}\pgfmathprintnumber[fixed, precision=0]{\pgfmathresult}\% \\
         \end{tabular}
     };
@@ -1209,7 +1269,7 @@
             \textbf{False Positive Rate} & #6\% \\
             \hline
             \textbf{Detection Rate} & \pgfmathparse{100-#6}\pgfmathprintnumber[fixed, precision=0]{\pgfmathresult}\% \\
-            \textbf{Efficiency} & \pgfmathparse{#3<24 && #4<48 ? 1 : 0}\ifnum\pgfmathresult=1\textcolor{green}{Good}\else\textcolor{orange}{Review}\fi \\
+            \textbf{Efficiency} & \pgfmathparse{and(#3<24, #4<48) ? 1 : 0}\ifnum\pgfmathresult=1\textcolor{green}{Good}\else\textcolor{orange}{Review}\fi \\
         \end{tabular}
     };
 }
@@ -1309,7 +1369,7 @@
         \node[draw=red, fill=red!30, line width=2pt,
               rounded corners=2pt, inner sep=2pt, font=\tiny\bfseries,
               anchor=south east, text=red!90!black] at (#1.south east) [xshift=0.5cm, yshift=-1.2cm] {
-            ⚠ ACTIVE\\EXPLOIT\\#5
+            ! ACTIVE\\EXPLOIT\\#5
         };
     }{}
 }
@@ -1508,7 +1568,7 @@
     \node[draw=\controlColor, fill=\controlColor!15, line width=2pt,
           rounded corners=2pt, inner sep=2pt, font=\tiny\bfseries,
           anchor=south west] at (#1.south west) [xshift=-0.3cm, yshift=0.3cm] {
-        \textcolor{\controlColor}{🛡 #2}\\
+        \textcolor{\controlColor}{[S] #2}\\
         \tiny\controlStatus
     };
 }
@@ -1552,10 +1612,10 @@
 \newcommand{\markEDR}[3]{
     \ifthenelse{\equal{#3}{protected}}{
         \def\edrColor{green!70!black}
-        \def\edrIcon{✓}
+        \def\edrIcon{+}
     }{
         \def\edrColor{red}
-        \def\edrIcon{✗}
+        \def\edrIcon{X}
     }
 
     \node[circle, fill=\edrColor, text=white, font=\tiny\bfseries,
@@ -1680,7 +1740,7 @@
 \newcommand{\markBackupStatus}[3]{
     \ifthenelse{\equal{#3}{current}}{
         \def\backupColor{green!70!black}
-        \def\backupIcon{✓}
+        \def\backupIcon{+}
     }{
         \def\backupColor{orange}
         \def\backupIcon{!}
