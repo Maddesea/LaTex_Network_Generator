@@ -6,6 +6,19 @@
 \definecolor{firewallRed}{RGB}{231,76,60}
 \definecolor{switchPurple}{RGB}{155,89,182}
 \definecolor{cloudGray}{RGB}{149,165,166}
+\definecolor{databaseTeal}{RGB}{22,160,133}
+\definecolor{loadBalancerCyan}{RGB}{41,128,185}
+\definecolor{vmIndigo}{RGB}{103,58,183}
+\definecolor{containerBlue}{RGB}{33,150,243}
+\definecolor{clusterGold}{RGB}{255,152,0}
+\definecolor{mobileOrange}{RGB}{255,87,34}
+\definecolor{iotGreen}{RGB}{76,175,80}
+\definecolor{cloudAWS}{RGB}{255,153,0}
+\definecolor{cloudAzure}{RGB}{0,120,215}
+\definecolor{cloudGCP}{RGB}{66,133,244}
+\definecolor{appliancePurple}{RGB}{156,39,176}
+\definecolor{storageYellow}{RGB}{255,193,7}
+\definecolor{wirelessTeal}{RGB}{0,150,136}
 
 % Threat indicator colors
 \definecolor{threatCritical}{RGB}{192,57,43}
