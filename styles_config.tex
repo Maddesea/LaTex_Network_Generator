@@ -1,5 +1,19 @@
 % styles_config.tex - Visual styling and color schemes
 % This module handles all visual styling, colors, and aesthetic configurations
+%
+% REQUIRED TIKZ LIBRARIES (must be loaded in your main document):
+% \usetikzlibrary{shapes.geometric}    % For cylinder, star, diamond, cloud, tape shapes
+% \usetikzlibrary{shapes.multipart}    % For rectangle split nodes
+% \usetikzlibrary{patterns}            % For pattern fills (firewall, accessibility)
+% \usetikzlibrary{decorations.markings} % For connection markers
+% \usetikzlibrary{decorations.pathmorphing} % For wireless/wavy connections
+% \usetikzlibrary{shadows.blur}        % For blur shadow effects
+% \usetikzlibrary{shadings}            % For gradient fills (CRITICAL for gradient styles)
+% \usetikzlibrary{arrows.meta}         % For arrow specifications
+%
+% RECOMMENDED PACKAGES:
+% \usepackage{xcolor}                  % For extended color support
+% \usepackage{ifthen}                  % For conditional logic in themes
 
 % ============================================================================
 % COLOR PALETTE DEFINITIONS
@@ -47,12 +61,8 @@
 % COLOR SCHEME LOADER
 % ============================================================================
 
-% Command to parse and define a single color from RGB values
-\newcommand{\defineColorFromRGB}[2]{%
-    \definecolor{#1}{RGB}{#2}%
-}
-
 % Command to load a color scheme from file
+% Note: Colors are defined directly using \definecolor{name}{RGB}{r,g,b} syntax
 % Usage: \loadColorScheme{dark} loads color_schemes/dark.colorscheme
 \newcommand{\loadColorScheme}[1]{%
     \IfFileExists{color_schemes/#1.colorscheme}{%
@@ -154,6 +164,7 @@
         rounded corners=1pt,
         fill=switchPurple!15,
         draw=switchPurple!70,
+        line width=1pt,
         minimum height=1cm
     },
     
@@ -597,7 +608,7 @@
         bottom color=routerOrange!35,
         draw=routerOrange!80,
         line width=1.5pt,
-        blur shadow={shadow blur steps=10}
+        blur shadow={shadow blur steps=10, shadow xshift=0pt, shadow yshift=-3pt}
     },
 
     % Glass effect (modern UI style)
@@ -611,7 +622,8 @@
         bottom color=serverBlue!20,
         draw=serverBlue!60,
         line width=1pt,
-        opacity=0.9
+        fill opacity=0.9,
+        text opacity=1
     }
 }
 
@@ -630,6 +642,8 @@
 % Example: \node[server, label=below:{Server Name}] {\nodeIcon{1cm}{icons/server.png}};
 
 % Fallback: Built-in TikZ icons (no external files needed)
+% Note: Optional parameter [size] is defined for future scalability but currently unused
+% Icons are scaled via the tikzpicture scale option (currently 0.5)
 \newcommand{\serverIcon}[1][0.4cm]{%
     \begin{tikzpicture}[scale=0.5, baseline=-0.5ex]
         \fill[black!70] (-0.3,0) rectangle (0.3,0.6);
@@ -650,7 +664,7 @@
 
 \newcommand{\phoneIcon}[1][0.4cm]{%
     \begin{tikzpicture}[scale=0.5, baseline=-0.5ex]
-        \fill[black!70, rounded corners=1pt] (-0.15,0) rectangle (0.15,0.6);
+        \draw[black!70, fill=black!70, rounded corners=1pt] (-0.15,0) rectangle (0.15,0.6);
         \fill[white] (-0.1,0.1) rectangle (0.1,0.5);
         \fill[black!50] (-0.03,0.52) rectangle (0.03,0.54);
     \end{tikzpicture}%
@@ -784,40 +798,47 @@
 % Example: \node[server, pin={[badge windows]45:Win}] at (0,0) {Server};
 
 % Corner badge positioning styles
+% These styles are helper templates - use with label= option on nodes
+% Example: \node[server, label={[badge windows, anchor=south west, xshift=0.8cm, yshift=0.4cm]north east:Win}] {Server};
 \tikzset{
-    top right badge/.style={
-        label={[#1, anchor=south west, xshift=0.8cm, yshift=0.4cm]north east:}
+    top right badge/.style n args={2}{
+        label={[#1, anchor=south west, xshift=0.8cm, yshift=0.4cm]north east:#2}
     },
-    top left badge/.style={
-        label={[#1, anchor=south east, xshift=-0.8cm, yshift=0.4cm]north west:}
+    top left badge/.style n args={2}{
+        label={[#1, anchor=south east, xshift=-0.8cm, yshift=0.4cm]north west:#2}
     },
-    bottom right badge/.style={
-        label={[#1, anchor=north west, xshift=0.8cm, yshift=-0.4cm]south east:}
+    bottom right badge/.style n args={2}{
+        label={[#1, anchor=north west, xshift=0.8cm, yshift=-0.4cm]south east:#2}
     },
-    bottom left badge/.style={
-        label={[#1, anchor=north east, xshift=-0.8cm, yshift=-0.4cm]south west:}
+    bottom left badge/.style n args={2}{
+        label={[#1, anchor=north east, xshift=-0.8cm, yshift=-0.4cm]south west:#2}
     }
 }
 
 % Predefined badge combinations
-\newcommand{\windowsBadge}{%
-    \node[badge windows] {Win};
+% Note: These create positioned nodes and must be used inside a tikzpicture environment
+% Recommended usage: Use badge styles directly with node labels instead
+% Example: \node[server, label={[badge windows]above:Win}] {Server};
+
+% Helper macros (use within tikzpicture with explicit positioning)
+\newcommand{\windowsBadge}[1][(0,0)]{%
+    \node[badge windows] at #1 {Win};
 }
 
-\newcommand{\linuxBadge}{%
-    \node[badge linux] {Linux};
+\newcommand{\linuxBadge}[1][(0,0)]{%
+    \node[badge linux] at #1 {Linux};
 }
 
-\newcommand{\macOSBadge}{%
-    \node[badge macos] {Mac};
+\newcommand{\macOSBadge}[1][(0,0)]{%
+    \node[badge macos] at #1 {Mac};
 }
 
-\newcommand{\onlineBadge}{%
-    \node[badge online] {●};
+\newcommand{\onlineBadge}[1][(0,0)]{%
+    \node[badge online] at #1 {●};
 }
 
-\newcommand{\offlineBadge}{%
-    \node[badge offline] {●};
+\newcommand{\offlineBadge}[1][(0,0)]{%
+    \node[badge offline] at #1 {●};
 }
 
 % TODO: Badge enhancements
@@ -1034,13 +1055,8 @@
     }
 }
 
-% Command to export current style settings to a custom file
-% Usage: \saveStyleTemplate{my_custom_style}
-\newcommand{\saveStyleTemplate}[1]{%
-    % This would save current color and style settings to a file
-    % Implementation requires file I/O
-    \message{Style template '#1' saved (feature placeholder)}%
-}
+% Note: Custom style templates can be manually saved by copying style definitions
+% to a separate .tex file and loading via \input{} command
 
 % Command to load a custom style template
 % Usage: \loadStyleTemplate{my_custom_style}
@@ -1274,6 +1290,7 @@
 }
 
 % Bandwidth utilization indicator
+% Valid range for #1: 0-100 (values outside this range not validated)
 \newcommand{\bwIndicator}[2]{
     % #1 = percentage (0-100)
     % #2 = connection path
@@ -1440,8 +1457,11 @@
 }
 
 % Complete legend templates
-\newcommand{\basicLegend}{%
-    \node[legend box] {
+% Usage: Place inside tikzpicture environment with explicit position
+% Example: \basicLegend{(-2,4)} places legend at coordinates (-2,4)
+
+\newcommand{\basicLegend}[1][(0,0)]{%
+    \node[legend box] at #1 {
         \begin{tabular}{ll}
             \legendTitle{Legend} \\
             \legendServer \\
@@ -1452,8 +1472,8 @@
     };
 }
 
-\newcommand{\connectionLegend}{%
-    \node[legend box] {
+\newcommand{\connectionLegend}[1][(0,0)]{%
+    \node[legend box] at #1 {
         \begin{tabular}{ll}
             \legendTitle{Connections} \\
             \legendNormalConn \\
@@ -1464,8 +1484,8 @@
     };
 }
 
-\newcommand{\statusLegend}{%
-    \node[legend box] {
+\newcommand{\statusLegend}[1][(0,0)]{%
+    \node[legend box] at #1 {
         \begin{tabular}{ll}
             \legendTitle{Status} \\
             \legendOnline \\
@@ -1662,6 +1682,8 @@
 % Define current time command (simple version without external packages)
 \newcommand{\currenttime}{\number\hour:\ifnum\minute<10 0\fi\number\minute}
 
+% IMPORTANT: This command requires 'remember picture' option in tikzpicture environment
+% Usage: \begin{tikzpicture}[remember picture] ... \timestamp ... \end{tikzpicture}
 \newcommand{\timestamp}{
     \node[font=\tiny, text=gray] at (current page.south east)
         [anchor=south east, xshift=-5mm, yshift=5mm]
@@ -1673,6 +1695,9 @@
 % ============================================================================
 
 % Helper to create a standard 3-tier architecture
+% Usage: \threeTierTemplate{w1}{w2}{w3}{a1}{a2}{a3}{d1}{d2}{d3}
+% Creates a 3-tier network with web, app, and data tiers at fixed positions
+% Note: Uses hardcoded positions; adjust coordinates in command if needed
 \newcommand{\threeTierTemplate}[9]{
     % #1-3 = web tier nodes (names)
     % #4-6 = app tier nodes (names)
@@ -1707,6 +1732,8 @@
 }
 
 % Hub and spoke topology helper
+% Usage: \hubSpokeTemplate{hub_name}{num_spokes}{radius}{hub_style}{spoke_style}
+% Example: \hubSpokeTemplate{Router1}{6}{4cm}{router}{client}
 \newcommand{\hubSpokeTemplate}[5]{
     % #1 = hub node name
     % #2 = number of spokes
@@ -1724,6 +1751,9 @@
 }
 
 % Mesh topology helper
+% Usage: \meshTemplate{num_nodes}{radius}{node_style}
+% Example: \meshTemplate{5}{3cm}{server}
+% Creates a full mesh network with all nodes connected to each other
 \newcommand{\meshTemplate}[3]{
     % #1 = number of nodes
     % #2 = radius
