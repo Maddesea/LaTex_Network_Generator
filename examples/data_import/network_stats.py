@@ -209,8 +209,13 @@ class NetworkStats:
             print(f"        Total Threats: & {len(self.threats)} \\\\")
 
             # Count critical threats
-            critical = sum(1 for t in self.threats
-                          if float(t.get('severity', '0')) >= 9.0)
+            critical = 0
+            for t in self.threats:
+                try:
+                    if float(t.get('severity', '0')) >= 9.0:
+                        critical += 1
+                except ValueError:
+                    pass  # Skip non-numeric severity values
             if critical > 0:
                 print(f"        Critical Threats: & {critical} \\\\")
 

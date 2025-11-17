@@ -20,6 +20,7 @@ import csv
 import json
 import xml.etree.ElementTree as ET
 from pathlib import Path
+import html
 
 # ANSI color codes
 GREEN = '\033[0;32m'
@@ -277,18 +278,21 @@ class FormatConverter:
 
             # Write nodes
             for node in nodes:
-                node_id = node.get('id', '').strip()
+                node_id = html.escape(node.get('id', '').strip())
+                node_label = html.escape(node.get('label', ''))
+                node_type = html.escape(node.get('type', ''))
+                node_ip = html.escape(node.get('ip', ''))
                 f.write(f'    <node id="{node_id}">\n')
-                f.write(f'      <data key="label">{node.get("label", "")}</data>\n')
-                f.write(f'      <data key="type">{node.get("type", "")}</data>\n')
-                f.write(f'      <data key="ip">{node.get("ip", "")}</data>\n')
+                f.write(f'      <data key="label">{node_label}</data>\n')
+                f.write(f'      <data key="type">{node_type}</data>\n')
+                f.write(f'      <data key="ip">{node_ip}</data>\n')
                 f.write(f'    </node>\n')
 
             # Write edges
             edge_id = 0
             for conn in connections:
-                source = conn.get('source', '').strip()
-                dest = conn.get('destination', '').strip()
+                source = html.escape(conn.get('source', '').strip())
+                dest = html.escape(conn.get('destination', '').strip())
                 f.write(f'    <edge id="e{edge_id}" source="{source}" target="{dest}"/>\n')
                 edge_id += 1
 
