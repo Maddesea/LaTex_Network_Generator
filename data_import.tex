@@ -130,9 +130,17 @@
         \read\csvfile to \csvheader% Skip header line
         \loop\unless\ifeof\csvfile
             \read\csvfile to \csvline%
-            \ifx\csvline\empty\else
-                \stepcounter{csvlinecount}%
-                \parseCSVNodeLine{\csvline}%
+            % Skip empty lines and whitespace-only lines
+            \ifx\csvline\empty
+                % Skip empty lines
+            \else
+                \expandafter\StrTrim\expandafter{\csvline}[\csvlinetrimmed]%
+                \ifx\csvlinetrimmed\empty
+                    % Skip whitespace-only lines
+                \else
+                    \stepcounter{csvlinecount}%
+                    \expandafter\parseCSVNodeLine\expandafter{\csvlinetrimmed}%
+                \fi
             \fi
         \repeat
         \closein\csvfile
@@ -188,9 +196,17 @@
         \read\csvfile to \csvheader% Skip header line
         \loop\unless\ifeof\csvfile
             \read\csvfile to \csvline%
-            \ifx\csvline\empty\else
-                \stepcounter{csvlinecount}%
-                \parseCSVConnectionLine{\csvline}%
+            % Skip empty lines and whitespace-only lines
+            \ifx\csvline\empty
+                % Skip empty lines
+            \else
+                \expandafter\StrTrim\expandafter{\csvline}[\csvlinetrimmed]%
+                \ifx\csvlinetrimmed\empty
+                    % Skip whitespace-only lines
+                \else
+                    \stepcounter{csvlinecount}%
+                    \expandafter\parseCSVConnectionLine\expandafter{\csvlinetrimmed}%
+                \fi
             \fi
         \repeat
         \closein\csvfile
@@ -214,23 +230,29 @@
 \newcommand{\createConnectionFromType}[4]{%
     % #1=type, #2=source, #3=destination, #4=label
     \def\conntype{#1}%
+    \def\connectionDrawn{false}%
     \IfStrEq{\conntype}{normal}{%
         \drawConnection{#2}{#3}{#4}%
+        \def\connectionDrawn{true}%
     }{}%
     \IfStrEq{\conntype}{encrypted}{%
         \drawEncryptedConnection{#2}{#3}{#4}%
+        \def\connectionDrawn{true}%
     }{}%
     \IfStrEq{\conntype}{attack}{%
         \drawAttackConnection{#2}{#3}{#4}%
+        \def\connectionDrawn{true}%
     }{}%
     \IfStrEq{\conntype}{suspicious}{%
         \drawSuspiciousConnection{#2}{#3}{#4}%
+        \def\connectionDrawn{true}%
     }{}%
     \IfStrEq{\conntype}{bidirectional}{%
         \drawBidirectional{#2}{#3}{#4}%
+        \def\connectionDrawn{true}%
     }{}%
-    % Default to normal connection
-    \IfStrEq{\conntype}{}{%
+    % Default to normal connection if type is empty or unrecognized
+    \IfStrEq{\connectionDrawn}{false}{%
         \drawConnection{#2}{#3}{#4}%
     }{}%
 }
@@ -245,9 +267,17 @@
         \read\csvfile to \csvheader% Skip header line
         \loop\unless\ifeof\csvfile
             \read\csvfile to \csvline%
-            \ifx\csvline\empty\else
-                \stepcounter{csvlinecount}%
-                \parseCSVThreatLine{\csvline}%
+            % Skip empty lines and whitespace-only lines
+            \ifx\csvline\empty
+                % Skip empty lines
+            \else
+                \expandafter\StrTrim\expandafter{\csvline}[\csvlinetrimmed]%
+                \ifx\csvlinetrimmed\empty
+                    % Skip whitespace-only lines
+                \else
+                    \stepcounter{csvlinecount}%
+                    \expandafter\parseCSVThreatLine\expandafter{\csvlinetrimmed}%
+                \fi
             \fi
         \repeat
         \closein\csvfile
@@ -569,11 +599,13 @@
 
         -- Auto-group nodes by subnet
         subnets = {}
+        subnetIPs = {}  -- Track IPs for each subnet for color determination
 
         function iputils.registerNode(nodeId, ip)
             local subnet = iputils.getSubnet(ip)
             if not subnets[subnet] then
                 subnets[subnet] = {}
+                subnetIPs[subnet] = ip  -- Store IP for this subnet
             end
             table.insert(subnets[subnet], nodeId)
         end
@@ -584,9 +616,10 @@
                 zoneIndex = zoneIndex + 1
                 local nodeList = "(" .. table.concat(nodes, ") (") .. ")"
 
-                -- Determine color based on private/public
+                -- Determine color based on private/public using stored IP
                 local color = "clientGreen"
-                if not iputils.isPrivate(nodes[1]) then
+                local subnetIP = subnetIPs[subnet]
+                if subnetIP and not iputils.isPrivate(subnetIP) then
                     color = "routerOrange"
                 end
 
@@ -826,9 +859,18 @@
         \read\csvfile to \csvheader% Skip header
         \loop\unless\ifeof\csvfile
             \read\csvfile to \csvline%
-            \ifx\csvline\empty\else
-                \stepcounter{csvlinecount}%
-                \parseCSVNodeAutoPos{\csvline}%
+            % Check if line is not empty and not just whitespace
+            \ifx\csvline\empty
+                % Skip empty lines
+            \else
+                % Trim the line and check if it has content
+                \expandafter\StrTrim\expandafter{\csvline}[\csvlinetrimmed]%
+                \ifx\csvlinetrimmed\empty
+                    % Skip whitespace-only lines
+                \else
+                    \stepcounter{csvlinecount}%
+                    \expandafter\parseCSVNodeAutoPos\csvlinetrimmed\relax%
+                \fi
             \fi
         \repeat
         \closein\csvfile
@@ -839,7 +881,9 @@
 }
 
 % Parse CSV node with auto-positioning
+% Format: id,type,ip,label
 \def\parseCSVNodeAutoPos#1,#2,#3,#4\relax{%
+    % #1=id, #2=type, #3=ip, #4=label (may have trailing content)
     % Calculate position automatically
     \calcNextGridPosition{\autopX}{\autopY}%
     \createNodeFromType{#2}{#1}{#3}{\autopX}{\autopY}{#4}%
