@@ -8,9 +8,18 @@
 % Node counter for auto-indexing
 \newcounter{nodecount}
 
-% Configurable parameters for node styling
+% Configurable parameters for node styling and behavior
 \newlength{\containerStackOffset}
 \setlength{\containerStackOffset}{2pt}  % Offset between stacked container layers
+
+% IP address generation defaults
+\newcommand{\defaultIPOctetStart}{10}  % Default starting octet for auto-generated IPs
+
+% Validation scoring parameters
+\newcommand{\validationErrorPenalty}{10}  % Penalty points per validation error
+\newcommand{\validationWarningPenalty}{5}  % Penalty points per validation warning
+\newcommand{\ipConflictPenalty}{15}  % Penalty points per IP conflict (critical)
+\newcommand{\portConflictPenalty}{8}  % Penalty points per port conflict
 
 % ============================================================================
 % HASH MAP IMPLEMENTATION FOR O(1) NODE LOOKUP
@@ -29,6 +38,17 @@
 % Register a node in the hash map
 % Usage: \registerNode{nodeID}{IP}{hostname}
 \newcommand{\registerNode}[3]{
+    % Validate inputs are non-empty
+    \IfStrEq{#1}{}{
+        \PackageError{node_definitions}{Node ID cannot be empty}{}
+    }{}
+    \IfStrEq{#2}{}{
+        \PackageError{node_definitions}{IP address cannot be empty for node #1}{}
+    }{}
+    \IfStrEq{#3}{}{
+        \PackageError{node_definitions}{Hostname cannot be empty for node #1}{}
+    }{}
+
     % Store by node ID
     \pgfkeys{/nodemap/byid/#1/.initial={#1}}
     \pgfkeys{/nodemap/byid/#1/ip/.initial={#2}}
@@ -259,15 +279,23 @@
 % Validate IPv4 octet is in range 0-255
 % Usage: \validateOctet{value}{\resultvar}
 \newcommand{\validateOctet}[2]{
-    \ifnum#1<0\relax
-        \def#2{0}
-    \else
-        \ifnum#1>255\relax
+    \def#2{0} % Assume invalid by default
+    % Check if input is numeric using xstring
+    \IfInteger{#1}{
+        % Is numeric, check range
+        \ifnum#1<0\relax
             \def#2{0}
         \else
-            \def#2{1}
+            \ifnum#1>255\relax
+                \def#2{0}
+            \else
+                \def#2{1}
+            \fi
         \fi
-    \fi
+    }{
+        % Not numeric, already invalid
+        \def#2{0}
+    }
 }
 
 % Enhanced IPv4 validation with octet range checking
@@ -283,25 +311,28 @@
         \StrCut{\remaining}{.}{\octetB}{\remaining}
         \StrCut{\remaining}{.}{\octetC}{\octetD}
 
-        % Validate each octet is in range 0-255
-        \def\validoctets{1}
-        \ifnum\octetA<0\relax \def\validoctets{0}\fi
-        \ifnum\octetA>255\relax \def\validoctets{0}\fi
-        \ifnum\octetB<0\relax \def\validoctets{0}\fi
-        \ifnum\octetB>255\relax \def\validoctets{0}\fi
-        \ifnum\octetC<0\relax \def\validoctets{0}\fi
-        \ifnum\octetC>255\relax \def\validoctets{0}\fi
-        \ifnum\octetD<0\relax \def\validoctets{0}\fi
-        \ifnum\octetD>255\relax \def\validoctets{0}\fi
+        % Validate each octet using validateOctet (includes numeric check)
+        \validateOctet{\octetA}{\validA}
+        \validateOctet{\octetB}{\validB}
+        \validateOctet{\octetC}{\validC}
+        \validateOctet{\octetD}{\validD}
 
-        \ifnum\validoctets=1\relax
-            \def#2{1} % Mark as valid if format and range are correct
+        % All octets must be valid
+        \ifnum\validA=1\relax
+            \ifnum\validB=1\relax
+                \ifnum\validC=1\relax
+                    \ifnum\validD=1\relax
+                        \def#2{1} % Mark as valid if all octets are valid
+                    \fi
+                \fi
+            \fi
         \fi
     \fi
 }
 
 % Extract subnet with variable CIDR prefix
 % Usage: \extractSubnetCIDR{192.168.1.100}{24}{\resultvar}
+% Supports /8, /16, /24, /32; defaults to /24 for other values
 \newcommand{\extractSubnetCIDR}[3]{
     \StrCut{#1}{.}{\octetA}{\remaining}
     \StrCut{\remaining}{.}{\octetB}{\remaining}
@@ -316,8 +347,13 @@
             \ifnum#2=24\relax
                 \def#3{\octetA.\octetB.\octetC.0}
             \else
-                % Default to /24
-                \def#3{\octetA.\octetB.\octetC.0}
+                \ifnum#2=32\relax
+                    \def#3{\octetA.\octetB.\octetC.\octetD}
+                \else
+                    % Default to /24 for unsupported CIDR values
+                    \PackageWarning{node_definitions}{Unsupported CIDR /#2, using /24 default}
+                    \def#3{\octetA.\octetB.\octetC.0}
+                \fi
             \fi
         \fi
     \fi
@@ -384,9 +420,20 @@
 % BASIC NODE CREATION COMMANDS
 % ============================================================================
 
+% Internal: Validate node parameters (name and IP cannot be empty)
+\newcommand{\validateNodeParams}[2]{
+    \IfStrEq{#1}{}{
+        \PackageError{node_definitions}{Node name cannot be empty}{}
+    }{}
+    \IfStrEq{#2}{}{
+        \PackageError{node_definitions}{IP address cannot be empty for node #1}{}
+    }{}
+}
+
 % Create a server node
 % Usage: \createServer{name}{ip}{x}{y}{label}
 \newcommand{\createServer}[5]{
+    \validateNodeParams{#1}{#2}
     \node[server] (#1) at (#3,#4) {
         \textbf{#5} \\[2pt]
         \iptext{#2}
@@ -396,6 +443,7 @@
 % Create a client node
 % Usage: \createClient{name}{ip}{x}{y}{label}
 \newcommand{\createClient}[5]{
+    \validateNodeParams{#1}{#2}
     \node[client] (#1) at (#3,#4) {
         \textbf{#5} \\[2pt]
         \iptext{#2}
@@ -405,6 +453,7 @@
 % Create a router node
 % Usage: \createRouter{name}{ip}{x}{y}{label}
 \newcommand{\createRouter}[5]{
+    \validateNodeParams{#1}{#2}
     \node[router] (#1) at (#3,#4) {
         \textbf{#5} \\[2pt]
         \iptext{#2}
@@ -414,6 +463,7 @@
 % Create a firewall node
 % Usage: \createFirewall{name}{ip}{x}{y}{label}
 \newcommand{\createFirewall}[5]{
+    \validateNodeParams{#1}{#2}
     \node[firewall] (#1) at (#3,#4) {
         \textbf{#5} \\[2pt]
         \iptext{#2}
@@ -423,6 +473,7 @@
 % Create a switch node
 % Usage: \createSwitch{name}{ip}{x}{y}{label}
 \newcommand{\createSwitch}[5]{
+    \validateNodeParams{#1}{#2}
     \node[switch] (#1) at (#3,#4) {
         \textbf{#5} \\[2pt]
         \iptext{#2}
@@ -690,7 +741,8 @@
         label={[rotate=90, anchor=south]left:\textbf{#2}}
     ] (#1) {};
     % Add rack mounting holes effect
-    \foreach \y in {0.1,0.3,...,0.9} {
+    \foreach \yint in {1,3,...,9} {
+        \pgfmathsetmacro{\y}{\yint/10}
         \fill[black!40] ([yshift=\y*10pt]#1.north west) circle (1pt);
         \fill[black!40] ([yshift=\y*10pt]#1.north east) circle (1pt);
     }
@@ -1010,7 +1062,8 @@
         {\tiny\ttfamily\textcolor{wirelessTeal!80}{SSID: #6}}
     };
     % Add wireless signal indicators
-    \foreach \r in {0.3, 0.5, 0.7} {
+    \foreach \rint in {3, 5, 7} {
+        \pgfmathsetmacro{\r}{\rint/10}
         \draw[wirelessTeal!60, line width=0.5pt]
             ([yshift=5pt]#1.north) arc (180:0:\r cm and \r/2 cm);
     }
@@ -1151,7 +1204,7 @@
 \newcommand{\createNodeRow}[6]{
     \foreach \i in {1,...,#5} {
         \pgfmathsetmacro{\xpos}{-#5 + 2*\i}
-        \pgfmathsetmacro{\ipoctet}{10 + \i - 1}
+        \pgfmathsetmacro{\ipoctet}{\defaultIPOctetStart + \i - 1}
         \ifthenelse{\equal{#1}{server}}{
             \createServer{#2\i}{#3.\ipoctet}{\xpos}{#4}{#6-\i}
         }{
@@ -1175,7 +1228,7 @@
             \pgfmathsetmacro{\xpos}{#4 + 2*(\col-1)}
             \pgfmathsetmacro{\ypos}{#5 - 2*(\row-1)}
             \pgfmathsetmacro{\nodenum}{\nodenum + 1}
-            \pgfmathsetmacro{\ipoctet}{10 + \nodenum}
+            \pgfmathsetmacro{\ipoctet}{\defaultIPOctetStart + \nodenum}
             \ifthenelse{\equal{#1}{server}}{
                 \createServer{#2\nodenum}{#3.\ipoctet}{\xpos}{\ypos}{Node-\nodenum}
             }{
@@ -1203,7 +1256,7 @@
         \pgfmathsetmacro{\angle}{360/#5 * (\i-1)}
         \pgfmathsetmacro{\xpos}{3*cos(\angle)}
         \pgfmathsetmacro{\ypos}{3*sin(\angle)}
-        \pgfmathsetmacro{\ipoctet}{10 + \i}
+        \pgfmathsetmacro{\ipoctet}{\defaultIPOctetStart + \i}
 
         \ifthenelse{\equal{#3}{client}}{
             \createClient{#1_node\i}{#4.\ipoctet}{\xpos}{\ypos}{Client-\i}
@@ -1677,14 +1730,19 @@
 % Validate all nodes in a subnet boundary
 % Usage: \validateSubnetNodes{subnet}{cidr}{node1,node2,node3,...}{\resultvar}
 % Result: Number of nodes outside subnet
+% Note: Handles empty node list gracefully (returns 0)
 \newcommand{\validateSubnetNodes}[4]{
     \def#4{0}
-    \foreach \n in {#3} {
-        \validateNodeInSubnet{\n}{#1}{#2}{\isinsubnet}
-        \ifnum\isinsubnet=0\relax
-            \pgfmathtruncatemacro{\tempincrement}{#4 + 1}
-            \let#4\tempincrement
-        \fi
+    \IfStrEq{#3}{}{
+        % Empty list, nothing to validate
+    }{
+        \foreach \n in {#3} {
+            \validateNodeInSubnet{\n}{#1}{#2}{\isinsubnet}
+            \ifnum\isinsubnet=0\relax
+                \pgfmathtruncatemacro{\tempincrement}{#4 + 1}
+                \let#4\tempincrement
+            \fi
+        }
     }
 }
 
@@ -1901,17 +1959,17 @@
     % Base score starts at 100
     \pgfmathsetmacro{\score}{100}
 
-    % Deduct for errors (10 points each)
-    \pgfmathsetmacro{\score}{\score - (\thevalidationErrorCount * 10)}
+    % Deduct for errors
+    \pgfmathsetmacro{\score}{\score - (\thevalidationErrorCount * \validationErrorPenalty)}
 
-    % Deduct for warnings (5 points each)
-    \pgfmathsetmacro{\score}{\score - (\thevalidationWarningCount * 5)}
+    % Deduct for warnings
+    \pgfmathsetmacro{\score}{\score - (\thevalidationWarningCount * \validationWarningPenalty)}
 
-    % Deduct for IP conflicts (15 points each - critical)
-    \pgfmathsetmacro{\score}{\score - (\theipConflictCount * 15)}
+    % Deduct for IP conflicts (critical)
+    \pgfmathsetmacro{\score}{\score - (\theipConflictCount * \ipConflictPenalty)}
 
-    % Deduct for port conflicts (8 points each)
-    \pgfmathsetmacro{\score}{\score - (\theportConflictCount * 8)}
+    % Deduct for port conflicts
+    \pgfmathsetmacro{\score}{\score - (\theportConflictCount * \portConflictPenalty)}
 
     % Ensure score doesn't go below 0
     \ifdim\score pt<0pt\relax
