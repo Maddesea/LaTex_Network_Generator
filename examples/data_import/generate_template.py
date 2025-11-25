@@ -53,7 +53,7 @@ def generate_nodes_template(auto_position=False):
             ['ws2', 'client', '192.168.100.51', '0', '-5', 'Workstation 2'],
         ]
 
-    with open(filename, 'w', newline='') as f:
+    with open(filename, 'w', newline='', encoding='utf-8') as f:
         writer = csv.writer(f)
         writer.writerow(headers)
         writer.writerows(example_rows)
@@ -83,7 +83,7 @@ def generate_connections_template():
         ['ws2', 'web1', '', 'bidirectional'],
     ]
 
-    with open(filename, 'w', newline='') as f:
+    with open(filename, 'w', newline='', encoding='utf-8') as f:
         writer = csv.writer(f)
         writer.writerow(headers)
         writer.writerows(example_rows)
@@ -107,7 +107,7 @@ def generate_threats_template():
         ['fw1', 'vulnerability', '6.5', 'CVE-2024-1111', 'Configuration weakness'],
     ]
 
-    with open(filename, 'w', newline='') as f:
+    with open(filename, 'w', newline='', encoding='utf-8') as f:
         writer = csv.writer(f)
         writer.writerow(headers)
         writer.writerows(example_rows)
@@ -187,7 +187,7 @@ def generate_network_json_template():
 }
 """
 
-    with open(filename, 'w') as f:
+    with open(filename, 'w', encoding='utf-8') as f:
         f.write(template)
 
     print(f"{GREEN}✓ Created: {filename}{NC}")

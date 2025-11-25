@@ -35,19 +35,19 @@ class NetworkStats:
 
     def load_nodes_csv(self, filepath):
         """Load nodes from CSV"""
-        with open(filepath, 'r') as f:
+        with open(filepath, 'r', encoding='utf-8') as f:
             reader = csv.DictReader(f)
             self.nodes = list(reader)
 
     def load_connections_csv(self, filepath):
         """Load connections from CSV"""
-        with open(filepath, 'r') as f:
+        with open(filepath, 'r', encoding='utf-8') as f:
             reader = csv.DictReader(f)
             self.connections = list(reader)
 
     def load_threats_csv(self, filepath):
         """Load threats from CSV"""
-        with open(filepath, 'r') as f:
+        with open(filepath, 'r', encoding='utf-8') as f:
             reader = csv.DictReader(f)
             self.threats = list(reader)
 

@@ -50,7 +50,7 @@ class FormatConverter:
         }
 
         # Load nodes
-        with open(nodes_file, 'r') as f:
+        with open(nodes_file, 'r', encoding='utf-8') as f:
             reader = csv.DictReader(f)
             for row in reader:
                 node = {
@@ -74,7 +74,7 @@ class FormatConverter:
 
         # Load connections if provided
         if connections_file and Path(connections_file).exists():
-            with open(connections_file, 'r') as f:
+            with open(connections_file, 'r', encoding='utf-8') as f:
                 reader = csv.DictReader(f)
                 for row in reader:
                     conn = {
@@ -91,7 +91,7 @@ class FormatConverter:
 
         # Load threats if provided
         if threats_file and Path(threats_file).exists():
-            with open(threats_file, 'r') as f:
+            with open(threats_file, 'r', encoding='utf-8') as f:
                 reader = csv.DictReader(f)
                 for row in reader:
                     threat = {
@@ -113,7 +113,7 @@ class FormatConverter:
                     data["threats"].append(threat)
 
         # Write JSON
-        with open(output_file, 'w') as f:
+        with open(output_file, 'w', encoding='utf-8') as f:
             json.dump(data, f, indent=2)
 
         print(f"{GREEN}✓ Converted to JSON: {output_file}{NC}")
@@ -123,7 +123,7 @@ class FormatConverter:
 
     def json_to_csv(self, json_file):
         """Convert JSON to CSV files"""
-        with open(json_file, 'r') as f:
+        with open(json_file, 'r', encoding='utf-8') as f:
             data = json.load(f)
 
         # Extract nodes
@@ -132,7 +132,7 @@ class FormatConverter:
             nodes = data['network']['nodes']
 
         if nodes:
-            with open('nodes_from_json.csv', 'w', newline='') as f:
+            with open('nodes_from_json.csv', 'w', newline='', encoding='utf-8') as f:
                 has_position = any('position' in node for node in nodes)
 
                 if has_position:
@@ -165,7 +165,7 @@ class FormatConverter:
             connections = data['network']['connections']
 
         if connections:
-            with open('connections_from_json.csv', 'w', newline='') as f:
+            with open('connections_from_json.csv', 'w', newline='', encoding='utf-8') as f:
                 fieldnames = ['source', 'destination', 'label', 'type']
                 writer = csv.DictWriter(f, fieldnames=fieldnames)
                 writer.writeheader()
@@ -186,7 +186,7 @@ class FormatConverter:
             threats = data['network']['threats']
 
         if threats:
-            with open('threats_from_json.csv', 'w', newline='') as f:
+            with open('threats_from_json.csv', 'w', newline='', encoding='utf-8') as f:
                 fieldnames = ['target', 'type', 'severity', 'cve', 'description']
                 writer = csv.DictWriter(f, fieldnames=fieldnames)
                 writer.writeheader()
@@ -243,7 +243,7 @@ class FormatConverter:
             node_id += 1
 
         # Write CSV
-        with open('nodes_from_nmap.csv', 'w', newline='') as f:
+        with open('nodes_from_nmap.csv', 'w', newline='', encoding='utf-8') as f:
             fieldnames = ['id', 'type', 'ip', 'label', 'ports']
             writer = csv.DictWriter(f, fieldnames=fieldnames)
             writer.writeheader()
@@ -256,19 +256,19 @@ class FormatConverter:
         """Convert CSV to GraphML format"""
         # Read nodes
         nodes = []
-        with open(nodes_file, 'r') as f:
+        with open(nodes_file, 'r', encoding='utf-8') as f:
             reader = csv.DictReader(f)
             nodes = list(reader)
 
         # Read connections
         connections = []
         if Path(connections_file).exists():
-            with open(connections_file, 'r') as f:
+            with open(connections_file, 'r', encoding='utf-8') as f:
                 reader = csv.DictReader(f)
                 connections = list(reader)
 
         # Generate GraphML
-        with open(output_file, 'w') as f:
+        with open(output_file, 'w', encoding='utf-8') as f:
             f.write('<?xml version="1.0" encoding="UTF-8"?>\n')
             f.write('<graphml xmlns="http://graphml.graphdrawing.org/xmlns">\n')
             f.write('  <key id="label" for="node" attr.name="label" attr.type="string"/>\n')

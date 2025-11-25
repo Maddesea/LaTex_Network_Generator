@@ -56,27 +56,56 @@ class NetworkDataValidator:
     def validate_node_type(self, node_type: str) -> bool:
         """Validate node type"""
         valid_types = [
-            'server', 'client', 'router', 'firewall',
-            'switch', 'cloud', 'attacker'
+            # Basic network devices
+            'server', 'client', 'router', 'firewall', 'switch', 'cloud', 'attacker',
+            # Database nodes
+            'database', 'database_primary', 'database_replica', 'database_cluster',
+            # Load balancers
+            'loadbalancer', 'loadbalancer_active', 'loadbalancer_passive',
+            # Virtualization
+            'vm', 'hypervisor', 'container', 'pod',
+            # Mobile devices
+            'mobile', 'mobile_phone', 'tablet', 'laptop',
+            # IoT devices
+            'iot', 'iot_device', 'sensor', 'smart_device',
+            # Cloud providers
+            'aws', 'azure', 'gcp', 'aws_node', 'azure_node', 'gcp_node',
+            # Network appliances
+            'ips', 'ids', 'proxy', 'waf',
+            # Storage
+            'storage', 'nas', 'san',
+            # Wireless
+            'wireless', 'wireless_ap', 'access_point',
+            # Generic
+            'generic', 'unknown'
         ]
-        return node_type.lower() in valid_types
+        return node_type.lower().replace(' ', '_').replace('-', '_') in valid_types
 
     def validate_connection_type(self, conn_type: str) -> bool:
         """Validate connection type"""
         if not conn_type:  # Empty is OK (defaults to normal)
             return True
         valid_types = [
-            'normal', 'encrypted', 'attack',
-            'suspicious', 'bidirectional'
+            # Basic connection types
+            'normal', 'encrypted', 'attack', 'suspicious', 'bidirectional',
+            # Special connection types
+            'vpn', 'vpn_tunnel', 'wireless', 'fiber', 'fiber_optic',
+            'satellite', 'satellite_link', 'blocked',
+            # Bandwidth-based
+            'bw_low', 'bw_medium', 'bw_high', 'bw_very_high', 'bw_congested',
+            # Load balanced
+            'load_balanced', 'curve', 'curve_sharp', 'curve_reverse',
+            # Generic
+            'generic', 'unknown'
         ]
-        return conn_type.lower() in valid_types
+        return conn_type.lower().replace(' ', '_').replace('-', '_') in valid_types
 
     def validate_nodes_csv(self, filepath: str) -> bool:
         """Validate nodes CSV file"""
         print(f"\n{BLUE}Validating nodes CSV: {filepath}{NC}")
 
         try:
-            with open(filepath, 'r') as f:
+            with open(filepath, 'r', encoding='utf-8') as f:
                 reader = csv.DictReader(f)
 
                 # Check required headers
@@ -161,7 +190,7 @@ class NetworkDataValidator:
         print(f"\n{BLUE}Validating connections CSV: {filepath}{NC}")
 
         try:
-            with open(filepath, 'r') as f:
+            with open(filepath, 'r', encoding='utf-8') as f:
                 reader = csv.DictReader(f)
 
                 # Check required headers
@@ -227,7 +256,7 @@ class NetworkDataValidator:
         print(f"\n{BLUE}Validating threats CSV: {filepath}{NC}")
 
         try:
-            with open(filepath, 'r') as f:
+            with open(filepath, 'r', encoding='utf-8') as f:
                 reader = csv.DictReader(f)
 
                 # Check required headers
@@ -286,7 +315,7 @@ class NetworkDataValidator:
         print(f"\n{BLUE}Validating JSON: {filepath}{NC}")
 
         try:
-            with open(filepath, 'r') as f:
+            with open(filepath, 'r', encoding='utf-8') as f:
                 data = json.load(f)
 
             # Check basic structure
